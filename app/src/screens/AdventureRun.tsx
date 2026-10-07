@@ -13,7 +13,7 @@ export const formatClock = (ms: number) => {
 
 /** Wall-clock time Guachito gets back, e.g. "18:40". */
 export const returnTime = (remainingMs: number) =>
-  new Date(Date.now() + remainingMs).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+  new Date(Date.now() + remainingMs).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
 
 const GALLOP = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => `ride_${i}`)
 const DOG_RUN = [1, 2, 3, 4].map((i) => `dog_run_${i}`)
