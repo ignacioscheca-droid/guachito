@@ -5,6 +5,10 @@ import { actions, useGame } from '../game/store'
 
 export function Settings({ onClose, onTestMenu }: { onClose: () => void; onTestMenu: () => void }) {
   const subscription = useGame((s) => s.pushSubscription)
+  const savedName = useGame((s) => s.name)
+  const savedPlayer = useGame((s) => s.playerName)
+  const [companion, setCompanion] = useState(savedName)
+  const [player, setPlayer] = useState(savedPlayer)
   const [msg, setMsg] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const file = useRef<HTMLInputElement>(null)
@@ -46,6 +50,28 @@ export function Settings({ onClose, onTestMenu }: { onClose: () => void; onTestM
     <div className="overlay overlay--top" onClick={onClose}>
       <div className="modal settings" onClick={(e) => e.stopPropagation()}>
         <h2>Ajustes</h2>
+
+        <section className="settings__block">
+          <h3>Nombres</h3>
+          <label className="settings__field">
+            <span>Tu nombre</span>
+            <input value={player} maxLength={24} placeholder="¿Cómo te llamás?" onChange={(e) => setPlayer(e.target.value)} />
+          </label>
+          <label className="settings__field">
+            <span>Tu Gauchito</span>
+            <input value={companion} maxLength={16} onChange={(e) => setCompanion(e.target.value)} />
+          </label>
+          <Button
+            variant="light"
+            disabled={!companion.trim() || (companion.trim() === savedName && player.trim() === savedPlayer)}
+            onClick={() => {
+              actions.setNames(companion, player)
+              setMsg('¡Listo! Guardé los nombres.')
+            }}
+          >
+            Guardar nombres
+          </Button>
+        </section>
 
         {needsInstall && (
           <section className="settings__block settings__block--warn">

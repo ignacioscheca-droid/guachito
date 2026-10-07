@@ -19,6 +19,8 @@ export type GameState = {
   version: 1
   onboarded: boolean
   name: string
+  /** The player's own name (used in greetings and reminders). */
+  playerName: string
   habits: string[]
   /** Habits the player created (name + emoji). */
   customHabits: HabitDef[]
@@ -47,6 +49,7 @@ const initial = (): GameState => ({
   version: 1,
   onboarded: false,
   name: 'Gauchito',
+  playerName: '',
   habits: [],
   customHabits: [],
   completions: {},
@@ -236,6 +239,10 @@ export const actions = {
 
   clearNewItem() {
     if (state.newItemId) set({ ...state, newItemId: null })
+  },
+
+  setNames(companion: string, player: string) {
+    set({ ...state, name: companion.trim() || state.name, playerName: player.trim() })
   },
 
   setPushSubscription(json: string | null) {

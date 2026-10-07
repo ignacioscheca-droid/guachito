@@ -23,6 +23,7 @@ const CATALOG_EMOJI: Record<string, string> = {
 export type ReminderSnapshot = {
   v: 1
   name: string
+  playerName: string
   habits: { id: string; name: string; emoji: string }[]
   /** Completed habit ids per local day (last 14 days). */
   completions: Record<string, string[]>
@@ -38,6 +39,7 @@ function build(s: GameState): ReminderSnapshot {
   return {
     v: 1,
     name: s.name,
+    playerName: s.playerName,
     habits: s.habits.map((id) => {
       const h = findHabit(s, id)
       return { id, name: h.name, emoji: h.emoji ?? CATALOG_EMOJI[id] ?? '⭐' }

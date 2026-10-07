@@ -1730,6 +1730,29 @@ img {
 .settings__block--warn {
   background: #fff3cd;
 }
+.settings__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--brown);
+}
+.settings__field input {
+  height: 44px;
+  padding: 0 12px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+  outline: 0;
+}
+.settings__field input:focus {
+  border-color: var(--brown);
+}
 .settings__code {
   width: 100%;
   padding: 8px 10px;

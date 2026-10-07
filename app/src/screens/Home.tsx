@@ -17,11 +17,12 @@ type Props = {
   onSettings: () => void
 }
 
-function greeting() {
+function greeting(player: string) {
   const h = new Date().getHours()
-  if (h >= 5 && h < 12) return '¡Buen día!'
-  if (h >= 12 && h < 20) return '¡Buenas tardes!'
-  return '¡Buenas noches!'
+  const to = player ? `, ${player}` : ''
+  if (h >= 5 && h < 12) return `¡Buen día${to}!`
+  if (h >= 12 && h < 20) return `¡Buenas tardes${to}!`
+  return `¡Buenas noches${to}!`
 }
 
 /** How many of today's open habits are still needed to fill the bar (null: not enough left today). */
@@ -81,7 +82,7 @@ export function Home({ width, celebrateKey, remainingMs, onCompleteHabit, onAdve
       >
         <div className="home__top">
           <div className="home__greet" onClick={secret}>
-            <h1>{greeting()}</h1>
+            <h1>{greeting(s.playerName)}</h1>
             <p>{subline(s, open.length, toGo)}</p>
           </div>
           <CoinPill coins={s.coins} />
