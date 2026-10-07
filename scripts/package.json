@@ -1,0 +1,9 @@
+{
+  "name": "guachito-scripts",
+  "private": true,
+  "type": "module",
+  "description": "Daily reminder push, sent by .github/workflows/reminder.yml",
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}

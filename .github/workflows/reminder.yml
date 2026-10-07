@@ -1,0 +1,35 @@
+# Daily reminder push at 16:00 Madrid time.
+# Two crons cover summer (14:00 UTC) and winter (15:00 UTC) time; the script
+# only sends when it really is 16:00 in Madrid. GitHub can start scheduled runs
+# a few minutes late.
+name: Daily reminder
+
+on:
+  schedule:
+    - cron: '0 14 * * *'
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Send now (ignore the time check)
+        type: boolean
+        default: true
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+        working-directory: scripts
+      - run: node send-reminder.mjs
+        working-directory: scripts
+        env:
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          PUSH_SUBSCRIPTION: ${{ secrets.PUSH_SUBSCRIPTION }}
+          REMINDER_HOUR: '16'
+          FORCE: ${{ inputs.force || 'false' }}

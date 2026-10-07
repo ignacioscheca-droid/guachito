@@ -1,0 +1,711 @@
+{
+ "char_idle": {
+  "src": "design/work/gif/f10.png",
+  "box": [
+   0,
+   0,
+   480,
+   302
+  ],
+  "no_shadow": true,
+  "out_dir": "app/public/art"
+ },
+ "char_thumbs": {
+  "src": "design/work/gif/f09.png",
+  "box": [
+   0,
+   0,
+   480,
+   302
+  ],
+  "no_shadow": true,
+  "out_dir": "app/public/art"
+ },
+ "char_step": {
+  "src": "design/work/gif/f06.png",
+  "box": [
+   0,
+   0,
+   480,
+   302
+  ],
+  "no_shadow": true,
+  "out_dir": "app/public/art"
+ },
+ "char_trophy": {
+  "src": "design/work/gif/f07.png",
+  "box": [
+   0,
+   0,
+   480,
+   302
+  ],
+  "no_shadow": true,
+  "out_dir": "app/public/art"
+ },
+ "char_jump": {
+  "src": "design/work/gif/f04.png",
+  "box": [
+   0,
+   0,
+   480,
+   302
+  ],
+  "no_shadow": true,
+  "out_dir": "app/public/art"
+ },
+ "char_celebrate": {
+  "src": "design/work/gif/f05.png",
+  "box": [
+   0,
+   0,
+   480,
+   302
+  ],
+  "no_shadow": true,
+  "out_dir": "app/public/art"
+ },
+ "char_wave": {
+  "src": "design/source/01_PRODUCT_MVP/01_full_mvp_flow_board.png",
+  "box": [
+   160,
+   665,
+   295,
+   828
+  ],
+  "no_shadow": true,
+  "scale": 2,
+  "out_dir": "app/public/art"
+ },
+ "char_happy": {
+  "src": "design/source/01_PRODUCT_MVP/01_full_mvp_flow_board.png",
+  "box": [
+   300,
+   665,
+   442,
+   828
+  ],
+  "no_shadow": true,
+  "scale": 2,
+  "out_dir": "app/public/art"
+ },
+ "char_mate": {
+  "src": "design/source/01_PRODUCT_MVP/01_full_mvp_flow_board.png",
+  "box": [
+   738,
+   688,
+   868,
+   828
+  ],
+  "no_shadow": true,
+  "scale": 2,
+  "out_dir": "app/public/art"
+ },
+ "char_sleep": {
+  "src": "design/source/01_PRODUCT_MVP/01_full_mvp_flow_board.png",
+  "box": [
+   862,
+   700,
+   998,
+   828
+  ],
+  "keep": "all",
+  "min_area": 0.02,
+  "scale": 2,
+  "out_dir": "app/public/art"
+ },
+ "char_ride": {
+  "src": "design/source/02_RIVE_CHARACTER/02_animation_and_rig_guide.png",
+  "box": [
+   872,
+   420,
+   1015,
+   580
+  ],
+  "no_shadow": true,
+  "scale": 2.5,
+  "erode": 1,
+  "soft_hi": 40,
+  "out_dir": "app/public/art"
+ },
+ "char_return": {
+  "src": "design/source/01_PRODUCT_MVP/01_full_mvp_flow_board.png",
+  "box": [
+   1262,
+   680,
+   1424,
+   828
+  ],
+  "keep": "all",
+  "min_area": 0.02,
+  "scale": 2,
+  "out_dir": "app/public/art"
+ },
+ "char_walk": {
+  "src": "design/source/02_RIVE_CHARACTER/02_animation_and_rig_guide.png",
+  "box": [
+   758,
+   442,
+   852,
+   578
+  ],
+  "no_shadow": true,
+  "scale": 2,
+  "out_dir": "app/public/art"
+ },
+ "char_map": {
+  "src": "design/source/02_RIVE_CHARACTER/02_animation_and_rig_guide.png",
+  "box": [
+   503,
+   442,
+   602,
+   578
+  ],
+  "no_shadow": true,
+  "scale": 2,
+  "out_dir": "app/public/art"
+ },
+ "char_pet": {
+  "src": "design/source/02_RIVE_CHARACTER/02_animation_and_rig_guide.png",
+  "box": [
+   358,
+   442,
+   502,
+   578
+  ],
+  "keep": "all",
+  "min_area": 0.02,
+  "scale": 2,
+  "out_dir": "app/public/art"
+ },
+ "dog_idle": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   1133,
+   772,
+   1217,
+   862
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art",
+  "no_shadow": true,
+  "erode": 1,
+  "soft_hi": 40
+ },
+ "dog_happy": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   1215,
+   772,
+   1307,
+   862
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art",
+  "no_shadow": true,
+  "erode": 1,
+  "soft_hi": 40
+ },
+ "dog_play": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   1303,
+   772,
+   1397,
+   862
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art",
+  "no_shadow": true,
+  "erode": 1,
+  "soft_hi": 40
+ },
+ "dog_sleep": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   1393,
+   768,
+   1527,
+   862
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art",
+  "no_shadow": true,
+  "erode": 1,
+  "soft_hi": 40
+ },
+ "dog_run": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   1128,
+   878,
+   1227,
+   967
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art",
+  "no_shadow": true,
+  "erode": 1,
+  "soft_hi": 40
+ },
+ "dog_sit": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   1228,
+   872,
+   1307,
+   967
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art",
+  "no_shadow": true,
+  "erode": 1,
+  "soft_hi": 40
+ },
+ "dog_wave": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   1308,
+   872,
+   1397,
+   967
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art",
+  "no_shadow": true,
+  "erode": 1,
+  "soft_hi": 40
+ },
+ "dog_belly": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   1398,
+   892,
+   1527,
+   967
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art",
+  "no_shadow": true,
+  "erode": 1,
+  "soft_hi": 40
+ },
+ "prop_mate": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   638,
+   772,
+   702,
+   862
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art"
+ },
+ "prop_termo": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   703,
+   772,
+   752,
+   867
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art"
+ },
+ "prop_guitarra": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   757,
+   772,
+   838,
+   867
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art"
+ },
+ "prop_mapa": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   842,
+   786,
+   913,
+   867
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art"
+ },
+ "prop_linterna": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   922,
+   782,
+   983,
+   867
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art"
+ },
+ "prop_mochila": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   1006,
+   778,
+   1084,
+   867
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art"
+ },
+ "prop_cana": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   632,
+   872,
+   703,
+   977
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art"
+ },
+ "prop_fogon": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   703,
+   876,
+   773,
+   977
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art"
+ },
+ "prop_libro": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   777,
+   882,
+   843,
+   967
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art"
+ },
+ "prop_binoculares": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   845,
+   892,
+   915,
+   962
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art"
+ },
+ "prop_herradura": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   927,
+   887,
+   993,
+   967
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art"
+ },
+ "prop_sombrero": {
+  "src": "design/source/02_RIVE_CHARACTER/01_character_bible.png",
+  "box": [
+   1002,
+   892,
+   1108,
+   967
+  ],
+  "scale": 2.5,
+  "out_dir": "app/public/art"
+ },
+ "item_mesa": {
+  "src": "design/source/01_PRODUCT_MVP/08_ranch_shop.png",
+  "box": [
+   98,
+   1250,
+   230,
+   1362
+  ],
+  "scale": 1.5,
+  "out_dir": "app/public/art",
+  "erode": 2,
+  "soft_hi": 45
+ },
+ "item_planta": {
+  "src": "design/source/01_PRODUCT_MVP/08_ranch_shop.png",
+  "box": [
+   258,
+   1222,
+   384,
+   1370
+  ],
+  "scale": 1.5,
+  "out_dir": "app/public/art",
+  "erode": 2,
+  "soft_hi": 45
+ },
+ "item_alfombra": {
+  "src": "design/source/01_PRODUCT_MVP/08_ranch_shop.png",
+  "box": [
+   412,
+   1262,
+   548,
+   1362
+  ],
+  "scale": 1.5,
+  "out_dir": "app/public/art",
+  "erode": 2,
+  "soft_hi": 45
+ },
+ "item_farol": {
+  "src": "design/source/01_PRODUCT_MVP/08_ranch_shop.png",
+  "box": [
+   100,
+   1485,
+   220,
+   1655
+  ],
+  "scale": 1.5,
+  "out_dir": "app/public/art",
+  "erode": 2,
+  "soft_hi": 45
+ },
+ "item_silla": {
+  "src": "design/source/01_PRODUCT_MVP/08_ranch_shop.png",
+  "box": [
+   255,
+   1488,
+   385,
+   1658
+  ],
+  "scale": 1.5,
+  "out_dir": "app/public/art",
+  "erode": 2,
+  "soft_hi": 45
+ },
+ "item_barril": {
+  "src": "design/source/01_PRODUCT_MVP/08_ranch_shop.png",
+  "box": [
+   415,
+   1490,
+   545,
+   1655
+  ],
+  "scale": 1.5,
+  "out_dir": "app/public/art",
+  "erode": 2,
+  "soft_hi": 45
+ },
+ "item_sillon": {
+  "src": "design/source/01_PRODUCT_MVP/08_ranch_shop.png",
+  "box": [
+   95,
+   1065,
+   195,
+   1165
+  ],
+  "scale": 1.5,
+  "out_dir": "app/public/art",
+  "erode": 2,
+  "soft_hi": 45
+ },
+ "item_lampara": {
+  "src": "design/source/01_PRODUCT_MVP/08_ranch_shop.png",
+  "box": [
+   340,
+   1065,
+   430,
+   1165
+  ],
+  "scale": 1.5,
+  "out_dir": "app/public/art",
+  "erode": 2,
+  "soft_hi": 45
+ },
+ "item_cuadro": {
+  "src": "design/source/01_PRODUCT_MVP/08_ranch_shop.png",
+  "box": [
+   462,
+   1068,
+   545,
+   1162
+  ],
+  "scale": 1.5,
+  "out_dir": "app/public/art",
+  "erode": 2,
+  "soft_hi": 45
+ },
+ "icon_dormir": {
+  "src": "design/source/01_PRODUCT_MVP/03_choose_habits.png",
+  "box": [
+   80,
+   585,
+   190,
+   700
+  ],
+  "out_dir": "app/public/art",
+  "erode": 2,
+  "soft_hi": 45
+ },
+ "icon_comer": {
+  "src": "design/source/01_PRODUCT_MVP/03_choose_habits.png",
+  "box": [
+   320,
+   578,
+   432,
+   700
+  ],
+  "out_dir": "app/public/art",
+  "erode": 2,
+  "soft_hi": 45
+ },
+ "icon_ejercicio": {
+  "src": "design/source/01_PRODUCT_MVP/03_choose_habits.png",
+  "box": [
+   55,
+   868,
+   207,
+   987
+  ],
+  "out_dir": "app/public/art",
+  "erode": 2,
+  "soft_hi": 45
+ },
+ "icon_productivo": {
+  "src": "design/source/01_PRODUCT_MVP/03_choose_habits.png",
+  "box": [
+   308,
+   872,
+   447,
+   982
+  ],
+  "out_dir": "app/public/art",
+  "erode": 2,
+  "soft_hi": 45
+ },
+ "icon_mente": {
+  "src": "design/source/01_PRODUCT_MVP/03_choose_habits.png",
+  "box": [
+   58,
+   1152,
+   207,
+   1272
+  ],
+  "out_dir": "app/public/art",
+  "erode": 2,
+  "soft_hi": 45
+ },
+ "icon_agua": {
+  "src": "design/source/01_PRODUCT_MVP/04_home.png",
+  "box": [
+   22,
+   1328,
+   80,
+   1402
+  ],
+  "scale": 2,
+  "out_dir": "app/public/art",
+  "erode": 2,
+  "soft_hi": 45
+ },
+ "icon_energia": {
+  "src": "design/source/01_PRODUCT_MVP/05_complete_habit.png",
+  "box": [
+   150,
+   1160,
+   262,
+   1292
+  ],
+  "erode": 2,
+  "soft_hi": 45,
+  "out_dir": "app/public/art"
+ },
+ "icon_moneda": {
+  "src": "design/source/01_PRODUCT_MVP/07_story_reward.png",
+  "box": [
+   176,
+   1548,
+   258,
+   1632
+  ],
+  "scale": 1.5,
+  "out_dir": "app/public/art",
+  "erode": 2,
+  "soft_hi": 45
+ },
+ "nav_inicio": {
+  "src": "design/source/02_RIVE_CHARACTER/02_animation_and_rig_guide.png",
+  "box": [
+   1055,
+   935,
+   1102,
+   990
+  ],
+  "scale": 2.5,
+  "erode": 1,
+  "out_dir": "app/public/art"
+ },
+ "nav_aventura": {
+  "src": "design/source/01_PRODUCT_MVP/01_full_mvp_flow_board.png",
+  "box": [
+   1132,
+   944,
+   1180,
+   987
+  ],
+  "scale": 2.5,
+  "erode": 1,
+  "out_dir": "app/public/art"
+ },
+ "nav_rancho": {
+  "src": "design/source/01_PRODUCT_MVP/01_full_mvp_flow_board.png",
+  "box": [
+   1190,
+   944,
+   1236,
+   987
+  ],
+  "scale": 2.5,
+  "erode": 1,
+  "out_dir": "app/public/art"
+ },
+ "nav_guachito": {
+  "src": "design/source/01_PRODUCT_MVP/01_full_mvp_flow_board.png",
+  "box": [
+   1300,
+   940,
+   1356,
+   984
+  ],
+  "scale": 2.5,
+  "erode": 1,
+  "out_dir": "app/public/art"
+ },
+ "icon_check": {
+  "src": "design/source/01_PRODUCT_MVP/01_full_mvp_flow_board.png",
+  "box": [
+   1462,
+   944,
+   1508,
+   986
+  ],
+  "scale": 2.5,
+  "erode": 1,
+  "out_dir": "app/public/art"
+ },
+ "char_jump_big": {
+  "src": "design/source/01_PRODUCT_MVP/05_complete_habit.png",
+  "box": [
+   138,
+   556,
+   552,
+   1068
+  ],
+  "no_shadow": true,
+  "out_dir": "app/public/art"
+ }
+}

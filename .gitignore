@@ -1,0 +1,20 @@
+# secrets: the push private key never goes to git
+.secrets/
+.env*
+
+node_modules/
+app/dist/
+.DS_Store
+.claude/
+
+# working files and big originals (the app uses the processed art in app/public/a)
+design/work/
+guachito_assets.zip
+GUACHITO_MVP_CLAUDE_CODE_PACKAGE.zip
+guachito_assets/source/
+
+# local originals and design scratch (the app only needs app/)
+guachito_assets/
+design/source/
+diseño_rancho/
+rancho_completo_unlocked.png
