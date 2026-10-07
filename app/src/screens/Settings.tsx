@@ -62,7 +62,7 @@ export function Settings({ onClose, onTestMenu }: { onClose: () => void; onTestM
           {!pushSupported() && <p>Este navegador no admite notificaciones.</p>}
           {pushSupported() && !subscription && (
             <>
-              <p>Te aviso todos los días a las {REMINDER_TIME} para que no se te pasen los hábitos.</p>
+              <p>Te aviso todos los días a las {REMINDER_TIME}, según lo que tengas hecho y lo que te falte.</p>
               <Button onClick={turnOn} disabled={needsInstall}>
                 Activar notificaciones
               </Button>
@@ -80,7 +80,7 @@ export function Settings({ onClose, onTestMenu }: { onClose: () => void; onTestM
                   {copied ? '¡Copiado!' : 'Copiar código'}
                 </Button>
                 <Button variant="light" onClick={() => testNotification()}>
-                  Probar
+                  Ver mensaje de hoy
                 </Button>
               </div>
             </>

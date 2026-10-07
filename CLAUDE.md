@@ -21,6 +21,9 @@ brings back a story and a ranch item. The owner uses it for a real one-week test
   `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `PUSH_SUBSCRIPTION` (copied from the app's
   Ajustes on the phone). The public key is also in `app/src/game/push.ts`.
   iPhone push only works from the installed Home Screen app.
+  The push carries no text: `app/public/sw.js` writes it on the phone from a snapshot
+  of today's state that the app keeps in IndexedDB (`src/game/reminderSnapshot.ts`) —
+  what's done, what's missing, where Guachito is. Ajustes → "Ver mensaje de hoy" shows it.
 - Content and tuning: `app/src/game/content.ts` — habit catalog, energy split
   (all of today's habits = exactly 100), 7 daily episodes, ranch items and their
   patio spots.

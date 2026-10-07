@@ -7,8 +7,10 @@ import '@fontsource/nunito/900.css'
 import './index.css'
 import App from './App.tsx'
 import { registerServiceWorker } from './game/push'
+import { startReminderSnapshots } from './game/reminderSnapshot'
 
 registerServiceWorker()
+startReminderSnapshots()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -1,6 +1,7 @@
 // Daily reminder: the phone subscribes to Web Push here; a scheduled GitHub
 // Action (.github/workflows/reminder.yml) sends the notification at 16:00.
 // iPhone only allows this once Guachito is added to the Home Screen.
+import { saveReminderSnapshot } from './reminderSnapshot'
 
 /** VAPID public key (the private half lives only in the GitHub secret). */
 const VAPID_PUBLIC_KEY = 'BCp_BYxwkOCUJcUayhzQTSXevG3sz8tBXnbzUht2Bso5O9TI_vyP8bKTezjZu4rTEjJ88yNiRtRS2u6CIDFuxW8'
@@ -38,8 +39,9 @@ export async function enableReminders(): Promise<{ ok: true; subscription: strin
   return { ok: true, subscription: JSON.stringify(sub) }
 }
 
-/** Shows a notification right away, to check they display on this phone. */
+/** Shows today's reminder right away (the same text the 16:00 one would have). */
 export async function testNotification() {
+  await saveReminderSnapshot()
   const reg = await navigator.serviceWorker.ready
-  await reg.showNotification('Guachito 🧉', { body: '¡Así te va a llegar el recordatorio de las 16:00!', icon: `${import.meta.env.BASE_URL}icon-192.png`, tag: 'guachito-test' })
+  reg.active?.postMessage({ type: 'test-reminder' })
 }

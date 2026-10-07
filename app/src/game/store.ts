@@ -103,6 +103,14 @@ export function useGame<T>(select: (s: GameState) => T): T {
 
 export const getState = () => state
 
+/** Calls `l` after every state change (outside React). */
+export function subscribe(l: () => void) {
+  listeners.add(l)
+  return () => {
+    listeners.delete(l)
+  }
+}
+
 // ---- lookups ----------------------------------------------------------
 
 export function findHabit(s: GameState, id: string): HabitDef {
