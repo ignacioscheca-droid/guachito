@@ -43,6 +43,14 @@ and the `guachito_assets/` folder. Everything people read says Gauchito.
 - Ranch layout follows his reference image `rancho_completo_unlocked.png` (local only);
   `design/tools/ranch_preview.py` renders the layout for review.
 - Out of scope: weekly history view, offline caching, usage logging.
+- New onboarding (decided, waiting for art): a mate scene replaces the welcome screen.
+  1) Gauchito ceba un mate y te mira (no text) · 2) "¡Hola! Soy el Gauchito ___" (the
+  player names him) → "Soy tu compañero para cuidarte un poquito cada día. ¡Y cuando
+  vos te cuidás, a mí también me hace bien!" · 3) "¿Cómo te llamás?" · 4) "¡Un gusto,
+  {nombre}! ¿Querés un mate?" Sí → "¡Tomá, está muy rico!" / No → "¡Más para mí!" ·
+  5) "¿Qué te trae por acá, {nombre}?" → habit picker. Naming the dog comes later, not
+  in onboarding. Art brief: Claude Doc "Gauchito — Escena del mate (onboarding)"; the
+  owner generates the art with ChatGPT from `kit_escena_mate/` (local only).
 
 ## Art
 
