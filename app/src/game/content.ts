@@ -84,7 +84,7 @@ export const ADVENTURE = { name: 'Las Pampas' }
 
 export type Episode = {
   title: string
-  /** Shown one after another while Guachito is out. */
+  /** Shown one after another while Gauchito is out. */
   beats: [string, string, string]
   story: string
   image: string
@@ -183,7 +183,7 @@ export const EPISODES: Episode[] = [
     replies: [
       { label: '¡Un tesoro de verdad!', answer: 'El mejor: va a crecer con nosotros.' },
       { label: '¿Quién dejó el mapa?', answer: 'No sé… pero tenía dibujado un sombrero igual al mío.' },
-      { label: 'Qué semana, Guachito.', answer: '¡Gracias a vos! Cada hábito tuyo fue un paso de esta aventura.' },
+      { label: 'Qué semana, Gauchito.', answer: '¡Gracias a vos! Cada hábito tuyo fue un paso de esta aventura.' },
     ],
   },
 ]

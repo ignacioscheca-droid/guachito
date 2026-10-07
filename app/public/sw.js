@@ -1,7 +1,7 @@
-// Guachito service worker: shows the daily reminder and opens the app on tap.
+// Gauchito service worker: shows the daily reminder and opens the app on tap.
 // The reminder text is written here, on the phone, from the snapshot the app keeps
 // in IndexedDB (src/game/reminderSnapshot.ts): what is done today, what is missing,
-// and where Guachito is. The push from GitHub only says "it's time".
+// and where Gauchito is. The push from GitHub only says "it's time".
 self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()))
 
@@ -45,15 +45,15 @@ const list = (hs) => {
 /** Same variant all day, a different one each day. */
 const pick = (variants, now) => variants[now.getDate() % variants.length]
 
-const FALLBACK = { title: 'Guachito 🧉', body: '¿Cómo vienen los hábitos de hoy?' }
+const FALLBACK = { title: 'Gauchito 🧉', body: '¿Cómo vienen los hábitos de hoy?' }
 
 function composeReminder(s, now = new Date()) {
   if (!s || !Array.isArray(s.habits)) return FALLBACK
-  const name = s.name || 'Guachito'
+  const name = s.name || 'Gauchito'
   const title = `${name} 🧉`
   const a = s.adventure || {}
 
-  // Where Guachito is comes first: it's the most interesting news.
+  // Where Gauchito is comes first: it's the most interesting news.
   const back = a.status === 'returned' || (a.status === 'running' && a.returnAt && now.getTime() >= a.returnAt)
   if (back) {
     const where = a.episode ? ` de “${a.episode}”` : ''

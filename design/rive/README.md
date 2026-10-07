@@ -1,4 +1,4 @@
-# Guachito Rive master
+# Gauchito Rive master
 
 Built through the Rive editor's MCP server (Rive desktop app, file "Gauchito v1")
 from the artist's full-body poses. The artist's modular rig parts don't rebuild
@@ -41,7 +41,7 @@ The file has a state machine (`idle` → `habit_completed` / `celebrate` →
 `return_to_idle` → `idle`) driven by view-model triggers `habit_completed` and
 `celebrate`. **Exports from the free Rive plan drop the view model** (and add
 watermark artboards), so the app plays the linear animations by name instead
-(`app/src/components/RiveGuachito.tsx`). On a paid plan, switch the component back
+(`app/src/components/RiveGauchito.tsx`). On a paid plan, switch the component back
 to the state machine + `useViewModelInstanceTrigger`.
 
 ## Updating

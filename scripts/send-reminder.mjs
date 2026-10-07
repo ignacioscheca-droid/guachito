@@ -1,4 +1,4 @@
-// Sends Guachito's daily reminder as a Web Push notification.
+// Sends Gauchito's daily reminder as a Web Push notification.
 // Run by .github/workflows/reminder.yml. Secrets (env):
 //   VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY  - the app's push keys
 //   PUSH_SUBSCRIPTION                    - JSON copied from the app (Ajustes > Recordatorio)
@@ -19,16 +19,16 @@ if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY || !PUSH_SUBSCRIPTION) {
 }
 
 const lines = [
-  '¿Cómo vienen los hábitos de hoy? Guachito ya ensilló el caballo.',
-  'Guachito tiene el mate listo. ¿Arrancamos con los hábitos?',
+  '¿Cómo vienen los hábitos de hoy? Gauchito ya ensilló el caballo.',
+  'Gauchito tiene el mate listo. ¿Arrancamos con los hábitos?',
   'Cada hábito es energía para la aventura de hoy.',
-  'El perro y Guachito te esperan en el rancho.',
+  'El perro y Gauchito te esperan en el rancho.',
 ]
 const body = lines[new Date().getUTCDate() % lines.length]
 
 webpush.setVapidDetails('mailto:guachito@users.noreply.github.com', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
 try {
-  const res = await webpush.sendNotification(JSON.parse(PUSH_SUBSCRIPTION), JSON.stringify({ title: 'Guachito 🧉', body }), { TTL: 6 * 3600 })
+  const res = await webpush.sendNotification(JSON.parse(PUSH_SUBSCRIPTION), JSON.stringify({ title: 'Gauchito 🧉', body }), { TTL: 6 * 3600 })
   console.log('Sent, status', res.statusCode)
 } catch (err) {
   // 404/410: the phone dropped the subscription; turn notifications on again in the app.

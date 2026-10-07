@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { art } from '../game/content'
-import { RiveGuachito, useRiveAvailable } from './RiveGuachito'
+import { RiveGauchito, useRiveAvailable } from './RiveGauchito'
 
 /** Poses from the artist's delivery. All share one box (1208 × 1320) with the boots on its baseline. */
 export type Pose = 'idle' | 'wave' | 'thumbs' | 'mate' | 'sleep' | 'think' | 'surprised' | 'sad' | 'map' | 'pet'
@@ -36,7 +36,7 @@ const CELEBRATION: [Frame, number][] = [
   ['land', 380],
 ]
 
-export function preloadGuachito() {
+export function preloadGauchito() {
   new Set(Object.values(FRAME_ART)).forEach((name) => {
     const img = new Image()
     img.src = art(name)
@@ -55,14 +55,14 @@ type Props = {
   onTap?: () => void
 }
 
-export function Guachito(props: Props) {
+export function Gauchito(props: Props) {
   const rive = useRiveAvailable()
   // The Rive master covers idle + celebration; other poses still use the stills.
-  if (rive && (props.pose ?? 'idle') === 'idle') return <RiveGuachito {...props} />
-  return <SpriteGuachito {...props} />
+  if (rive && (props.pose ?? 'idle') === 'idle') return <RiveGauchito {...props} />
+  return <SpriteGauchito {...props} />
 }
 
-function SpriteGuachito({ pose = 'idle', celebrateKey = 0, onFrame, width, shadow = true, onTap }: Props) {
+function SpriteGauchito({ pose = 'idle', celebrateKey = 0, onFrame, width, shadow = true, onTap }: Props) {
   const [frame, setFrame] = useState<Frame>(pose)
   const lastKey = useRef(celebrateKey)
 

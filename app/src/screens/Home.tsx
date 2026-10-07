@@ -12,7 +12,7 @@ type Props = {
   remainingMs: number
   onCompleteHabit: (id: string) => void
   onAdventure: () => void
-  onTapGuachito: () => void
+  onTapGauchito: () => void
   onSecretTap: () => void
   onSettings: () => void
 }
@@ -46,7 +46,7 @@ function subline(s: GameState, left: number, toGo: number | null) {
   return `¡Vamos! Con ${toGo} hábito${toGo > 1 ? 's' : ''} más ${s.name} sale de aventura`
 }
 
-export function Home({ width, celebrateKey, remainingMs, onCompleteHabit, onAdventure, onTapGuachito, onSecretTap, onSettings }: Props) {
+export function Home({ width, celebrateKey, remainingMs, onCompleteHabit, onAdventure, onTapGauchito, onSecretTap, onSettings }: Props) {
   const s = useGame((g) => g)
   const [editing, setEditing] = useState(false)
   const done = doneToday(s)
@@ -77,7 +77,7 @@ export function Home({ width, celebrateKey, remainingMs, onCompleteHabit, onAdve
         items={s.ownedItems}
         celebrateKey={celebrateKey}
         away={status === 'running'}
-        onTapGuachito={onTapGuachito}
+        onTapGauchito={onTapGauchito}
       >
         <div className="home__top">
           <div className="home__greet" onClick={secret}>

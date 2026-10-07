@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { preloadGuachito } from './components/Guachito'
+import { preloadGauchito } from './components/Gauchito'
 import { BottomNav, type Tab } from './components/ui'
 import { actions, adventureRemainingMs, useGame } from './game/store'
 import { AdventureReady } from './screens/AdventureReady'
@@ -60,7 +60,7 @@ export default function App() {
   const remaining = useAdventureClock()
   const testMode = new URLSearchParams(location.search).has('test')
 
-  useEffect(preloadGuachito, [])
+  useEffect(preloadGauchito, [])
 
   // Every screen starts at the top (the story screen is long and scrolls).
   useEffect(() => {
@@ -82,7 +82,7 @@ export default function App() {
   const completeHabit = (id: string) => {
     const gained = actions.completeHabit(id)
     setCelebrateKey((k) => k + 1)
-    // Let Guachito's jump land in the scene before the modal covers it.
+    // Let Gauchito's jump land in the scene before the modal covers it.
     window.setTimeout(() => setDone({ habitId: id, gained }), 1250)
   }
 
@@ -122,7 +122,7 @@ export default function App() {
               remainingMs={remaining}
               onCompleteHabit={completeHabit}
               onAdventure={openAdventure}
-              onTapGuachito={() => setCelebrateKey((k) => k + 1)}
+              onTapGauchito={() => setCelebrateKey((k) => k + 1)}
               onSecretTap={() => setTestMenu(true)}
               onSettings={() => setSettings(true)}
             />

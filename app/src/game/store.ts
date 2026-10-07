@@ -46,7 +46,7 @@ const KEY = 'guachito.v1'
 const initial = (): GameState => ({
   version: 1,
   onboarded: false,
-  name: 'Guachito',
+  name: 'Gauchito',
   habits: [],
   customHabits: [],
   completions: {},
@@ -64,7 +64,9 @@ const initial = (): GameState => ({
 
 function parse(raw: string): GameState {
   const data = JSON.parse(raw)
-  if (typeof data !== 'object' || data == null || data.version !== 1) throw new Error('not a Guachito save')
+  if (typeof data !== 'object' || data == null || data.version !== 1) throw new Error('not a Gauchito save')
+  // The app was first spelled "Guachito": rename a companion that still has that default.
+  if (data.name === 'Guachito') data.name = 'Gauchito'
   return { ...initial(), ...data }
 }
 
@@ -140,7 +142,7 @@ export function adventureRemainingMs(s: GameState = state) {
 
 export const actions = {
   finishOnboarding(name: string, habits: string[]) {
-    set({ ...state, onboarded: true, name: name.trim() || 'Guachito', habits })
+    set({ ...state, onboarded: true, name: name.trim() || 'Gauchito', habits })
   },
 
   /** Creates a habit of the player's own and returns its id. */
@@ -244,7 +246,7 @@ export const actions = {
   exportData(): string {
     return JSON.stringify(state, null, 1)
   },
-  /** Replaces everything with a backup; false if the file isn't a Guachito save. */
+  /** Replaces everything with a backup; false if the file isn't a Gauchito save. */
   importData(raw: string): boolean {
     try {
       set(parse(raw))

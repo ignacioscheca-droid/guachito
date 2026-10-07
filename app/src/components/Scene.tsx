@@ -1,7 +1,7 @@
 import { useState, type CSSProperties, type ReactNode } from 'react'
 import { art, itemById } from '../game/content'
 import { Confetti } from './Confetti'
-import { BOX_ASPECT, Guachito, IDLE_HEIGHT_IN_BOX } from './Guachito'
+import { BOX_ASPECT, Gauchito, IDLE_HEIGHT_IN_BOX } from './Gauchito'
 
 /** Which part of the patio the camera frames. */
 export type SceneView = 'home' | 'ranch'
@@ -13,9 +13,9 @@ type Props = {
   items: string[]
   highlightId?: string | null
   celebrateKey?: number
-  /** Guachito is out on the adventure: the patio waits with the dog asleep. */
+  /** Gauchito is out on the adventure: the patio waits with the dog asleep. */
   away?: boolean
-  onTapGuachito?: () => void
+  onTapGauchito?: () => void
   children?: ReactNode
 }
 
@@ -24,22 +24,22 @@ type Props = {
 // decides which part of that square the scene shows.
 
 // Layout follows the reference rancho_completo_unlocked.png (see design/tools/ranch_preview.py).
-/** Guachito's height and where his boots touch the patio. */
+/** Gauchito's height and where his boots touch the patio. */
 const HERO = { x: 20.9, y: 71.3, h: 25.1 }
-/** The dog, sitting on Guachito's left (height of the sitting pose). */
+/** The dog, sitting on Gauchito's left (height of the sitting pose). */
 const DOG = { x: 7.9, y: 72.8, h: 11.3 }
 const DOG_ASLEEP = { x: 21, y: 72.5, h: 9 }
 
 /**
  * Camera per screen: zoom, and which patio point (in %) sits where on screen.
- * Home frames Guachito up close; Rancho shows the whole patio.
+ * Home frames Gauchito up close; Rancho shows the whole patio.
  */
 type Camera = {
   zoom: number
   /** Patio x (%) that lands at screen x (% of the scene width). */
   focusX: number
   screenX: number
-  /** Home: Guachito's boots this far from the top (in scene widths). */
+  /** Home: Gauchito's boots this far from the top (in scene widths). */
   bootsAt?: number
   /** Rancho: patio y (%) at the scene's bottom edge. */
   bottomY?: number
@@ -73,8 +73,8 @@ function cameraStyle(view: SceneView, width: number, height: number): CSSPropert
   return { width: side, transform: `translate(${left}px, ${Math.min(0, top)}px)` }
 }
 
-/** The estancia patio: the artist's patio backdrop, ranch items, Guachito and the dog. */
-export function Scene({ width, height, view, items, highlightId, celebrateKey = 0, away, onTapGuachito, children }: Props) {
+/** The estancia patio: the artist's patio backdrop, ranch items, Gauchito and the dog. */
+export function Scene({ width, height, view, items, highlightId, celebrateKey = 0, away, onTapGauchito, children }: Props) {
   const [frame, setFrame] = useState('idle')
   const [burst, setBurst] = useState(0)
   const onFrame = (f: string) => {
@@ -117,7 +117,7 @@ export function Scene({ width, height, view, items, highlightId, celebrateKey = 
 
         {!away && (
           <div className="scene__guachito" style={{ ...place(HERO.x, HERO.y + 0.2, HERO_BOX_H), aspectRatio: BOX_ASPECT }}>
-            <Guachito width="100%" celebrateKey={celebrateKey} onFrame={onFrame} onTap={onTapGuachito} />
+            <Gauchito width="100%" celebrateKey={celebrateKey} onFrame={onFrame} onTap={onTapGauchito} />
             <div className="scene__confetti">
               <Confetti burstKey={burst} />
             </div>

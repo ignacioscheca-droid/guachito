@@ -1,8 +1,16 @@
-# Guachito — notes for Claude
+# Gauchito — notes for Claude
 
 Habit app MVP (spec: `GUACHITO_MVP_BUILD_SPEC.docx`). Completing daily habits gives
-energy to Guachito, a chibi gaucho; a full bar sends him on a 2-hour adventure that
+energy to Gauchito, a chibi gaucho; a full bar sends him on a 2-hour adventure that
 brings back a story and a ranch item. The owner uses it for a real one-week test.
+
+## Name
+
+The app and character are **Gauchito**. The spec and first builds said "Guachito";
+lowercase ids keep that spelling on purpose, because renaming them would lose saved
+data or break links: the `guachito.v1` localStorage key, the `guachito` IndexedDB,
+the repo and its Pages URL, `guachito.riv` and its `Guachito` artboard, CSS classes,
+and the `guachito_assets/` folder. Everything people read says Gauchito.
 
 ## Working with the owner
 
@@ -23,7 +31,7 @@ brings back a story and a ranch item. The owner uses it for a real one-week test
   iPhone push only works from the installed Home Screen app.
   The push carries no text: `app/public/sw.js` writes it on the phone from a snapshot
   of today's state that the app keeps in IndexedDB (`src/game/reminderSnapshot.ts`) —
-  what's done, what's missing, where Guachito is. Ajustes → "Ver mensaje de hoy" shows it.
+  what's done, what's missing, where Gauchito is. Ajustes → "Ver mensaje de hoy" shows it.
 - Content and tuning: `app/src/game/content.ts` — habit catalog, energy split
   (all of today's habits = exactly 100), 7 daily episodes, ranch items and their
   patio spots.
@@ -46,7 +54,7 @@ brings back a story and a ranch item. The owner uses it for a real one-week test
   rig parts don't rebuild the character, so the Rive file is pose-swap + eyelids.
 - Rive: `app/public/rive/guachito.riv`, built in the Rive desktop app ("Gauchito v1")
   through its local MCP server — only available on the owner's Mac. Free-plan exports
-  drop view models, so the app plays the animations by name (`RiveGuachito.tsx`).
+  drop view models, so the app plays the animations by name (`RiveGauchito.tsx`).
   See `design/rive/README.md`.
 
 ## Checks

@@ -31,7 +31,7 @@ export function Settings({ onClose, onTestMenu }: { onClose: () => void; onTestM
     const blob = new Blob([actions.exportData()], { type: 'application/json' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
-    a.download = `guachito-copia-${new Date().toISOString().slice(0, 10)}.json`
+    a.download = `gauchito-copia-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(a.href)
   }
@@ -39,7 +39,7 @@ export function Settings({ onClose, onTestMenu }: { onClose: () => void; onTestM
   const importBackup = async (f: File | undefined) => {
     if (!f) return
     const ok = actions.importData(await f.text())
-    setMsg(ok ? '¡Listo! Recuperé tu copia.' : 'Ese archivo no es una copia de Guachito.')
+    setMsg(ok ? '¡Listo! Recuperé tu copia.' : 'Ese archivo no es una copia de Gauchito.')
   }
 
   return (
@@ -49,7 +49,7 @@ export function Settings({ onClose, onTestMenu }: { onClose: () => void; onTestM
 
         {needsInstall && (
           <section className="settings__block settings__block--warn">
-            <h3>Instalá Guachito</h3>
+            <h3>Instalá Gauchito</h3>
             <p>
               En Safari tocá <strong>Compartir</strong> → <strong>Agregar a inicio</strong> y abrilo desde el ícono. Así tus datos quedan
               guardados y podés recibir el recordatorio.

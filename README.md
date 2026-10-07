@@ -1,6 +1,6 @@
-# Guachito — MVP
+# Gauchito — MVP
 
-Habit app where completing real habits gives energy to Guachito, who goes on an
+Habit app where completing real habits gives energy to Gauchito, who goes on an
 adventure in the pampas and brings back things for the ranch. Scope and intent:
 `GUACHITO_MVP_BUILD_SPEC.docx`.
 
@@ -38,7 +38,7 @@ app/                     Vite + React + TypeScript web app
   src/game/content.ts    habits, ranch items, adventure episodes, tuning numbers
   src/game/store.ts      game state (saved in localStorage) and actions
   src/screens/           onboarding, home, habit done, adventure, story, ranch
-  src/components/        scene, Guachito (Rive or still-pose fallback), UI pieces
+  src/components/        scene, Gauchito (Rive or still-pose fallback), UI pieces
   public/a/              web-ready art (generated from guachito_assets/)
   public/rive/           guachito.riv (the app falls back to the still poses without it)
 guachito_assets/         the artist's delivery (local only, not in git)
@@ -63,5 +63,5 @@ python3 design/tools/import_assets.py
 ## Rive
 
 `app/public/rive/guachito.riv` is picked up automatically when present. Artboard
-`Guachito` (906 × 1210), animations `idle`, `habit_completed`, `celebrate`,
+`Guachito` (906 × 1210; artboard name kept from the old spelling), animations `idle`, `habit_completed`, `celebrate`,
 `return_to_idle`. Details and the free-plan caveat: `design/rive/README.md`.

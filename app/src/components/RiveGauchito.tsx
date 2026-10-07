@@ -7,7 +7,7 @@ import { Alignment, EventType, Fit, Layout, useRive } from '@rive-app/react-canv
 //   Linear animations: "idle" (loop), "habit_completed", "celebrate", "return_to_idle".
 // The file also has a "Guachito" state machine driven by view-model triggers, but
 // free-plan exports drop view models, so the app plays the animations by name.
-const ARTBOARD = 'Guachito'
+const ARTBOARD = 'Guachito' // artboard name inside the .riv (old spelling)
 const ARTBOARD_W = 906
 const ARTBOARD_H = 1210
 
@@ -50,7 +50,7 @@ const NEXT: Record<string, string> = {
   return_to_idle: 'idle',
 }
 
-export function RiveGuachito({ celebrateKey = 0, onFrame, width, onTap }: Props) {
+export function RiveGauchito({ celebrateKey = 0, onFrame, width, onTap }: Props) {
   const { rive, RiveComponent } = useRive({
     buffer: rivBuffer ?? undefined,
     artboard: ARTBOARD,

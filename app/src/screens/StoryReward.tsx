@@ -10,7 +10,7 @@ export function StoryReward({ onClaim }: { onClaim: () => void }) {
   const [reply, setReply] = useState<number | null>(null)
   const rewardRef = useRef<HTMLDivElement>(null)
 
-  // The reward slides in after Guachito answers; bring it on screen.
+  // The reward slides in after Gauchito answers; bring it on screen.
   useEffect(() => {
     if (reply == null) return
     const t = window.setTimeout(() => rewardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 1150)

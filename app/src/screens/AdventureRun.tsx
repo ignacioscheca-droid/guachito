@@ -11,7 +11,7 @@ export const formatClock = (ms: number) => {
   return h > 0 ? `${h}:${String(mm).padStart(2, '0')}:${ss}` : `${mm}:${ss}`
 }
 
-/** Wall-clock time Guachito gets back, e.g. "18:40". */
+/** Wall-clock time Gauchito gets back, e.g. "18:40". */
 export const returnTime = (remainingMs: number) =>
   new Date(Date.now() + remainingMs).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
 
