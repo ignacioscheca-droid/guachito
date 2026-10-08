@@ -43,14 +43,22 @@ and the `guachito_assets/` folder. Everything people read says Gauchito.
 - Ranch layout follows his reference image `rancho_completo_unlocked.png` (local only);
   `design/tools/ranch_preview.py` renders the layout for review.
 - Out of scope: weekly history view, offline caching, usage logging.
-- New onboarding (decided, waiting for art): a mate scene replaces the welcome screen.
+- Onboarding (`app/src/screens/Onboarding.tsx`): a mate scene replaces the welcome screen.
   1) Gauchito ceba un mate y te mira (no text) · 2) "¡Hola! Soy el Gauchito ___" (the
   player names him) → "Soy tu compañero para cuidarte un poquito cada día. ¡Y cuando
   vos te cuidás, a mí también me hace bien!" · 3) "¿Cómo te llamás?" · 4) "¡Un gusto,
   {nombre}! ¿Querés un mate?" Sí → "¡Tomá, está muy rico!" / No → "¡Más para mí!" ·
   5) "¿Qué te trae por acá, {nombre}?" → habit picker. Naming the dog comes later, not
-  in onboarding. Art brief: Claude Doc "Gauchito — Escena del mate (onboarding)"; the
-  owner generates the art with ChatGPT from `kit_escena_mate/` (local only).
+  in onboarding. Art brief: Claude Doc "Gauchito — Escena del mate (onboarding)"
+  (https://claude.ai/code/artifact/a95a438f-5c51-43af-8984-69abcb3ff50b, tab "Para pegar en
+  ChatGPT" is the brief); the owner generates the art with ChatGPT from `kit_escena_mate/`.
+  The 25 poses arrived 2026-10-08 in `escena_mate/` (local only): A = plano general
+  1024×1536 (cebando, sorbo, "ahh", te mira), B = plano medio 1254×1254 with
+  `_cerrada`/`_abierta` (+ `_parpadeo` for b2/b3); variants are pixel-aligned.
+  `design/tools/import_mate_scene.py` cleans the halos of A2·1, A3, A4. A2·3 keeps a
+  smoky halo, so the scene plays A1 in its place. A5 (te mira) has an opaque halo and is
+  being redone by the owner: re-run the script when it arrives and re-check the `steam`
+  point in `SCENE`.
 
 ## Art
 
@@ -68,4 +76,5 @@ and the `guachito_assets/` folder. Everything people read says Gauchito.
 ## Checks
 
 - `cd app && npx tsc -b && npm run build`
-- Hidden test menu: tap the Home greeting 5 times, or open with `?test`.
+- Hidden test menu: tap the Home greeting 5 times, or open with `?test`. "Ver el onboarding"
+  replays the mate scene without saving anything.

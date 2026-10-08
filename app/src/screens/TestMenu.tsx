@@ -1,7 +1,7 @@
 import { actions, todayKey, useGame } from '../game/store'
 
 /** Playtest helpers. Open by tapping the Home greeting 5 times, or with ?test in the URL. */
-export function TestMenu({ onClose }: { onClose: () => void }) {
+export function TestMenu({ onClose, onOnboarding }: { onClose: () => void; onOnboarding: () => void }) {
   const s = useGame((g) => g)
   const run = (fn: () => void) => () => {
     fn()
@@ -18,6 +18,7 @@ export function TestMenu({ onClose }: { onClose: () => void }) {
         <button onClick={run(actions.debugFillEnergy)}>Llenar la energía</button>
         <button onClick={run(actions.debugFinishAdventure)}>Terminar la aventura ya</button>
         <button onClick={run(actions.debugCoins)}>+100 monedas</button>
+        <button onClick={run(onOnboarding)}>Ver el onboarding (no borra nada)</button>
         <button
           className="testmenu__danger"
           onClick={run(() => {

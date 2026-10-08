@@ -57,6 +57,7 @@ export default function App() {
   const [celebrateKey, setCelebrateKey] = useState(0)
   const [testMenu, setTestMenu] = useState(false)
   const [settings, setSettings] = useState(false)
+  const [replayOnboarding, setReplayOnboarding] = useState(false)
   const remaining = useAdventureClock()
   const testMode = new URLSearchParams(location.search).has('test')
 
@@ -89,6 +90,8 @@ export default function App() {
   let content
   if (!onboarded) {
     content = <Onboarding />
+  } else if (replayOnboarding) {
+    content = <Onboarding onPreviewDone={() => setReplayOnboarding(false)} />
   } else if (view === 'ready') {
     content = (
       <AdventureReady
@@ -157,8 +160,8 @@ export default function App() {
           }}
         />
       )}
-      {testMenu && <TestMenu onClose={() => setTestMenu(false)} />}
-      {testMode && onboarded && !testMenu && view === 'tabs' && (
+      {testMenu && <TestMenu onClose={() => setTestMenu(false)} onOnboarding={() => setReplayOnboarding(true)} />}
+      {testMode && onboarded && !testMenu && !replayOnboarding && view === 'tabs' && (
         <button className="testfab" onClick={() => setTestMenu(true)} aria-label="Menú de prueba">
           🛠
         </button>

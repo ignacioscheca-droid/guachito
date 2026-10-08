@@ -144,8 +144,8 @@ export function adventureRemainingMs(s: GameState = state) {
 // ---- actions ----------------------------------------------------------
 
 export const actions = {
-  finishOnboarding(name: string, habits: string[]) {
-    set({ ...state, onboarded: true, name: name.trim() || 'Gauchito', habits })
+  finishOnboarding(name: string, habits: string[], playerName = '') {
+    set({ ...state, onboarded: true, name: name.trim() || 'Gauchito', playerName: playerName.trim(), habits })
   },
 
   /** Creates a habit of the player's own and returns its id. */
