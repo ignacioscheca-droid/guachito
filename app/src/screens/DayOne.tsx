@@ -47,7 +47,11 @@ export function StreakDay({ companion, onNext }: { companion: string; onNext: ()
   const today = new Date().getDay()
   return (
     <div className="screen d1">
-      <img className="d1-guy d1-guy--big" src={art('g_celebrate')} alt="" />
+      <div className="d1-hero">
+        {/* Finch's sunburst: light rays turning slowly behind him */}
+        <div className="d1-burst" aria-hidden />
+        <img className="d1-guy d1-guy--big" src={art('g_celebrate')} alt="" />
+      </div>
       <p className="d1-big">1</p>
       <p className="d1-big-label">Día de racha</p>
       <div className="d1-week" aria-hidden>

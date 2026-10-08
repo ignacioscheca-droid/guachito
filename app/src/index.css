@@ -2577,6 +2577,7 @@ img {
   background: linear-gradient(180deg, #3a93d2, #5eaee3);
   color: #fff;
   text-align: center;
+  isolation: isolate;
 }
 .d1-kicker {
   margin: 8px 0 0;
@@ -2660,11 +2661,48 @@ img {
   width: 96px;
   flex: none;
 }
-.d1-guy--big {
-  width: 190px;
+.d1-hero {
+  position: relative;
   margin-top: 26px;
-  animation: d1-hop 1.6s ease-in-out infinite;
+}
+.d1-guy--big {
+  position: relative;
+  width: 190px;
+  animation:
+    d1-jump-in 0.7s cubic-bezier(0.3, 1.5, 0.5, 1) both,
+    d1-hop 1.6s 0.7s ease-in-out infinite;
   transform-origin: 50% 100%;
+}
+/* soft shadow under his boots */
+.d1-hero::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 120px;
+  height: 18px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: rgba(10, 50, 100, 0.22);
+  z-index: -1;
+}
+.d1-burst {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 860px;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  z-index: -1;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 38%),
+    repeating-conic-gradient(rgba(255, 255, 255, 0.14) 0deg 9deg, rgba(255, 255, 255, 0) 9deg 18deg);
+  -webkit-mask-image: radial-gradient(closest-side, #000 22%, rgba(0, 0, 0, 0.5) 60%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 22%, rgba(0, 0, 0, 0.5) 60%, transparent 100%);
+  animation:
+    d1-burst-in 0.9s 0.35s ease-out both,
+    d1-spin 26s linear infinite;
 }
 .d1-big {
   margin: 4px 0 0;
@@ -2841,6 +2879,34 @@ img {
   to {
     transform: none;
     opacity: 1;
+  }
+}
+@keyframes d1-jump-in {
+  from {
+    translate: 0 140px;
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    translate: 0 0;
+    opacity: 1;
+  }
+}
+@keyframes d1-burst-in {
+  from {
+    opacity: 0;
+    scale: 0.4;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes d1-spin {
+  to {
+    rotate: 360deg;
   }
 }
 @keyframes d1-hop {
