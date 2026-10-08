@@ -5,12 +5,13 @@ import { Button } from '../components/ui'
 import { buildPlan, type AboutYou } from '../game/aboutYou'
 import { art, HABITS_TO_PICK, PLAN_SIZE } from '../game/content'
 import { actions } from '../game/store'
+import { DayOneCard, StreakDay, StreakGoal } from './DayOne'
 import { Generating, StarterPlan } from './PlanScreens'
 import { Questionnaire } from './Questionnaire'
 
 // First open: Gauchito se ceba un mate, te mira y charla con vos (see CLAUDE.md).
-type Step = 'scene' | 'name' | 'purpose' | 'player' | 'mate' | 'reply' | 'about' | 'quiz' | 'habits' | 'generating' | 'plan'
-type TalkStep = Exclude<Step, 'scene' | 'quiz' | 'generating' | 'plan'>
+type TalkStep = 'name' | 'purpose' | 'player' | 'mate' | 'reply' | 'about' | 'habits'
+type Step = 'scene' | TalkStep | 'quiz' | 'generating' | 'plan' | 'day1' | 'streak' | 'goal'
 
 /**
  * The opening, frame by frame. `steam` = the yerba, in % of the frame.
@@ -86,6 +87,7 @@ export function Onboarding({ onPreviewDone }: { onPreviewDone?: () => void }) {
   const [wantsMate, setWantsMate] = useState(true)
   const [habits, setHabits] = useState<string[]>([])
   const [answers, setAnswers] = useState<AboutYou>({})
+  const [plan, setPlan] = useState<string[]>([])
 
   useEffect(preload, [])
   const toAbout = useCallback(() => setStep('about'), [])
@@ -97,15 +99,31 @@ export function Onboarding({ onPreviewDone }: { onPreviewDone?: () => void }) {
       <Questionnaire player={player} answers={answers} onChange={setAnswers} onDone={() => setStep('habits')} onBack={() => setStep('about')} />
     )
   }
-  if (step === 'generating') return <Generating companion={companion.trim() || DEFAULT_NAME} onDone={toPlan} />
+  const him = companion.trim() || DEFAULT_NAME
+  if (step === 'generating') return <Generating companion={him} onDone={toPlan} />
   if (step === 'plan') {
-    const plan = buildPlan(habits, answers, PLAN_SIZE)
+    const built = buildPlan(habits, answers, PLAN_SIZE)
     return (
       <StarterPlan
         player={player}
-        companion={companion.trim() || DEFAULT_NAME}
-        plan={plan}
-        onAccept={() => (onPreviewDone ? onPreviewDone() : actions.finishOnboarding(companion, plan, player, answers))}
+        companion={him}
+        plan={built}
+        onAccept={() => {
+          setPlan(built)
+          setStep('day1')
+        }}
+      />
+    )
+  }
+  if (step === 'day1') return <DayOneCard companion={him} onNext={() => setStep('streak')} />
+  if (step === 'streak') return <StreakDay companion={him} onNext={() => setStep('goal')} />
+  if (step === 'goal') {
+    return (
+      <StreakGoal
+        companion={him}
+        onCommit={(streakGoal) =>
+          onPreviewDone ? onPreviewDone() : actions.finishOnboarding({ name: companion, playerName: player, habits: plan, aboutYou: answers, streakGoal })
+        }
       />
     )
   }

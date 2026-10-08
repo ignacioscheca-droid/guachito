@@ -25,6 +25,8 @@ export type GameState = {
   playerName: string
   /** Onboarding questionnaire answers ("Contame un poco de vos"), for the personalized plan. */
   aboutYou: AboutYou | null
+  /** Days in a row the player committed to on day 1 (2, 5, 7 or 14). */
+  streakGoal: number | null
   habits: string[]
   /** Habits the player created (name + emoji). */
   customHabits: HabitDef[]
@@ -55,6 +57,7 @@ const initial = (): GameState => ({
   name: 'Gauchito',
   playerName: '',
   aboutYou: null,
+  streakGoal: null,
   habits: [],
   customHabits: [],
   completions: {},
@@ -153,8 +156,8 @@ export function adventureRemainingMs(s: GameState = state) {
 // ---- actions ----------------------------------------------------------
 
 export const actions = {
-  finishOnboarding(name: string, habits: string[], playerName = '', aboutYou: AboutYou | null = null) {
-    set({ ...state, onboarded: true, name: name.trim() || 'Gauchito', playerName: playerName.trim(), aboutYou, habits })
+  finishOnboarding(o: { name: string; playerName: string; habits: string[]; aboutYou: AboutYou; streakGoal: number }) {
+    set({ ...state, ...o, onboarded: true, name: o.name.trim() || 'Gauchito', playerName: o.playerName.trim() })
   },
 
   /** Creates a habit of the player's own and returns its id. */
