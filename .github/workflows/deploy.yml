@@ -1,4 +1,6 @@
 # Builds the web app and publishes it to GitHub Pages on every push to main.
+# The idle-tycoon exploration (branch idle-tycoon) is built too and published beside
+# the app at /<repo>/idle/; after pushing that branch, run this workflow by hand.
 name: Deploy
 
 on:
@@ -31,6 +33,16 @@ jobs:
         working-directory: app
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
+      - name: Build the idle-tycoon exploration into /idle/
+        run: |
+          if git ls-remote --exit-code --heads origin idle-tycoon > /dev/null; then
+            git fetch --depth 1 origin idle-tycoon
+            git worktree add ../idle FETCH_HEAD
+            cd ../idle/app
+            npm ci
+            BASE_PATH=/${{ github.event.repository.name }}/idle/ npm run build
+            cp -r dist "$GITHUB_WORKSPACE/app/dist/idle"
+          fi
       - uses: actions/upload-pages-artifact@v3
         with:
           path: app/dist
