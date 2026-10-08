@@ -1,11 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { preloadGauchito } from './components/Gauchito'
+import { HabitToast } from './components/DayLoop'
 import { BottomNav, type Tab } from './components/ui'
-import { actions, adventureRemainingMs, useGame } from './game/store'
-import { AdventureReady } from './screens/AdventureReady'
+import { ENERGY_GOAL } from './game/content'
+import { actions, adventureRemainingMs, getState, useGame } from './game/store'
 import { AdventureRun } from './screens/AdventureRun'
 import { AdventureTab } from './screens/AdventureTab'
-import { HabitDone } from './screens/HabitDone'
+import { EnergyFull, type FillStep } from './screens/EnergyFull'
 import { Home } from './screens/Home'
 import { Onboarding } from './screens/Onboarding'
 import { Ranch } from './screens/Ranch'
@@ -14,6 +15,9 @@ import { Settings } from './screens/Settings'
 import { TestMenu } from './screens/TestMenu'
 
 type View = 'tabs' | 'ready' | 'run' | 'story'
+
+/** Finch's toasts after ticking a habit. */
+const PRAISE = ['¡Sos un genio!', '¡Bien ahí!', '¡Qué crack!', '¡Increíble!', '¡Bravo!', '¡Así se hace!']
 
 function useWidth() {
   const ref = useRef<HTMLDivElement>(null)
@@ -53,7 +57,8 @@ export default function App() {
   const [ref, width] = useWidth()
   const [tab, setTab] = useState<Tab>('home')
   const [view, setView] = useState<View>('tabs')
-  const [done, setDone] = useState<{ habitId: string; gained: number } | null>(null)
+  const [toast, setToast] = useState<{ key: number; title: string; sub: string } | null>(null)
+  const [fill, setFill] = useState<{ from: number; start: FillStep }>({ from: ENERGY_GOAL, start: 'grow' })
   const [celebrateKey, setCelebrateKey] = useState(0)
   const [testMenu, setTestMenu] = useState(false)
   const [settings, setSettings] = useState(false)
@@ -84,23 +89,43 @@ export default function App() {
     window.scrollTo(0, 0)
   }, [view, tab, onboarded])
 
+  useEffect(() => {
+    if (!toast) return
+    const t = window.setTimeout(() => setToast(null), 2600)
+    return () => clearTimeout(t)
+  }, [toast])
+
   // When the adventure ends while watching it, go straight to the story.
   useEffect(() => {
     if (status === 'returned' && view === 'run') setView('story')
   }, [status, view])
 
   const openAdventure = () => {
-    if (status === 'ready') setView('ready')
-    else if (status === 'running') setView('run')
+    if (status === 'ready') {
+      setFill({ from: ENERGY_GOAL, start: 'grow' })
+      setView('ready')
+    } else if (status === 'running') setView('run')
     else if (status === 'returned') setView('story')
     else setTab('adventure')
   }
 
+  // Like Finch: a toast for each habit, and when the bar fills, the full-energy sequence.
   const completeHabit = (id: string) => {
-    const gained = actions.completeHabit(id)
+    const before = getState().energy
+    const r = actions.completeHabit(id)
     setCelebrateKey((k) => k + 1)
-    // Let Gauchito's jump land in the scene before the modal covers it.
-    window.setTimeout(() => setDone({ habitId: id, gained }), 1250)
+    setToast({
+      key: Date.now(),
+      title: PRAISE[Math.floor(Math.random() * PRAISE.length)],
+      sub: r.firstTime ? '¡Primera vez que lo completás!' : r.coins > 0 ? `+${r.coins} monedas` : `+${r.energy} de energía`,
+    })
+    if (r.full) {
+      window.setTimeout(() => {
+        setToast(null)
+        setFill({ from: before, start: 'max' })
+        setView('ready')
+      }, 900)
+    }
   }
 
   let content
@@ -117,12 +142,15 @@ export default function App() {
     )
   } else if (view === 'ready') {
     content = (
-      <AdventureReady
-        onStart={() => {
-          actions.startAdventure()
-          setView('run')
+      <EnergyFull
+        width={width}
+        from={fill.from}
+        start={fill.start}
+        remainingMs={remaining}
+        onDone={() => {
+          setTab('home')
+          setView('tabs')
         }}
-        onLater={() => setView('tabs')}
       />
     )
   } else if (view === 'run') {
@@ -165,16 +193,7 @@ export default function App() {
     <div className="app" ref={ref}>
       {content}
       {arriving && <div className="arrive-veil" aria-hidden />}
-      {done && (
-        <HabitDone
-          {...done}
-          onClose={() => setDone(null)}
-          onAdventure={() => {
-            setDone(null)
-            setView('ready')
-          }}
-        />
-      )}
+      {toast && view === 'tabs' && <HabitToast key={toast.key} title={toast.title} sub={toast.sub} />}
       {settings && (
         <Settings
           onClose={() => setSettings(false)}

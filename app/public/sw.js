@@ -136,16 +136,21 @@ function composeReminder(s, now = new Date()) {
     }
   }
 
-  if (missing.length === 1) {
+  // Three habits fill the bar (s.toGo); older snapshots don't say, so count what's missing.
+  const toGo = typeof s.toGo === 'number' ? s.toGo : missing.length
+  if (toGo === 1) {
     return {
       title,
       body: pick(
-        [cap(`${hey}solo falta ${label(missing[0])} y ${name} sale de aventura.`), `¡Casi${toYou}! Te queda ${label(missing[0])} para completar el día.`],
+        [cap(`${hey}con un hábito más ${name} sale de aventura. ¿${label(missing[0])}?`), `¡Casi${toYou}! Te falta uno para que ${name} salga de aventura.`],
         now,
       ),
     }
   }
-  return { title, body: `¡Vas ${done.length}/${s.habits.length}${toYou}! Ya hiciste ${list(done)}. Faltan ${list(missing)}.` }
+  return {
+    title,
+    body: `¡Vas ${done.length}/${s.habits.length}${toYou}! Ya hiciste ${list(done)}. Con ${toGo} más ${name} sale de aventura.`,
+  }
 }
 function compose(kind, s, now = new Date()) {
   return GREETINGS[kind] ? greet(kind, s, now) : composeReminder(s, now)

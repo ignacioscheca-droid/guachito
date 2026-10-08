@@ -4,7 +4,7 @@ import { Confetti } from './Confetti'
 import { BOX_ASPECT, Gauchito, IDLE_HEIGHT_IN_BOX } from './Gauchito'
 
 /** Which part of the patio the camera frames. */
-export type SceneView = 'home' | 'ranch'
+export type SceneView = 'home' | 'ranch' | 'cheer'
 
 type Props = {
   width: number
@@ -46,6 +46,8 @@ type Camera = {
 }
 const CAMERA: Record<SceneView, Camera> = {
   home: { zoom: 1.6, focusX: HERO.x, screenX: 34, bootsAt: 0.76 },
+  // the energy-full celebration: closer, and Gauchito nearer the middle
+  cheer: { zoom: 1.9, focusX: HERO.x, screenX: 50, bootsAt: 0.86 },
   ranch: { zoom: 1.04, focusX: 50, screenX: 50, bottomY: 92 },
 }
 

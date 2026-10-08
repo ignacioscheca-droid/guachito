@@ -4,7 +4,10 @@ import {
   ADVENTURE_COINS,
   ADVENTURE_MS,
   ENERGY_GOAL,
+  ENERGY_PER_HABIT,
   energyShare,
+  EXTRA_HABIT_COINS,
+  FULL_ENERGY_COINS,
   EPISODES,
   HABITS,
   ITEMS,
@@ -16,6 +19,9 @@ import {
 export type AdventureStatus = 'charging' | 'ready' | 'running' | 'returned'
 
 export type Reward = { coins: number; itemId: string | null; episode: number }
+
+/** What ticking a habit gave: energy while the bar fills, coins once it is full. */
+export type Completion = { energy: number; coins: number; full: boolean; firstTime: boolean }
 
 export type GameState = {
   version: 1
@@ -34,6 +40,13 @@ export type GameState = {
   completions: Record<string, string[]>
   /** Energy each completion gave, per day, so a mistaken tick can be undone. */
   energyGains: Record<string, Record<string, number>>
+  /** Same for the coins a completion gave (the bar filling, or a habit after it was full). */
+  coinGains: Record<string, Record<string, number>>
+  /** Days the bar got full (Paucho becomes a baqueano at BAQUEANO_DAYS), and the last one. */
+  fullEnergyDays: number
+  lastFullDay: string | null
+  /** Energy rules the save follows ('finch': 5 per habit, 15 to go; older saves used 100). */
+  energyRule: 'finch'
   energy: number
   coins: number
   adventure: { status: AdventureStatus; startedAt: number | null; runs: number }
@@ -62,6 +75,10 @@ const initial = (): GameState => ({
   customHabits: [],
   completions: {},
   energyGains: {},
+  coinGains: {},
+  fullEnergyDays: 0,
+  lastFullDay: null,
+  energyRule: 'finch',
   energy: 0,
   coins: 0,
   adventure: { status: 'charging', startedAt: null, runs: 0 },
@@ -78,7 +95,18 @@ function parse(raw: string): GameState {
   if (typeof data !== 'object' || data == null || data.version !== 1) throw new Error('not a Gauchito save')
   // The app was first spelled "Guachito": rename a companion that still has that default.
   if (data.name === 'Guachito') data.name = 'Gauchito'
-  return { ...initial(), ...data }
+  const s: GameState = { ...initial(), ...data }
+  // Saves from before Finch's energy rules (a bar of 100 split among all habits): today's
+  // ticks count 5 each now, and three of them fill the bar.
+  if (data.energyRule !== 'finch') {
+    s.energyRule = 'finch'
+    if (s.adventure.status === 'charging') {
+      s.energy = Math.min(ENERGY_GOAL, (s.completions[todayKey(s)] ?? []).length * ENERGY_PER_HABIT)
+      if (s.energy >= ENERGY_GOAL) s.adventure = { ...s.adventure, status: 'ready' }
+    } else if (s.adventure.status === 'ready') s.energy = ENERGY_GOAL
+    else s.energy = 0
+  }
+  return s
 }
 
 function load(): GameState {
@@ -171,23 +199,32 @@ export const actions = {
     set({ ...state, habits })
   },
 
-  /** Returns the energy gained (0 if already done, or while an adventure is underway). */
-  completeHabit(id: string): number {
+  /**
+   * Ticks a habit. While the bar fills it gives energy; the tick that fills it also gives
+   * FULL_ENERGY_COINS and counts a full-energy day; after that, habits give coins.
+   */
+  completeHabit(id: string): Completion {
     const day = todayKey()
     const done = state.completions[day] ?? []
-    if (done.includes(id)) return 0
+    if (done.includes(id)) return { energy: 0, coins: 0, full: false, firstTime: false }
+    const firstTime = !Object.values(state.completions).some((ids) => ids.includes(id))
     const charging = state.adventure.status === 'charging'
     const energy = charging ? Math.min(ENERGY_GOAL, state.energy + energyShare(state.habits, id)) : state.energy
-    const status: AdventureStatus = charging && energy >= ENERGY_GOAL ? 'ready' : state.adventure.status
-    const gained = energy - state.energy
+    const full = charging && energy >= ENERGY_GOAL
+    const coins = full ? FULL_ENERGY_COINS : charging ? 0 : EXTRA_HABIT_COINS
+    const newDay = full && state.lastFullDay !== day
     set({
       ...state,
       completions: { ...state.completions, [day]: [...done, id] },
-      energyGains: { ...state.energyGains, [day]: { ...state.energyGains[day], [id]: gained } },
+      energyGains: { ...state.energyGains, [day]: { ...state.energyGains[day], [id]: energy - state.energy } },
+      coinGains: { ...state.coinGains, [day]: { ...state.coinGains[day], [id]: coins } },
       energy,
-      adventure: { ...state.adventure, status },
+      coins: state.coins + coins,
+      fullEnergyDays: state.fullEnergyDays + (newDay ? 1 : 0),
+      lastFullDay: full ? day : state.lastFullDay,
+      adventure: { ...state.adventure, status: full ? 'ready' : state.adventure.status },
     })
-    return gained
+    return { energy: energy - state.energy, coins, full, firstTime }
   },
 
   /** Unticks a habit; its energy comes back out unless the adventure already used it. */
@@ -196,15 +233,21 @@ export const actions = {
     const done = state.completions[day] ?? []
     if (!done.includes(id)) return
     const { [id]: gained = 0, ...gains } = state.energyGains[day] ?? {}
+    const { [id]: coins = 0, ...coinGains } = state.coinGains[day] ?? {}
     const unspent = state.adventure.status === 'charging' || state.adventure.status === 'ready'
     const energy = unspent ? Math.max(0, state.energy - gained) : state.energy
-    const status: AdventureStatus = state.adventure.status === 'ready' && energy < ENERGY_GOAL ? 'charging' : state.adventure.status
+    const unfilled = state.adventure.status === 'ready' && energy < ENERGY_GOAL
+    const undoFullDay = unfilled && state.lastFullDay === day
     set({
       ...state,
       completions: { ...state.completions, [day]: done.filter((h) => h !== id) },
       energyGains: { ...state.energyGains, [day]: gains },
+      coinGains: { ...state.coinGains, [day]: coinGains },
       energy,
-      adventure: { ...state.adventure, status },
+      coins: Math.max(0, state.coins - coins),
+      fullEnergyDays: state.fullEnergyDays - (undoFullDay ? 1 : 0),
+      lastFullDay: undoFullDay ? null : state.lastFullDay,
+      adventure: { ...state.adventure, status: unfilled ? 'charging' : state.adventure.status },
     })
   },
 
@@ -281,7 +324,15 @@ export const actions = {
   },
   debugFillEnergy() {
     if (state.adventure.status !== 'charging') return
-    set({ ...state, energy: ENERGY_GOAL, adventure: { ...state.adventure, status: 'ready' } })
+    const day = todayKey()
+    set({
+      ...state,
+      energy: ENERGY_GOAL,
+      coins: state.coins + FULL_ENERGY_COINS,
+      fullEnergyDays: state.fullEnergyDays + (state.lastFullDay !== day ? 1 : 0),
+      lastFullDay: day,
+      adventure: { ...state.adventure, status: 'ready' },
+    })
   },
   debugCoins() {
     set({ ...state, coins: state.coins + 100 })

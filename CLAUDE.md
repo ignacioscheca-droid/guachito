@@ -37,13 +37,19 @@ and the `guachito_assets/` folder. Everything people read says Gauchito.
   call): one per day from `GREETINGS` in sw.js. The 16:00 reminder reads a snapshot of
   today's state that the app keeps in IndexedDB (`src/game/reminderSnapshot.ts`) — what's
   done, what's missing, where Gauchito is. Ajustes → 9:00 / 16:00 / 21:00 shows them.
-- Content and tuning: `app/src/game/content.ts` — habit catalog, energy split
-  (all of today's habits = exactly 100), 7 daily episodes, ranch items and their
+- Content and tuning: `app/src/game/content.ts` — habit catalog, energy and coins
+  (ENERGY_PER_HABIT, ENERGY_GOAL, ADVENTURE_MS…), 7 episodes, ranch items and their
   patio spots.
 
 ## Decisions already made
 
-- Daily pace: 2-hour adventures, one episode per day, 7 episodes (a week).
+- Day loop copies Finch's day 0 (owner's call, from his Finch recording): each habit gives
+  5 energy and 15 (three habits) fills the bar; later habits give 3 coins. A full bar runs
+  `EnergyFull.tsx`: the bar counts to "¡Al máximo!", "¡Yujuuu!" + 30 coins flying to the
+  counter, then "se está haciendo baqueano" (7 full-energy days, Finch's "evolve"), then
+  "¡Salir de aventura!" → 8-hour adventure; Home shows him riding the pampas with a
+  "vuelve en…" track. Habits leave the list with confetti and a toast ("¡Primera vez que
+  lo completás!"); done ones fold into "Hechos hoy". One episode per adventure, 7 in all.
 - His habits: Jugar con Oli 🧸, Darle un abrazo a Pau 🤗, Entrenar 🏋️ (custom habits).
 - Ranch layout follows his reference image `rancho_completo_unlocked.png` (local only);
   `design/tools/ranch_preview.py` renders the layout for review.

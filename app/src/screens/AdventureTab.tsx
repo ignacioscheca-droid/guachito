@@ -19,7 +19,7 @@ export function AdventureTab({ remainingMs, onOpen }: { remainingMs: number; onO
       </div>
       <div className="panel advtab__panel">
         <EnergyBar energy={s.energy} />
-        {status === 'charging' && <p className="advtab__status">Completá tus hábitos de hoy para que {s.name} salga a explorar.</p>}
+        {status === 'charging' && <p className="advtab__status">Con 3 hábitos hechos, {s.name} tiene energía para salir a explorar.</p>}
         {status === 'ready' && <Button onClick={onOpen}>Empezar aventura</Button>}
         {status === 'running' && <Button variant="light" onClick={onOpen}>Ver la aventura · {formatClock(remainingMs)}</Button>}
         {status === 'returned' && <Button variant="gold" onClick={onOpen}>¡Volvió! Escuchar su historia</Button>}

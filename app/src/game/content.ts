@@ -56,17 +56,22 @@ export const HABITS_TO_PICK = 3
 /** The starter plan has as many goals as Finch's. */
 export const PLAN_SIZE = 7
 export const MAX_HABITS = PLAN_SIZE
-export const ENERGY_GOAL = 100
-/** Daily pace: the adventure takes two real hours. */
-export const ADVENTURE_MS = 2 * 60 * 60 * 1000
+// Energy works like Finch's: every habit gives the same energy and three of them fill
+// the bar for the day's adventure; the rest of the day's habits earn coins.
+export const ENERGY_PER_HABIT = 5
+export const ENERGY_GOAL = 15
+/** Coins when the bar fills ("Paucho merendó y juntó energía"), and for each habit after that. */
+export const FULL_ENERGY_COINS = 30
+export const EXTRA_HABIT_COINS = 3
+/** Days with a full bar that make Paucho a baqueano (Finch: 7 to evolve into a toddler). */
+export const BAQUEANO_DAYS = 7
+/** Like Finch's, an adventure takes eight real hours. */
+export const ADVENTURE_MS = 8 * 60 * 60 * 1000
 export const ADVENTURE_COINS = 50
 
-/** Energy each habit gives: completing all of today's habits fills the bar exactly. */
+/** Energy a habit gives while the bar is filling. */
 export function energyShare(habitIds: string[], id: string) {
-  const n = habitIds.length
-  const i = habitIds.indexOf(id)
-  if (n === 0 || i < 0) return 0
-  return Math.floor(ENERGY_GOAL / n) + (i < ENERGY_GOAL % n ? 1 : 0)
+  return habitIds.includes(id) ? ENERGY_PER_HABIT : 0
 }
 
 /**

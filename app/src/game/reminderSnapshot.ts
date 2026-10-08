@@ -1,7 +1,7 @@
 // The daily notifications are composed on the phone, by the service worker (public/sw.js),
 // from what you have done today. The SW can't read localStorage, so the app keeps a
 // small copy of the relevant state in IndexedDB. Nothing leaves the phone.
-import { ADVENTURE_MS, EPISODES, itemById } from './content'
+import { ADVENTURE_MS, ENERGY_GOAL, ENERGY_PER_HABIT, EPISODES, itemById } from './content'
 import { findHabit, getState, subscribe, type GameState } from './store'
 
 /** Emoji for catalog habits, which use artist icons in the app. */
@@ -29,6 +29,8 @@ export type ReminderSnapshot = {
   completions: Record<string, string[]>
   adventure: { status: GameState['adventure']['status']; returnAt: number | null; episode: string | null }
   rewardItem: string | null
+  /** Habits still needed today for the adventure (0 once the bar is full). */
+  toGo: number
 }
 
 function build(s: GameState): ReminderSnapshot {
@@ -47,6 +49,7 @@ function build(s: GameState): ReminderSnapshot {
     completions: Object.fromEntries(days.map((d) => [d, s.completions[d]])),
     adventure: { status, returnAt: startedAt != null ? startedAt + ADVENTURE_MS : null, episode },
     rewardItem: s.pendingReward?.itemId ? itemById(s.pendingReward.itemId).name : null,
+    toGo: status === 'charging' ? Math.ceil((ENERGY_GOAL - s.energy) / ENERGY_PER_HABIT) : 0,
   }
 }
 
