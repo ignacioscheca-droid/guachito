@@ -1,0 +1,347 @@
+/* Gauchito Idle (exploration): the ruined ranch and its repairs. */
+
+.ix {
+  padding-bottom: calc(var(--safe-bottom) + 24px);
+}
+.ix-top {
+  position: absolute;
+  z-index: 9;
+  inset: calc(var(--safe-top) + 12px) 12px auto 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+.ix-top h1 {
+  margin: 0;
+  max-width: 48%;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--ink);
+  text-shadow: 0 1px 10px rgba(255, 255, 255, 0.85);
+}
+.ix-res {
+  display: flex;
+  gap: 6px;
+}
+.ix-res__pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--ink);
+}
+.ix-res__pill img {
+  width: 22px;
+  height: 22px;
+}
+.ix-say {
+  position: absolute;
+  z-index: 9;
+  top: calc(var(--safe-top) + 62px);
+  left: 12px;
+  width: 56%;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 16px;
+  background: rgba(255, 253, 248, 0.95);
+  box-shadow: var(--shadow);
+  animation: mi-pop 0.35s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+.ix-say img {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--sky);
+}
+.ix-say p {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+/* on the patio */
+.ix-ruin {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: rgba(110, 85, 60, 0.32);
+  -webkit-backdrop-filter: grayscale(0.85) brightness(0.88);
+  backdrop-filter: grayscale(0.85) brightness(0.88);
+  transition: opacity 0.9s ease;
+}
+.ix-weed {
+  position: absolute;
+  z-index: 60;
+  translate: -50% -100%;
+  line-height: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 2px rgba(60, 35, 15, 0.3)) saturate(0.7);
+}
+.ix-weed--going {
+  animation: ix-pull 1s ease-in forwards;
+}
+.ix-mark {
+  position: absolute;
+  z-index: 90;
+  translate: -50% -50%;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 253, 248, 0.92);
+  border: 3px solid var(--line);
+  box-shadow: 0 3px 8px rgba(40, 25, 10, 0.25);
+  font-size: 20px;
+}
+.ix-mark--ready {
+  border-color: var(--gold);
+  animation: ix-bob 1.4s ease-in-out infinite;
+}
+.ix-mark--ready::after {
+  content: '!';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--red);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+}
+.ix-work {
+  position: absolute;
+  z-index: 95;
+  width: 0;
+  height: 0;
+}
+.ix-work__dust {
+  position: absolute;
+  left: -34px;
+  top: -34px;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: radial-gradient(rgba(245, 230, 205, 0.95), rgba(245, 230, 205, 0) 70%);
+  animation: ix-dust 0.7s ease-out infinite;
+}
+.ix-work__dust--2 {
+  animation-delay: 0.35s;
+}
+.ix-work__hammer {
+  position: absolute;
+  left: -2px;
+  top: -50px;
+  font-size: 32px;
+  transform-origin: 80% 85%;
+  animation: ix-hammer 0.3s ease-in-out infinite alternate;
+}
+.ix-garden {
+  position: absolute;
+  z-index: 84;
+  translate: -50% -60%;
+  width: 92px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  background: radial-gradient(#7a5233, #5b3a24);
+  font-size: 18px;
+  animation: mi-pop 0.5s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+.ix-harvest {
+  position: absolute;
+  z-index: 96;
+  translate: -50% -100%;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--ink);
+  animation: ix-bob 1.4s ease-in-out infinite;
+}
+.ix-harvest img {
+  width: 24px;
+  height: 24px;
+}
+.ix-burst {
+  position: absolute;
+  z-index: 97;
+  width: 0;
+  height: 0;
+}
+.ix-flyer {
+  font-size: 24px;
+  line-height: 28px;
+  text-align: center;
+}
+
+/* the panel */
+.ix-fixes,
+.ix-huerta,
+.ix-locked {
+  padding: 14px;
+}
+.ix-fixes h3 {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  padding: 0 4px 6px;
+  font-size: 17px;
+  font-weight: 900;
+}
+.ix-fixes h3 span {
+  color: var(--muted);
+}
+.ix-fixes ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ix-fix {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 2px;
+  border-top: 1px solid var(--line);
+}
+.ix-fix__emoji {
+  flex: none;
+  width: 34px;
+  font-size: 26px;
+  text-align: center;
+}
+.ix-fix__text {
+  flex: 1;
+  min-width: 0;
+}
+.ix-fix__text strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--ink);
+}
+.ix-cost {
+  display: flex;
+  gap: 10px;
+  margin-top: 2px;
+}
+.ix-cost b {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--brown);
+}
+.ix-cost b img {
+  width: 16px;
+  height: 16px;
+}
+.ix-cost .ix-cost--short {
+  color: var(--red);
+}
+.ix-fix__go {
+  flex: none;
+  width: auto;
+  min-height: 40px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+.ix-note {
+  margin: 8px 4px 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.ix-huerta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.ix-huerta strong,
+.ix-locked strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 900;
+}
+.ix-huerta small,
+.ix-locked small {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.ix-huerta .btn {
+  width: auto;
+  min-height: 40px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+.ix-locked {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0.75;
+}
+.ix-locked > span {
+  font-size: 26px;
+}
+
+@keyframes ix-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+@keyframes ix-pull {
+  to {
+    opacity: 0;
+    transform: translateY(-30px) rotate(20deg) scale(0.6);
+  }
+}
+@keyframes ix-dust {
+  from {
+    opacity: 0.9;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+@keyframes ix-hammer {
+  from {
+    transform: rotate(-30deg);
+  }
+  to {
+    transform: rotate(25deg);
+  }
+}

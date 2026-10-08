@@ -16,6 +16,8 @@ type Props = {
   /** Gauchito is out on the adventure: the patio waits with the dog asleep. */
   away?: boolean
   onTapGauchito?: () => void
+  /** Drawn on the patio itself (positioned in % of the patio, like the items). */
+  overlay?: ReactNode
   children?: ReactNode
 }
 
@@ -76,7 +78,7 @@ function cameraStyle(view: SceneView, width: number, height: number): CSSPropert
 }
 
 /** The estancia patio: the artist's patio backdrop, ranch items, Gauchito and the dog. */
-export function Scene({ width, height, view, items, highlightId, celebrateKey = 0, away, onTapGauchito, children }: Props) {
+export function Scene({ width, height, view, items, highlightId, celebrateKey = 0, away, onTapGauchito, overlay, children }: Props) {
   const [frame, setFrame] = useState('idle')
   const [burst, setBurst] = useState(0)
   const onFrame = (f: string) => {
@@ -92,6 +94,7 @@ export function Scene({ width, height, view, items, highlightId, celebrateKey = 
     <div className="scene" style={{ height }}>
       <div className="scene__stage" style={cameraStyle(view, width, height)}>
         <img className="scene__bg" src={art('bg_patio')} alt="" />
+        {overlay}
 
         {items.map((id) => {
           const item = itemById(id)

@@ -4,6 +4,18 @@ Habit app MVP (spec: `GUACHITO_MVP_BUILD_SPEC.docx`). Completing daily habits gi
 energy to Gauchito, a chibi gaucho; a full bar sends him on a 2-hour adventure that
 brings back a story and a ranch item. The owner uses it for a real one-week test.
 
+## This branch: idle-tycoon (exploration)
+
+Gauchito Idle: Paucho restores a ruined ranch. The app here is only `app/src/idle/`
+(`main.tsx` renders `IdleApp`): 7 preset daily habits (the starter plan's) give 1 ⭐
+each; ⭐ (and later coins) pay for 9 repairs in order (`FIXES`); the garden, once
+planted, makes 12 coins an hour (holds 8 h). Day 0's 7 ⭐ end with the garden planted.
+Own save `gauchito-idle.v1`. Published at `/guachito/idle/` by main's deploy workflow
+(run it by hand after pushing this branch). The ruin is a placeholder (grey veil,
+weeds, markers) until the ChatGPT art: brief "Gauchito Idle — Arte del rancho
+(mockups)", https://claude.ai/code/artifact/3f6e351f-6257-41d2-a471-ead795edcd74.
+`?test` adds a menu (+5 ⭐, pass an hour or a day, reset). Nothing here goes to main.
+
 ## Name
 
 The app and character are **Gauchito**. The spec and first builds said "Guachito";

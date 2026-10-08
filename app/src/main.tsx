@@ -5,15 +5,12 @@ import '@fontsource/nunito/700.css'
 import '@fontsource/nunito/800.css'
 import '@fontsource/nunito/900.css'
 import './index.css'
-import App from './App.tsx'
-import { registerServiceWorker } from './game/push'
-import { startReminderSnapshots } from './game/reminderSnapshot'
+import './idle/idle.css'
+import { IdleApp } from './idle/IdleApp'
 
-registerServiceWorker()
-startReminderSnapshots()
-
+// Branch idle-tycoon: the app is only the idle exploration (no onboarding, no reminders).
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <IdleApp />
   </StrictMode>,
 )
