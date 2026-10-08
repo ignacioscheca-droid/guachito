@@ -1,4 +1,4 @@
-// The daily reminder is composed on the phone, by the service worker (public/sw.js),
+// The daily notifications are composed on the phone, by the service worker (public/sw.js),
 // from what you have done today. The SW can't read localStorage, so the app keeps a
 // small copy of the relevant state in IndexedDB. Nothing leaves the phone.
 import { ADVENTURE_MS, EPISODES, itemById } from './content'
@@ -29,6 +29,8 @@ export type ReminderSnapshot = {
   completions: Record<string, string[]>
   adventure: { status: GameState['adventure']['status']; returnAt: number | null; episode: string | null }
   rewardItem: string | null
+  /** The story the next adventure brings (teased in the morning). */
+  nextEpisode: string
 }
 
 function build(s: GameState): ReminderSnapshot {
@@ -47,6 +49,7 @@ function build(s: GameState): ReminderSnapshot {
     completions: Object.fromEntries(days.map((d) => [d, s.completions[d]])),
     adventure: { status, returnAt: startedAt != null ? startedAt + ADVENTURE_MS : null, episode },
     rewardItem: s.pendingReward?.itemId ? itemById(s.pendingReward.itemId).name : null,
+    nextEpisode: EPISODES[runs % EPISODES.length].title,
   }
 }
 

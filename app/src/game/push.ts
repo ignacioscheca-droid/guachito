@@ -1,12 +1,19 @@
-// Daily reminder: the phone subscribes to Web Push here; a scheduled GitHub
-// Action (.github/workflows/reminder.yml) sends the notification at 16:00.
+// Daily notifications: the phone subscribes to Web Push here; a scheduled GitHub
+// Action (.github/workflows/reminder.yml) sends them at 9:00, 16:00 and 21:00 (Madrid).
 // iPhone only allows this once Gauchito is added to the Home Screen.
 import { saveReminderSnapshot } from './reminderSnapshot'
 
 /** VAPID public key (the private half lives only in the GitHub secret). */
 const VAPID_PUBLIC_KEY = 'BCp_BYxwkOCUJcUayhzQTSXevG3sz8tBXnbzUht2Bso5O9TI_vyP8bKTezjZu4rTEjJ88yNiRtRS2u6CIDFuxW8'
 
-export const REMINDER_TIME = '16:00'
+export type NotificationKind = 'morning' | 'reminder' | 'night'
+
+/** The three daily notifications; the times must match .github/workflows/reminder.yml. */
+export const NOTIFICATIONS: { kind: NotificationKind; time: string; emoji: string }[] = [
+  { kind: 'morning', time: '9:00', emoji: '☀️' },
+  { kind: 'reminder', time: '16:00', emoji: '🧉' },
+  { kind: 'night', time: '21:00', emoji: '🌙' },
+]
 
 export const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent)
 export const isStandalone = () =>
@@ -39,9 +46,9 @@ export async function enableReminders(): Promise<{ ok: true; subscription: strin
   return { ok: true, subscription: JSON.stringify(sub) }
 }
 
-/** Shows today's reminder right away (the same text the 16:00 one would have). */
-export async function testNotification() {
+/** Shows one of today's notifications right away, with the text it would have now. */
+export async function testNotification(kind: NotificationKind) {
   await saveReminderSnapshot()
   const reg = await navigator.serviceWorker.ready
-  reg.active?.postMessage({ type: 'test-reminder' })
+  reg.active?.postMessage({ type: 'test-reminder', kind })
 }

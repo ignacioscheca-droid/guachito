@@ -1,23 +1,29 @@
-# Daily reminder push at 16:00 Madrid time.
-# Two crons cover summer (14:00 UTC) and winter (15:00 UTC) time; the script
-# only sends when it really is 16:00 in Madrid. GitHub can start scheduled runs
-# a few minutes late.
-name: Daily reminder
+# Gauchito's daily notifications, Madrid time: buen día 9:00, reminder 16:00,
+# buenas noches 21:00. Each time has two crons, for summer (UTC+2) and winter
+# (UTC+1) time; they fire at :50 UTC, before the busy top of the hour, and the
+# script waits for the full hour. The cron that doesn't land on a slot exits.
+name: Daily notifications
 
 on:
   schedule:
-    - cron: '0 14 * * *'
-    - cron: '0 15 * * *'
+    - cron: '50 6 * * *' # 9:00 summer
+    - cron: '50 7 * * *' # 9:00 winter
+    - cron: '50 13 * * *' # 16:00 summer
+    - cron: '50 14 * * *' # 16:00 winter
+    - cron: '50 18 * * *' # 21:00 summer
+    - cron: '50 19 * * *' # 21:00 winter
   workflow_dispatch:
     inputs:
-      force:
-        description: Send now (ignore the time check)
-        type: boolean
-        default: true
+      kind:
+        description: Which notification to send now
+        type: choice
+        options: [reminder, morning, night]
+        default: reminder
 
 jobs:
-  remind:
+  notify:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,5 +37,5 @@ jobs:
           VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           PUSH_SUBSCRIPTION: ${{ secrets.PUSH_SUBSCRIPTION }}
-          REMINDER_HOUR: '16'
-          FORCE: ${{ inputs.force || 'false' }}
+          SCHEDULE: ${{ github.event.schedule }}
+          KIND: ${{ inputs.kind }}

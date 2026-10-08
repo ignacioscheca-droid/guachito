@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Button } from '../components/ui'
-import { enableReminders, isIOS, isStandalone, pushSupported, REMINDER_TIME, testNotification } from '../game/push'
+import { enableReminders, isIOS, isStandalone, NOTIFICATIONS, pushSupported, testNotification } from '../game/push'
 import { actions, useGame } from '../game/store'
 
 export function Settings({ onClose, onTestMenu }: { onClose: () => void; onTestMenu: () => void }) {
@@ -78,17 +78,20 @@ export function Settings({ onClose, onTestMenu }: { onClose: () => void; onTestM
             <h3>Instalá Gauchito</h3>
             <p>
               En Safari tocá <strong>Compartir</strong> → <strong>Agregar a inicio</strong> y abrilo desde el ícono. Así tus datos quedan
-              guardados y podés recibir el recordatorio.
+              guardados y podés recibir las notificaciones.
             </p>
           </section>
         )}
 
         <section className="settings__block">
-          <h3>Recordatorio diario · {REMINDER_TIME}</h3>
+          <h3>Notificaciones</h3>
           {!pushSupported() && <p>Este navegador no admite notificaciones.</p>}
           {pushSupported() && !subscription && (
             <>
-              <p>Te aviso todos los días a las {REMINDER_TIME}, según lo que tengas hecho y lo que te falte.</p>
+              <p>
+                Te escribo tres veces por día: buen día a las 9, un recordatorio a las 16 según lo que tengas hecho y lo que te falte, y
+                buenas noches a las 21.
+              </p>
               <Button onClick={turnOn} disabled={needsInstall}>
                 Activar notificaciones
               </Button>
@@ -96,19 +99,25 @@ export function Settings({ onClose, onTestMenu }: { onClose: () => void; onTestM
           )}
           {subscription && (
             <>
-              <p>
-                ✅ Notificaciones activadas en este teléfono. Último paso: copiá este código y pasáselo a Claude (o guardalo como secreto{' '}
-                <code>PUSH_SUBSCRIPTION</code> en GitHub).
-              </p>
-              <textarea className="settings__code" readOnly value={subscription} rows={3} onFocus={(e) => e.target.select()} />
+              <p>✅ Activadas en este teléfono: buen día a las 9, un recordatorio a las 16 y buenas noches a las 21.</p>
+              <p>Ver cómo quedan hoy:</p>
               <div className="settings__row">
+                {NOTIFICATIONS.map((n) => (
+                  <Button key={n.kind} variant="light" onClick={() => testNotification(n.kind)}>
+                    {n.emoji} {n.time}
+                  </Button>
+                ))}
+              </div>
+              <details className="settings__details">
+                <summary>Código del teléfono</summary>
+                <p>
+                  Si reinstalás la app, copiá el código nuevo y pasáselo a Claude (es el secreto <code>PUSH_SUBSCRIPTION</code> en GitHub).
+                </p>
+                <textarea className="settings__code" readOnly value={subscription} rows={3} onFocus={(e) => e.target.select()} />
                 <Button variant="light" onClick={copy}>
                   {copied ? '¡Copiado!' : 'Copiar código'}
                 </Button>
-                <Button variant="light" onClick={() => testNotification()}>
-                  Ver mensaje de hoy
-                </Button>
-              </div>
+              </details>
             </>
           )}
         </section>

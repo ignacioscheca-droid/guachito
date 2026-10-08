@@ -150,7 +150,7 @@ export function Home({ width, celebrateKey, remainingMs, onCompleteHabit, onAdve
         </section>
 
         <button className="settings-link" onClick={onSettings}>
-          Ajustes · recordatorio, copia de seguridad
+          Ajustes · notificaciones, copia de seguridad
         </button>
       </div>
 

@@ -1753,6 +1753,21 @@ img {
 .settings__field input:focus {
   border-color: var(--brown);
 }
+.settings__details {
+  margin-top: 4px;
+}
+.settings__details summary {
+  padding: 6px 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--muted);
+  cursor: pointer;
+}
+.settings__details[open] {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 .settings__code {
   width: 100%;
   padding: 8px 10px;
@@ -1769,6 +1784,7 @@ img {
 }
 .settings__row .btn {
   min-height: 44px;
+  padding: 0 12px;
   font-size: 15px;
 }
 .settings__msg {

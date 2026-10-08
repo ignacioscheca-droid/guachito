@@ -24,14 +24,17 @@ and the `guachito_assets/` folder. Everything people read says Gauchito.
   (`app/src/game/store.ts`), with export/import backup in Ajustes.
 - Deploy: push to `main` → `.github/workflows/deploy.yml` → GitHub Pages at
   `https://ignacioscheca-droid.github.io/guachito/` (base path from `BASE_PATH`).
-- Daily reminder: `.github/workflows/reminder.yml` runs `scripts/send-reminder.mjs`
-  at 16:00 Europe/Madrid (two UTC crons, the script checks the local hour). Secrets:
-  `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `PUSH_SUBSCRIPTION` (copied from the app's
-  Ajustes on the phone). The public key is also in `app/src/game/push.ts`.
-  iPhone push only works from the installed Home Screen app.
-  The push carries no text: `app/public/sw.js` writes it on the phone from a snapshot
-  of today's state that the app keeps in IndexedDB (`src/game/reminderSnapshot.ts`) —
-  what's done, what's missing, where Gauchito is. Ajustes → "Ver mensaje de hoy" shows it.
+- Daily notifications, Europe/Madrid: buen día 9:00 (`morning`), reminder 16:00
+  (`reminder`), buenas noches 21:00 (`night`). `.github/workflows/reminder.yml` runs
+  `scripts/send-reminder.mjs`; each time has two UTC crons (summer/winter) at :50, and
+  the script works out the Madrid hour from the cron that fired, waits for :00 and sends
+  (the other cron exits). Manual test: `gh workflow run reminder.yml -f kind=night`.
+  Secrets: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `PUSH_SUBSCRIPTION` (copied from the
+  app's Ajustes on the phone; set 2026-10-08). The public key is also in
+  `app/src/game/push.ts`. iPhone push only works from the installed Home Screen app.
+  The push carries only its kind: `app/public/sw.js` writes the text on the phone from a
+  snapshot of today's state that the app keeps in IndexedDB (`src/game/reminderSnapshot.ts`)
+  — what's done, what's missing, where Gauchito is. Ajustes → 9:00 / 16:00 / 21:00 shows them.
 - Content and tuning: `app/src/game/content.ts` — habit catalog, energy split
   (all of today's habits = exactly 100), 7 daily episodes, ranch items and their
   patio spots.
