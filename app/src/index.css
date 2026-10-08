@@ -2661,19 +2661,46 @@ img {
   width: 96px;
   flex: none;
 }
+/* ---- "1 día de racha", timed like Finch's (seconds from the screen showing up) ----
+   0     grey screen, a dim "0" fades in
+   0.62  "0" -> "1", the label turns white; 0.65 the grey fades to blue
+   1.03  Gauchito pops up and rises with the number (StreakDay animates the group)
+   1.57  sunburst · 1.65 week · 1.7 today fills · 2.2 sparkles · 2.3 text · 2.5 button */
+.d1--streak .d1-week,
+.d1--streak .d1-text,
+.d1--streak .d1-foot {
+  position: relative;
+  z-index: 1;
+}
+.d1-dark {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: #434c56;
+  animation: d1-out 0.28s 0.65s ease-in both;
+}
+.d1-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 .d1-hero {
   position: relative;
   margin-top: 26px;
+  visibility: hidden;
+  animation: d1-appear 0s 1.03s forwards;
 }
 .d1-guy--big {
   position: relative;
   width: 190px;
+  aspect-ratio: 906 / 990;
   animation:
-    d1-jump-in 0.7s cubic-bezier(0.3, 1.5, 0.5, 1) both,
-    d1-hop 1.6s 0.7s ease-in-out infinite;
+    d1-leap 3.4s 1.03s both,
+    d1-flap 0.2s 1.03s 4 ease-in-out,
+    d1-breathe 2.6s 4.5s ease-in-out infinite;
   transform-origin: 50% 100%;
 }
-/* soft shadow under his boots */
+/* his shadow stays on the ground and shrinks while he is up */
 .d1-hero::after {
   content: '';
   position: absolute;
@@ -2685,6 +2712,7 @@ img {
   border-radius: 50%;
   background: rgba(10, 50, 100, 0.22);
   z-index: -1;
+  animation: d1-shadow 3.4s 1.03s both;
 }
 .d1-burst {
   position: absolute;
@@ -2696,21 +2724,43 @@ img {
   z-index: -1;
   border-radius: 50%;
   background:
-    radial-gradient(closest-side, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 38%),
-    repeating-conic-gradient(rgba(255, 255, 255, 0.14) 0deg 9deg, rgba(255, 255, 255, 0) 9deg 18deg);
-  -webkit-mask-image: radial-gradient(closest-side, #000 22%, rgba(0, 0, 0, 0.5) 60%, transparent 100%);
-  mask-image: radial-gradient(closest-side, #000 22%, rgba(0, 0, 0, 0.5) 60%, transparent 100%);
+    radial-gradient(closest-side, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 34%),
+    repeating-conic-gradient(rgba(255, 255, 255, 0.09) 0deg 16deg, rgba(255, 255, 255, 0) 16deg 36deg);
+  -webkit-mask-image: radial-gradient(closest-side, #000 25%, rgba(0, 0, 0, 0.6) 62%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 25%, rgba(0, 0, 0, 0.6) 62%, transparent 100%);
   animation:
-    d1-burst-in 0.9s 0.35s ease-out both,
-    d1-spin 26s linear infinite;
+    d1-in 0.35s 1.57s ease-out both,
+    d1-spin 45s linear infinite;
+}
+.d1-count {
+  animation: d1-in 0.25s ease-out both;
 }
 .d1-big {
+  position: relative;
   margin: 4px 0 0;
   font-size: 104px;
   font-weight: 900;
   line-height: 1;
-  text-shadow: 0 4px 0 rgba(20, 70, 120, 0.3);
-  animation: d1-pop 0.6s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+.d1-big__zero {
+  position: absolute;
+  inset: 0;
+  color: #323b42;
+  animation: d1-out 0s 0.62s forwards;
+}
+.d1-big__one {
+  color: #fff;
+  text-shadow:
+    3px 0 0 #1f6fb0,
+    -3px 0 0 #1f6fb0,
+    0 3px 0 #1f6fb0,
+    0 -3px 0 #1f6fb0,
+    2px 2px 0 #1f6fb0,
+    -2px 2px 0 #1f6fb0,
+    2px -2px 0 #1f6fb0,
+    -2px -2px 0 #1f6fb0,
+    0 7px 0 rgba(20, 70, 120, 0.3);
+  animation: d1-in 0s 0.62s both;
 }
 .d1-big-label {
   margin: 2px 0 0;
@@ -2718,6 +2768,7 @@ img {
   font-weight: 900;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  animation: d1-whiten 0s 0.62s both;
 }
 .d1-week {
   display: flex;
@@ -2728,6 +2779,9 @@ img {
   border-radius: 18px;
   background: rgba(10, 60, 110, 0.22);
 }
+.d1--streak .d1-week {
+  animation: d1-rise 0.45s 1.65s ease-out both;
+}
 .d1-week__day {
   display: flex;
   flex-direction: column;
@@ -2737,6 +2791,7 @@ img {
   font-weight: 800;
 }
 .d1-week__day i {
+  position: relative;
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -2750,14 +2805,51 @@ img {
 .d1-week__day--done i {
   background: #fff;
   color: #3a93d2;
-  animation: d1-pop 0.5s 0.4s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+  animation: d1-fill 0.7s 1.7s ease-out both;
 }
+/* tomorrow: a smaller dot with a gap, inside a wavy ring */
 .d1-week__day--next i {
   background: none;
-  border: 2.5px dashed rgba(255, 255, 255, 0.85);
+}
+.d1-ring {
+  position: absolute;
+  inset: -7px;
+  width: 44px;
+  height: 44px;
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.55);
+  stroke-width: 2.4;
+}
+.d1-ring__dot {
+  fill: rgba(10, 60, 110, 0.3);
+  stroke: none;
+}
+.d1-spark {
+  position: absolute;
+  fill: #fff;
+  animation: d1-in 0.25s 2.2s ease-out both;
+}
+.d1-spark--big {
+  top: -12px;
+  right: -12px;
+  width: 13px;
+  height: 13px;
+}
+.d1-spark--small {
+  bottom: -9px;
+  left: -10px;
+  width: 9px;
+  height: 9px;
+  animation-delay: 2.3s;
 }
 .d1-week + .d1-text {
   margin-top: 18px;
+}
+.d1--streak .d1-text {
+  animation: d1-in 0.3s 2.3s ease-out both;
+}
+.d1--streak .d1-foot {
+  animation: d1-in 0.7s 2.5s ease-out both;
 }
 
 .d1-title {
@@ -2871,53 +2963,104 @@ img {
     transform: none;
   }
 }
-@keyframes d1-pop {
+@keyframes d1-in {
   from {
-    transform: scale(0.3);
     opacity: 0;
   }
   to {
-    transform: none;
     opacity: 1;
   }
 }
-@keyframes d1-jump-in {
-  from {
-    translate: 0 140px;
+@keyframes d1-out {
+  to {
     opacity: 0;
   }
-  60% {
-    opacity: 1;
+}
+@keyframes d1-appear {
+  to {
+    visibility: visible;
+  }
+}
+@keyframes d1-whiten {
+  from {
+    color: #323b42;
   }
   to {
+    color: #fff;
+  }
+}
+@keyframes d1-rise {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+  }
+  to {
+    opacity: 1;
     translate: 0 0;
+  }
+}
+@keyframes d1-fill {
+  from {
+    background: rgba(255, 255, 255, 0.35);
+  }
+  to {
+    background: #fff;
+  }
+}
+/* up with the number (0.8 s), then a slow float down onto his shadow */
+@keyframes d1-leap {
+  0% {
+    translate: 0 0;
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  24% {
+    translate: 0 -40px;
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  100% {
+    translate: 0 0;
+  }
+}
+@keyframes d1-shadow {
+  0% {
+    scale: 1;
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  24% {
+    scale: 0.72;
+    opacity: 0.55;
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  100% {
+    scale: 1;
     opacity: 1;
   }
 }
-@keyframes d1-burst-in {
-  from {
-    opacity: 0;
-    scale: 0.4;
+/* Finch flaps his wings on the way up; Gauchito wiggles */
+@keyframes d1-flap {
+  0%,
+  100% {
+    rotate: 0deg;
   }
-  to {
-    opacity: 1;
-    scale: 1;
+  25% {
+    rotate: -3deg;
+  }
+  75% {
+    rotate: 3deg;
+  }
+}
+@keyframes d1-breathe {
+  0%,
+  100% {
+    scale: 1 1;
+  }
+  50% {
+    scale: 1.01 1.025;
   }
 }
 @keyframes d1-spin {
   to {
     rotate: 360deg;
-  }
-}
-@keyframes d1-hop {
-  0%,
-  100% {
-    transform: translateY(0) scale(1, 1);
-  }
-  40% {
-    transform: translateY(-10px) scale(0.98, 1.02);
-  }
-  60% {
-    transform: translateY(0) scale(1.03, 0.97);
   }
 }
