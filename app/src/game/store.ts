@@ -42,7 +42,7 @@ export type GameState = {
   energyGains: Record<string, Record<string, number>>
   /** Same for the coins a completion gave (the bar filling, or a habit after it was full). */
   coinGains: Record<string, Record<string, number>>
-  /** Days the bar got full (Paucho becomes a baqueano at BAQUEANO_DAYS), and the last one. */
+  /** Days the bar got full (they make the ranch grow, see RANCH_STAGES), and the last one. */
   fullEnergyDays: number
   lastFullDay: string | null
   /** Energy rules the save follows ('finch': 5 per habit, 15 to go; older saves used 100). */

@@ -46,7 +46,9 @@ and the `guachito_assets/` folder. Everything people read says Gauchito.
 - Day loop copies Finch's day 0 (owner's call, from his Finch recording): each habit gives
   5 energy and 15 (three habits) fills the bar; later habits give 3 coins. A full bar runs
   `EnergyFull.tsx`: the bar counts to "¡Al máximo!", "¡Yujuuu!" + 30 coins flying to the
-  counter, then "se está haciendo baqueano" (7 full-energy days, Finch's "evolve"), then
+  counter, then "El rancho de Paucho está creciendo" (Finch's bird grows up; Paucho can't,
+  so the ranch does: Ranchito → Puesto at 7 full-energy days → Estancia at 21,
+  `RANCH_STAGES` in content.ts; the Rancho tab is titled with the stage), then
   "¡Salir de aventura!" → 8-hour adventure; Home shows him riding the pampas with a
   "vuelve en…" track. Habits leave the list with confetti and a toast ("¡Primera vez que
   lo completás!"); done ones fold into "Hechos hoy". One episode per adventure, 7 in all.

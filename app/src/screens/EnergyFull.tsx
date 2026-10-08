@@ -3,7 +3,7 @@ import { AdventureTrack } from '../components/DayLoop'
 import { RideWorld } from '../components/RideWorld'
 import { Scene } from '../components/Scene'
 import { Button, CoinPill } from '../components/ui'
-import { ADVENTURE_MS, art, BAQUEANO_DAYS, ENERGY_GOAL, FULL_ENERGY_COINS } from '../game/content'
+import { ADVENTURE_MS, art, ENERGY_GOAL, FULL_ENERGY_COINS, ranchStage } from '../game/content'
 import { actions, useGame } from '../game/store'
 import { formatClock } from './AdventureRun'
 
@@ -43,7 +43,7 @@ function flyCoins(from: Element | null, to: Element | null) {
 
 /**
  * Finch's energy-full sequence: the bar counts up to the top ("¡Yujuuu!"), Gauchito
- * celebrates and earns coins; then his progress to baqueano; then off he goes for eight
+ * celebrates and earns coins; then his ranch grows a little (Finch: the bird grows up); then off he goes for eight
  * hours, and Home follows him on the pampas.
  */
 export function EnergyFull({
@@ -91,8 +91,10 @@ export function EnergyFull({
     }
   }, [step, full]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const days = Math.min(s.fullEnergyDays, BAQUEANO_DAYS)
-  const left = BAQUEANO_DAYS - days
+  const { stage, next, justGrew } = ranchStage(s.fullEnergyDays)
+  const span = next ? next.days - stage.days : 1
+  const done = next ? s.fullEnergyDays - stage.days : 1
+  const left = next ? next.days - s.fullEnergyDays : 0
 
   return (
     <div className={`screen ef ef--${step}${full ? ' ef--full' : ''}`}>
@@ -150,26 +152,24 @@ export function EnergyFull({
         {step === 'grow' && (
           <div className="ef__step" key="grow">
             <h2 className="ef__in ef__small">
-              {days >= BAQUEANO_DAYS ? `¡${s.name} ya es todo un baqueano!` : `${s.name} se está haciendo baqueano`}
+              {justGrew ? `¡El rancho creció! Ahora es ${stage.a} 🎉` : `El rancho de ${s.name} está creciendo`}
             </h2>
             <div className="ef__card ef__in ef__in--2">
-              <span className="ef__card-icon">
-                <img src={art('g_map')} alt="" />
+              <span className="ef__card-icon ef__card-icon--ranch">
+                <img src={art('nav_rancho')} alt="" />
               </span>
               <div>
-                <strong>Hacé de {s.name} un baqueano</strong>
-                <small>Lográ {BAQUEANO_DAYS} días con energía completa</small>
+                <strong>{next ? `De ${stage.the.split(' ').pop()} a ${next.the.split(' ').pop()}` : `Tu rancho es ${stage.a}`}</strong>
+                <small>{next ? `Lográ ${span} días con energía completa` : 'Llegaste a la última etapa'}</small>
                 <div className="ef__progress">
-                  <i style={{ width: `${(days / BAQUEANO_DAYS) * 100}%` }} />
-                  <span>
-                    {days} / {BAQUEANO_DAYS}
-                  </span>
+                  <i style={{ width: `${(done / span) * 100}%` }} />
+                  <span>{next ? `${done} / ${span}` : '¡Completo!'}</span>
                 </div>
               </div>
             </div>
-            {left > 0 && (
+            {next && (
               <p className="ef__in ef__in--3 ef__note">
-                Faltan {left} día{left > 1 ? 's' : ''} con energía completa para que sea <b>baqueano</b>
+                Faltan {left} día{left > 1 ? 's' : ''} para que {stage.the} se convierta en <b>{next.a}</b>.
               </p>
             )}
             <p className="ef__in ef__in--4 ef__ready">{s.name} está listo para salir a recorrer las pampas y aprender algo nuevo.</p>

@@ -63,8 +63,22 @@ export const ENERGY_GOAL = 15
 /** Coins when the bar fills ("Paucho merendó y juntó energía"), and for each habit after that. */
 export const FULL_ENERGY_COINS = 30
 export const EXTRA_HABIT_COINS = 3
-/** Days with a full bar that make Paucho a baqueano (Finch: 7 to evolve into a toddler). */
-export const BAQUEANO_DAYS = 7
+/**
+ * What grows with the days of full energy: Finch's bird grows up, here the ranch does.
+ * `days`: full-energy days it takes to get there.
+ */
+export const RANCH_STAGES = [
+  { name: 'Ranchito', the: 'el ranchito', a: 'un ranchito', days: 0 },
+  { name: 'Puesto', the: 'el puesto', a: 'un puesto', days: 7 },
+  { name: 'Estancia', the: 'la estancia', a: 'una estancia', days: 21 },
+]
+
+/** The ranch's stage after so many full-energy days, and the next one (null at the top). */
+export function ranchStage(fullDays: number) {
+  let i = 0
+  while (i + 1 < RANCH_STAGES.length && fullDays >= RANCH_STAGES[i + 1].days) i++
+  return { stage: RANCH_STAGES[i], next: RANCH_STAGES[i + 1] ?? null, justGrew: i > 0 && fullDays === RANCH_STAGES[i].days }
+}
 /** Like Finch's, an adventure takes eight real hours. */
 export const ADVENTURE_MS = 8 * 60 * 60 * 1000
 export const ADVENTURE_COINS = 50

@@ -3416,6 +3416,15 @@ img {
   object-fit: cover;
   object-position: 50% 10%;
 }
+.ef__card-icon--ranch {
+  display: grid;
+  place-items: center;
+}
+.ef__card-icon--ranch img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
 .ef__card > div {
   flex: 1;
 }

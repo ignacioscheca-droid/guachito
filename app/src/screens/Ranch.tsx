@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Scene } from '../components/Scene'
 import { CoinPill } from '../components/ui'
-import { art, ITEMS, itemById } from '../game/content'
+import { art, ITEMS, itemById, ranchStage } from '../game/content'
 import { actions, useGame } from '../game/store'
 
 export function Ranch({ width }: { width: number }) {
@@ -9,6 +9,8 @@ export function Ranch({ width }: { width: number }) {
   const owned = useGame((s) => s.ownedItems)
   const newItemId = useGame((s) => s.newItemId)
   const away = useGame((s) => s.adventure.status === 'running')
+  const { stage, next } = ranchStage(useGame((s) => s.fullEnergyDays))
+  const fullDays = useGame((s) => s.fullEnergyDays)
   const [toast, setToast] = useState<string | null>(null)
   const [bump, setBump] = useState(0)
 
@@ -31,7 +33,7 @@ export function Ranch({ width }: { width: number }) {
     <div className="ranch">
       <Scene width={width} height={Math.round(width * 0.78)} view="ranch" items={owned} highlightId={newItemId} away={away}>
         <div className="ranch__top">
-          <h1>Tu rancho</h1>
+          <h1>Tu {stage.name.toLowerCase()}</h1>
           <CoinPill coins={coins} bump={bump > 0} key={bump} />
         </div>
         {toast && <div className="toast">{toast}</div>}
@@ -42,6 +44,12 @@ export function Ranch({ width }: { width: number }) {
           {owned.length === 0
             ? 'Cada aventura trae algo nuevo. Con las monedas podés sumar más cosas.'
             : `${owned.length} de ${ITEMS.length} cosas en el rancho`}
+          {next && (
+            <>
+              <br />
+              Con {next.days - fullDays} día{next.days - fullDays > 1 ? 's' : ''} más de energía completa, {stage.the} pasa a ser {next.a}.
+            </>
+          )}
         </p>
         <div className="shop">
           {ITEMS.map((it) => {
