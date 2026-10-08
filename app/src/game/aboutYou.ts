@@ -189,3 +189,54 @@ export const QUESTIONS: Question[] = [
     skip: (a) => (a.postergar ?? []).includes('nada'),
   },
 ]
+
+/** Finch's starter plan, in its order. */
+const FINCH_PLAN = ['levantarme', 'dientes', 'cara', 'vaso-agua', 'estirarme', 'feliz', 'respirar']
+/** At most this many goals come from the answers, so the plan stays mostly Finch's. */
+const FROM_ANSWERS = 2
+/** A picked habit makes its smaller twin redundant. */
+const COVERS: Record<string, string[]> = {
+  agua: ['vaso-agua'],
+  ejercicio: ['caminar', 'estirarme'],
+  meditar: ['respirar'],
+  mate: ['los-mios'],
+  pantallas: ['los-mios'],
+}
+
+/**
+ * The starter plan: the habits you picked, then goals your answers point to, then
+ * Finch's, up to PLAN_SIZE in all.
+ */
+export function buildPlan(picked: string[], a: AboutYou, size: number): string[] {
+  const has = (q: string, ...ids: string[]) => (a[q] ?? []).some((id) => ids.includes(id))
+  const fromAnswers = [
+    // What they came for ("¿Qué te trae por acá?") first...
+    has('areas', 'familia') && 'los-mios',
+    has('areas', 'dormir') && 'dormir',
+    has('areas', 'cuerpo') && 'caminar',
+    has('areas', 'estres') && 'respirar',
+    has('areas', 'vinculos') && 'escribirle',
+    has('areas', 'confianza') && 'algo-bien',
+    has('areas', 'rutina') && 'tender-cama',
+    // ...then what the other answers point to.
+    has('levantarse', 'dificil') && 'levantarme',
+    (has('agobio', 'semanal') || has('salud-mental', 'ansiedad')) && 'respirar',
+    has('sueno', 'menos-5', '5-7') && 'dormir',
+    has('actividad', 'poco') && 'caminar',
+    has('apoyo', '1', 'solo') && 'escribirle',
+    has('por-que', 'confianza') && 'algo-bien',
+    has('rutina', 'poco') && 'tender-cama',
+    has('postergar', 'mensajes') && 'mensaje',
+    has('postergar', 'decisiones', 'turnos', 'ejercicio', 'casa') && 'pendiente',
+  ].filter((id): id is string => !!id)
+
+  const skip = new Set(picked.flatMap((id) => COVERS[id] ?? []))
+  const plan: string[] = []
+  const add = (id: string) => {
+    if (plan.length < size && !plan.includes(id) && !skip.has(id)) plan.push(id)
+  }
+  picked.forEach(add)
+  fromAnswers.filter((id) => !plan.includes(id) && !skip.has(id)).slice(0, FROM_ANSWERS).forEach(add)
+  FINCH_PLAN.forEach(add)
+  return plan
+}

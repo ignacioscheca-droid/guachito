@@ -1,16 +1,16 @@
 import { useState } from 'react'
-import { HABIT_EMOJIS, HABITS, MAX_HABITS } from '../game/content'
+import { HABIT_EMOJIS, HABITS, MAX_HABITS, STARTER_GOALS } from '../game/content'
 import { actions, useGame } from '../game/store'
 import { Button, HabitIcon } from './ui'
 
-type Props = { picked: string[]; onChange: (ids: string[]) => void }
+type Props = { picked: string[]; onChange: (ids: string[]) => void; max?: number }
 
 /** Grid of catalog + own habits, with "Otro hábito" to create one. */
-export function HabitPicker({ picked, onChange }: Props) {
+export function HabitPicker({ picked, onChange, max = MAX_HABITS }: Props) {
   const custom = useGame((s) => s.customHabits)
   const [shake, setShake] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
-  const full = picked.length >= MAX_HABITS
+  const full = picked.length >= max
 
   const toggle = (id: string) => {
     if (picked.includes(id)) return onChange(picked.filter((p) => p !== id))
@@ -22,8 +22,9 @@ export function HabitPicker({ picked, onChange }: Props) {
     onChange([...picked, id])
   }
 
-  // The player's own habits first: they are the ones they came for.
-  const all = [...custom, ...HABITS]
+  // The player's own habits first: they are the ones they came for. Then the starter
+  // plan's goals they have, so they can be taken out.
+  const all = [...custom, ...STARTER_GOALS.filter((g) => picked.includes(g.id)), ...HABITS]
 
   return (
     <>

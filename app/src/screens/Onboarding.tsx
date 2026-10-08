@@ -2,14 +2,15 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { HabitPicker } from '../components/HabitPicker'
 import { BLINKS, Medio, MEDIO } from '../components/Medio'
 import { Button } from '../components/ui'
-import type { AboutYou } from '../game/aboutYou'
-import { art, HABITS_TO_PICK } from '../game/content'
+import { buildPlan, type AboutYou } from '../game/aboutYou'
+import { art, HABITS_TO_PICK, PLAN_SIZE } from '../game/content'
 import { actions } from '../game/store'
+import { Generating, StarterPlan } from './PlanScreens'
 import { Questionnaire } from './Questionnaire'
 
 // First open: Gauchito se ceba un mate, te mira y charla con vos (see CLAUDE.md).
-type Step = 'scene' | 'name' | 'purpose' | 'player' | 'mate' | 'reply' | 'about' | 'quiz' | 'habits'
-type TalkStep = Exclude<Step, 'scene' | 'quiz'>
+type Step = 'scene' | 'name' | 'purpose' | 'player' | 'mate' | 'reply' | 'about' | 'quiz' | 'habits' | 'generating' | 'plan'
+type TalkStep = Exclude<Step, 'scene' | 'quiz' | 'generating' | 'plan'>
 
 /**
  * The opening, frame by frame. `steam` = the yerba, in % of the frame.
@@ -27,7 +28,9 @@ const SCENE: { pose: string; ms: number; steam?: [number, number] }[] = [
 const SCENE_POSES = [...new Set(SCENE.map((f) => f.pose))]
 
 const PURPOSE = 'Soy tu compañero para cuidarte un poquito cada día. ¡Y cuando vos te cuidás, a mí también me hace bien!'
-const GAUCHO_NAMES = ['Pancho', 'Tito', 'Chacho', 'Lalo', 'Cholo', 'Beto', 'Nino', 'Coco', 'Toto', 'Rulo', 'Fermín', 'Ramón']
+/** He is Paucho unless you call him something else. */
+const DEFAULT_NAME = 'Paucho'
+const GAUCHO_NAMES = ['Paucho', 'Tito', 'Chacho', 'Lalo', 'Cholo', 'Beto', 'Nino', 'Coco', 'Toto', 'Rulo', 'Fermín', 'Ramón']
 
 function preload() {
   const names = [
@@ -78,7 +81,7 @@ function Bubble({ children }: { children: ReactNode }) {
 /** `onPreviewDone`: replay from the test menu; the end goes back instead of saving anything. */
 export function Onboarding({ onPreviewDone }: { onPreviewDone?: () => void }) {
   const [step, setStep] = useState<Step>('scene')
-  const [companion, setCompanion] = useState('')
+  const [companion, setCompanion] = useState(DEFAULT_NAME)
   const [player, setPlayer] = useState('')
   const [wantsMate, setWantsMate] = useState(true)
   const [habits, setHabits] = useState<string[]>([])
@@ -86,11 +89,24 @@ export function Onboarding({ onPreviewDone }: { onPreviewDone?: () => void }) {
 
   useEffect(preload, [])
   const toAbout = useCallback(() => setStep('about'), [])
+  const toPlan = useCallback(() => setStep('plan'), [])
 
   if (step === 'scene') return <Scene onDone={() => setStep('name')} />
   if (step === 'quiz') {
     return (
       <Questionnaire player={player} answers={answers} onChange={setAnswers} onDone={() => setStep('habits')} onBack={() => setStep('about')} />
+    )
+  }
+  if (step === 'generating') return <Generating companion={companion.trim() || DEFAULT_NAME} onDone={toPlan} />
+  if (step === 'plan') {
+    const plan = buildPlan(habits, answers, PLAN_SIZE)
+    return (
+      <StarterPlan
+        player={player}
+        companion={companion.trim() || DEFAULT_NAME}
+        plan={plan}
+        onAccept={() => (onPreviewDone ? onPreviewDone() : actions.finishOnboarding(companion, plan, player, answers))}
+      />
     )
   }
 
@@ -178,14 +194,9 @@ export function Onboarding({ onPreviewDone }: { onPreviewDone?: () => void }) {
         {step === 'habits' && (
           <>
             <div className="mi-habits">
-              <HabitPicker picked={habits} onChange={setHabits} />
+              <HabitPicker picked={habits} onChange={setHabits} max={HABITS_TO_PICK} />
             </div>
-            <Button
-              disabled={habits.length === 0}
-              onClick={() => (onPreviewDone ? onPreviewDone() : actions.finishOnboarding(companion, habits, player, answers))}
-            >
-              {habits.length === 0 ? `Elegí ${HABITS_TO_PICK} hábitos` : 'Crear mis hábitos'}
-            </Button>
+            <Button onClick={() => setStep('generating')}>{habits.length === 0 ? 'Seguir sin elegir' : 'Armar mi plan'}</Button>
           </>
         )}
       </div>
@@ -217,7 +228,7 @@ function Talk({
     mate: { pose: 'b5_ofrece', text: `¡Un gusto, ${you}! ¿Querés un mate?` },
     reply: wantsMate ? { pose: 'b6_toma', text: '¡Tomá, está muy rico!' } : { pose: 'b7_mas_para_mi', text: '¡Más para mí!' },
     about: { pose: 'b2_habla', text: 'Bueno, y ahora contame un poco de vos.' },
-    habits: { pose: 'b2_habla', text: `¡Gracias por contarme, ${you}! Ahora elegí ${HABITS_TO_PICK} hábitos para empezar.`, lead: { pose: 'b4_contento', ms: 900 } },
+    habits: { pose: 'b2_habla', text: `¡Gracias por contarme, ${you}! Elegí hasta ${HABITS_TO_PICK} hábitos para tu plan.`, lead: { pose: 'b4_contento', ms: 900 } },
   }
   const line = lines[step]
   const leadMs = line.lead?.ms ?? 0

@@ -9,6 +9,7 @@ import {
   HABITS,
   ITEMS,
   itemById,
+  STARTER_GOALS,
   type HabitDef,
 } from './content'
 
@@ -123,7 +124,11 @@ export function subscribe(l: () => void) {
 // ---- lookups ----------------------------------------------------------
 
 export function findHabit(s: GameState, id: string): HabitDef {
-  return HABITS.find((h) => h.id === id) ?? s.customHabits.find((h) => h.id === id) ?? { id, name: id, emoji: '⭐' }
+  return (
+    HABITS.find((h) => h.id === id) ??
+    STARTER_GOALS.find((h) => h.id === id) ??
+    s.customHabits.find((h) => h.id === id) ?? { id, name: id, emoji: '⭐' }
+  )
 }
 
 /** Today's episode while out, or the one just finished. */

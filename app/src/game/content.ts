@@ -27,11 +27,35 @@ export const HABITS: HabitDef[] = [
   { id: 'pantallas', name: 'Apagar pantallas a las 23', icon: 'habit_pantallas' },
 ]
 
+/**
+ * Small self-care goals for the starter plan (onboarding): Finch's seven, plus a few
+ * the plan picks from "Contame un poco de vos" (see buildPlan in aboutYou.ts).
+ */
+export const STARTER_GOALS: HabitDef[] = [
+  { id: 'levantarme', name: 'Levantarme de la cama', emoji: '🌻' },
+  { id: 'dientes', name: 'Lavarme los dientes', emoji: '🪥' },
+  { id: 'cara', name: 'Lavarme la cara', emoji: '🧼' },
+  { id: 'vaso-agua', name: 'Tomar un vaso de agua', emoji: '💧' },
+  { id: 'estirarme', name: 'Estirarme un rato', emoji: '🦒' },
+  { id: 'feliz', name: 'Hacer algo que me haga feliz', emoji: '😊' },
+  { id: 'respirar', name: 'Respirar hondo 3 veces', emoji: '🍃' },
+  { id: 'los-mios', name: 'Un rato sin pantallas con los míos', emoji: '🏡' },
+  { id: 'escribirle', name: 'Escribirle a alguien que quiero', emoji: '💌' },
+  { id: 'algo-bien', name: 'Anotar algo que hice bien', emoji: '✍️' },
+  { id: 'tender-cama', name: 'Tender la cama', emoji: '🛏️' },
+  { id: 'caminar', name: 'Salir a caminar 10 minutos', emoji: '🚶' },
+  { id: 'mensaje', name: 'Responder un mensaje pendiente', emoji: '💬' },
+  { id: 'pendiente', name: 'Hacer una cosa que vengo postergando', emoji: '✅' },
+]
+
 /** Emojis offered when creating your own habit. */
 export const HABIT_EMOJIS = ['🧸', '🤗', '❤️', '🏋️', '🏃', '🚴', '🧘', '📚', '💧', '🍎', '😴', '🎸', '🌱', '☀️', '🍳', '📵', '🐶', '🎨', '✍️', '📞']
 
+/** Habits you pick in onboarding, before the plan fills up the rest. */
 export const HABITS_TO_PICK = 3
-export const MAX_HABITS = 5
+/** The starter plan has as many goals as Finch's. */
+export const PLAN_SIZE = 7
+export const MAX_HABITS = PLAN_SIZE
 export const ENERGY_GOAL = 100
 /** Daily pace: the adventure takes two real hours. */
 export const ADVENTURE_MS = 2 * 60 * 60 * 1000
