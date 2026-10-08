@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import type { AboutYou } from './aboutYou'
 import {
   ADVENTURE_COINS,
   ADVENTURE_MS,
@@ -21,6 +22,8 @@ export type GameState = {
   name: string
   /** The player's own name (used in greetings and reminders). */
   playerName: string
+  /** Onboarding questionnaire answers ("Contame un poco de vos"), for the personalized plan. */
+  aboutYou: AboutYou | null
   habits: string[]
   /** Habits the player created (name + emoji). */
   customHabits: HabitDef[]
@@ -50,6 +53,7 @@ const initial = (): GameState => ({
   onboarded: false,
   name: 'Gauchito',
   playerName: '',
+  aboutYou: null,
   habits: [],
   customHabits: [],
   completions: {},
@@ -144,8 +148,8 @@ export function adventureRemainingMs(s: GameState = state) {
 // ---- actions ----------------------------------------------------------
 
 export const actions = {
-  finishOnboarding(name: string, habits: string[], playerName = '') {
-    set({ ...state, onboarded: true, name: name.trim() || 'Gauchito', playerName: playerName.trim(), habits })
+  finishOnboarding(name: string, habits: string[], playerName = '', aboutYou: AboutYou | null = null) {
+    set({ ...state, onboarded: true, name: name.trim() || 'Gauchito', playerName: playerName.trim(), aboutYou, habits })
   },
 
   /** Creates a habit of the player's own and returns its id. */

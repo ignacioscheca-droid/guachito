@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { HabitPicker } from '../components/HabitPicker'
+import { BLINKS, Medio, MEDIO } from '../components/Medio'
 import { Button } from '../components/ui'
+import type { AboutYou } from '../game/aboutYou'
 import { art, HABITS_TO_PICK } from '../game/content'
 import { actions } from '../game/store'
+import { Questionnaire } from './Questionnaire'
 
 // First open: Gauchito se ceba un mate, te mira y charla con vos (see CLAUDE.md).
-type Step = 'scene' | 'name' | 'purpose' | 'player' | 'mate' | 'reply' | 'habits'
+type Step = 'scene' | 'name' | 'purpose' | 'player' | 'mate' | 'reply' | 'about' | 'quiz' | 'habits'
+type TalkStep = Exclude<Step, 'scene' | 'quiz'>
 
 /**
  * The opening, frame by frame. `steam` = the yerba, in % of the frame.
@@ -21,10 +25,6 @@ const SCENE: { pose: string; ms: number; steam?: [number, number] }[] = [
   { pose: 'a5_te_mira', ms: 1400, steam: [73.1, 43.6] },
 ]
 const SCENE_POSES = [...new Set(SCENE.map((f) => f.pose))]
-
-/** Plano medio poses; the ones in BLINKS also have a `_parpadeo` variant. */
-const MEDIO = ['b1_saluda', 'b2_habla', 'b3_escucha', 'b4_contento', 'b5_ofrece', 'b6_toma', 'b7_mas_para_mi', 'b8_curioso']
-const BLINKS = new Set(['b2_habla', 'b3_escucha'])
 
 const PURPOSE = 'Soy tu compañero para cuidarte un poquito cada día. ¡Y cuando vos te cuidás, a mí también me hace bien!'
 const GAUCHO_NAMES = ['Pancho', 'Tito', 'Chacho', 'Lalo', 'Cholo', 'Beto', 'Nino', 'Coco', 'Toto', 'Rulo', 'Fermín', 'Ramón']
@@ -67,46 +67,6 @@ function useTalk(text: string, delayMs = 0) {
   return { shown: text.slice(0, count), talking: count > 0 && count < text.length, done: count >= text.length }
 }
 
-/** Gauchito in plano medio: the mouth moves while he talks and he blinks now and then. */
-function Medio({ pose, talking }: { pose: string; talking: boolean }) {
-  const [open, setOpen] = useState(false)
-  const [blink, setBlink] = useState(false)
-
-  useEffect(() => {
-    if (!talking) {
-      setOpen(false)
-      return
-    }
-    const id = window.setInterval(() => setOpen((o) => !o), 140)
-    return () => clearInterval(id)
-  }, [talking])
-
-  useEffect(() => {
-    if (!BLINKS.has(pose)) return
-    let t = 0
-    const loop = () => {
-      t = window.setTimeout(() => {
-        setBlink(true)
-        window.setTimeout(() => setBlink(false), 150)
-        loop()
-      }, 2200 + Math.random() * 1800)
-    }
-    loop()
-    return () => clearTimeout(t)
-  }, [pose])
-
-  const variants = ['cerrada', 'abierta', ...(BLINKS.has(pose) ? ['parpadeo'] : [])]
-  const variant = open ? 'abierta' : blink && BLINKS.has(pose) ? 'parpadeo' : 'cerrada'
-  // All variants stacked: switching is only visibility, so nothing flickers while decoding.
-  return (
-    <div className="mi-medio" key={pose}>
-      {variants.map((v) => (
-        <img key={v} src={art(`mate_${pose}_${v}`)} alt="" style={{ opacity: v === variant ? 1 : 0 }} draggable={false} />
-      ))}
-    </div>
-  )
-}
-
 function Bubble({ children }: { children: ReactNode }) {
   return (
     <div className="mi-bubble" aria-live="polite">
@@ -122,15 +82,21 @@ export function Onboarding({ onPreviewDone }: { onPreviewDone?: () => void }) {
   const [player, setPlayer] = useState('')
   const [wantsMate, setWantsMate] = useState(true)
   const [habits, setHabits] = useState<string[]>([])
+  const [answers, setAnswers] = useState<AboutYou>({})
 
   useEffect(preload, [])
-  const toHabits = useCallback(() => setStep('habits'), [])
+  const toAbout = useCallback(() => setStep('about'), [])
 
   if (step === 'scene') return <Scene onDone={() => setStep('name')} />
+  if (step === 'quiz') {
+    return (
+      <Questionnaire player={player} answers={answers} onChange={setAnswers} onDone={() => setStep('habits')} onBack={() => setStep('about')} />
+    )
+  }
 
   return (
     <div className={`screen mi mi--${step}${step === 'reply' && wantsMate ? ' mi--hand' : ''}`}>
-      <Talk step={step} companion={companion} player={player} wantsMate={wantsMate} onReplyDone={toHabits} />
+      <Talk step={step} companion={companion} player={player} wantsMate={wantsMate} onReplyDone={toAbout} />
 
       <div className="mi-sheet">
         {step === 'name' && (
@@ -166,6 +132,8 @@ export function Onboarding({ onPreviewDone }: { onPreviewDone?: () => void }) {
         )}
 
         {step === 'purpose' && <Button onClick={() => setStep('player')}>¡Dale!</Button>}
+
+        {step === 'about' && <Button onClick={() => setStep('quiz')}>¡Dale!</Button>}
 
         {step === 'player' && (
           <form
@@ -214,7 +182,7 @@ export function Onboarding({ onPreviewDone }: { onPreviewDone?: () => void }) {
             </div>
             <Button
               disabled={habits.length === 0}
-              onClick={() => (onPreviewDone ? onPreviewDone() : actions.finishOnboarding(companion, habits, player))}
+              onClick={() => (onPreviewDone ? onPreviewDone() : actions.finishOnboarding(companion, habits, player, answers))}
             >
               {habits.length === 0 ? `Elegí ${HABITS_TO_PICK} hábitos` : 'Crear mis hábitos'}
             </Button>
@@ -235,20 +203,21 @@ function Talk({
   wantsMate,
   onReplyDone,
 }: {
-  step: Exclude<Step, 'scene'>
+  step: TalkStep
   companion: string
   player: string
   wantsMate: boolean
   onReplyDone: () => void
 }) {
   const you = player.trim()
-  const lines: Record<Exclude<Step, 'scene'>, Line> = {
+  const lines: Record<TalkStep, Line> = {
     name: { pose: 'b1_saluda', text: '¡Hola! Soy el Gauchito' },
     purpose: { pose: 'b2_habla', text: PURPOSE, lead: { pose: 'b4_contento', ms: 900 } },
     player: { pose: 'b3_escucha', text: '¿Cómo te llamás?' },
     mate: { pose: 'b5_ofrece', text: `¡Un gusto, ${you}! ¿Querés un mate?` },
     reply: wantsMate ? { pose: 'b6_toma', text: '¡Tomá, está muy rico!' } : { pose: 'b7_mas_para_mi', text: '¡Más para mí!' },
-    habits: { pose: 'b8_curioso', text: `¿Qué te trae por acá, ${you}?` },
+    about: { pose: 'b2_habla', text: 'Bueno, y ahora contame un poco de vos.' },
+    habits: { pose: 'b2_habla', text: `¡Gracias por contarme, ${you}! Ahora elegí ${HABITS_TO_PICK} hábitos para empezar.`, lead: { pose: 'b4_contento', ms: 900 } },
   }
   const line = lines[step]
   const leadMs = line.lead?.ms ?? 0
