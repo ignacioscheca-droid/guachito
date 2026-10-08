@@ -48,7 +48,10 @@ and the `guachito_assets/` folder. Everything people read says Gauchito.
   `EnergyFull.tsx`: the bar counts to "¡Al máximo!", "¡Yujuuu!" + 30 coins flying to the
   counter, then "El rancho de Paucho está creciendo" (Finch's bird grows up; Paucho can't,
   so the ranch does: Ranchito → Puesto at 7 full-energy days → Estancia at 21,
-  `RANCH_STAGES` in content.ts; the Rancho tab is titled with the stage), then
+  `RANCH_STAGES` in content.ts; the Rancho tab is titled with the stage; art per stage is
+  being tried: mockup brief in the Claude Doc "Gauchito — Etapas del rancho (mockups)",
+  https://claude.ai/code/artifact/708b4a2d-1ce9-4692-a086-c4dc5e2bbda6, kit in
+  `kit_rancho_etapas/`, results go to `rancho_etapas/`, both local only), then
   "¡Salir de aventura!" → 8-hour adventure; Home shows him riding the pampas with a
   "vuelve en…" track. Habits leave the list with confetti and a toast ("¡Primera vez que
   lo completás!"); done ones fold into "Hechos hoy". One episode per adventure, 7 in all.
