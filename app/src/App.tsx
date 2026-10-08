@@ -58,10 +58,26 @@ export default function App() {
   const [testMenu, setTestMenu] = useState(false)
   const [settings, setSettings] = useState(false)
   const [replayOnboarding, setReplayOnboarding] = useState(false)
+  const [arriving, setArriving] = useState(false)
   const remaining = useAdventureClock()
   const testMode = new URLSearchParams(location.search).has('test')
 
   useEffect(preloadGauchito, [])
+
+  // Out of the onboarding into Home: the blue of the last screen fades away, the panel
+  // comes up like Finch's, and Gauchito celebrates as he lands.
+  const arrive = () => {
+    setTab('home')
+    setView('tabs')
+    setArriving(true)
+    window.setTimeout(() => setCelebrateKey((k) => k + 1), 450)
+    window.setTimeout(() => setArriving(false), 1200)
+  }
+  const wasOnboarded = useRef(onboarded)
+  useEffect(() => {
+    if (onboarded && !wasOnboarded.current) arrive()
+    wasOnboarded.current = onboarded
+  }, [onboarded]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Every screen starts at the top (the story screen is long and scrolls).
   useEffect(() => {
@@ -91,7 +107,14 @@ export default function App() {
   if (!onboarded) {
     content = <Onboarding />
   } else if (replayOnboarding) {
-    content = <Onboarding onPreviewDone={() => setReplayOnboarding(false)} />
+    content = (
+      <Onboarding
+        onPreviewDone={() => {
+          setReplayOnboarding(false)
+          arrive()
+        }}
+      />
+    )
   } else if (view === 'ready') {
     content = (
       <AdventureReady
@@ -117,7 +140,7 @@ export default function App() {
   } else {
     content = (
       <>
-        <main className="tabs" key={tab}>
+        <main className={`tabs${arriving ? ' tabs--arriving' : ''}`} key={tab}>
           {tab === 'home' && (
             <Home
               width={width}
@@ -141,6 +164,7 @@ export default function App() {
   return (
     <div className="app" ref={ref}>
       {content}
+      {arriving && <div className="arrive-veil" aria-hidden />}
       {done && (
         <HabitDone
           {...done}

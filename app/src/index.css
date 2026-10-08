@@ -3064,3 +3064,47 @@ img {
     rotate: 360deg;
   }
 }
+
+/* ---------- from the onboarding into Home ---------- */
+
+/* the last onboarding screen's blue, fading away over Home */
+.arrive-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  background: linear-gradient(180deg, #3a93d2, #5eaee3);
+  animation: arrive-veil 0.5s ease-out forwards;
+}
+.tabs--arriving .home__panel {
+  animation: arrive-panel 0.6s 0.05s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+.tabs--arriving .home__top {
+  animation: arrive-top 0.5s 0.2s ease-out both;
+}
+
+@keyframes arrive-veil {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes arrive-panel {
+  from {
+    opacity: 0;
+    transform: translateY(90px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes arrive-top {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
