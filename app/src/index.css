@@ -1748,8 +1748,8 @@ img {
   position: absolute;
   left: 50%;
   bottom: 7%;
-  width: min(78%, 360px);
-  aspect-ratio: 640 / 944;
+  width: min(72.5%, 335px);
+  aspect-ratio: 640 / 990;
   translate: -50% 0;
   animation: breathe-guy 2.6s ease-in-out infinite;
   transform-origin: 50% 100%;

@@ -18,13 +18,13 @@ type Step = 'scene' | TalkStep | 'quiz' | 'generating' | 'plan' | 'day1' | 'stre
  * After pouring he goes back to A1: A2·3 says the same but has a smoky halo baked in.
  */
 const SCENE: { pose: string; ms: number; steam?: [number, number] }[] = [
-  { pose: 'a1_base', ms: 1100, steam: [73.6, 43.6] },
+  { pose: 'a1_base', ms: 1100, steam: [79, 43.7] },
   { pose: 'a2_cebando_1', ms: 450 },
   { pose: 'a2_cebando_2', ms: 1300 },
-  { pose: 'a1_base', ms: 500, steam: [73.6, 43.6] },
+  { pose: 'a1_base', ms: 500, steam: [79, 43.7] },
   { pose: 'a3_sorbo', ms: 1300 },
-  { pose: 'a4_ahh', ms: 1100, steam: [72.7, 45.2] },
-  { pose: 'a5_te_mira', ms: 1400, steam: [73.1, 43.6] },
+  { pose: 'a4_ahh', ms: 1100, steam: [78, 45.3] },
+  { pose: 'a5_te_mira', ms: 1400, steam: [79, 43.7] },
 ]
 const SCENE_POSES = [...new Set(SCENE.map((f) => f.pose))]
 

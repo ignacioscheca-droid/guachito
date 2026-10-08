@@ -78,9 +78,9 @@ and the `guachito_assets/` folder. Everything people read says Gauchito.
   1024×1536 (cebando, sorbo, "ahh", te mira), B = plano medio 1254×1254 with
   `_cerrada`/`_abierta` (+ `_parpadeo` for b2/b3); variants are pixel-aligned.
   `design/tools/import_mate_scene.py` cleans the halos of A2·1, A3, A4. A2·3 keeps a
-  smoky halo, so the scene plays A1 in its place. A5 (te mira) has an opaque halo and is
-  being redone by the owner: re-run the script when it arrives and re-check the `steam`
-  point in `SCENE`.
+  smoky halo, so the scene plays A1 in its place. A5 (te mira) was redone clean on
+  2026-10-08; if any A pose changes, the shared crop can change too: re-check the
+  `steam` points in `SCENE` and the `.mi-scene__guy` aspect ratio.
 
 ## Art
 
