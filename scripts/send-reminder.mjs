@@ -17,9 +17,9 @@ const { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, PUSH_SUBSCRIPTION, SCHEDULE = '', K
 const SLOTS = { 9: 'morning', 16: 'reminder', 21: 'night' }
 /** Used by the phone only if it has no snapshot of the app yet. */
 const FALLBACK = {
-  morning: { title: '¡Buen día! ☀️', body: 'Gauchito ya cebó el primer mate. ¿Arrancamos?' },
+  morning: { title: 'Gauchito ☀️', body: '¡Arriba, que hoy va a ser un gran día!' },
   reminder: { title: 'Gauchito 🧉', body: '¿Cómo vienen los hábitos de hoy? Gauchito ya ensilló el caballo.' },
-  night: { title: 'Buenas noches 🌙', body: 'Gauchito ya se va a dormir. Mañana seguimos.' },
+  night: { title: 'Gauchito 🌙', body: '¡Qué sueño! Fue un día duro, ¿vamos a descansar?' },
 }
 /** How long the push service keeps trying if the phone is offline (a 9:00 "buen día" at noon is no use). */
 const TTL_HOURS = { morning: 3, reminder: 4, night: 2 }

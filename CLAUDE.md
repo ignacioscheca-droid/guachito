@@ -32,9 +32,11 @@ and the `guachito_assets/` folder. Everything people read says Gauchito.
   Secrets: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `PUSH_SUBSCRIPTION` (copied from the
   app's Ajustes on the phone; set 2026-10-08). The public key is also in
   `app/src/game/push.ts`. iPhone push only works from the installed Home Screen app.
-  The push carries only its kind: `app/public/sw.js` writes the text on the phone from a
-  snapshot of today's state that the app keeps in IndexedDB (`src/game/reminderSnapshot.ts`)
-  — what's done, what's missing, where Gauchito is. Ajustes → 9:00 / 16:00 / 21:00 shows them.
+  The push carries only its kind; `app/public/sw.js` writes the text on the phone.
+  Morning and night are plain greetings from Gauchito, never about the habits (the owner's
+  call): one per day from `GREETINGS` in sw.js. The 16:00 reminder reads a snapshot of
+  today's state that the app keeps in IndexedDB (`src/game/reminderSnapshot.ts`) — what's
+  done, what's missing, where Gauchito is. Ajustes → 9:00 / 16:00 / 21:00 shows them.
 - Content and tuning: `app/src/game/content.ts` — habit catalog, energy split
   (all of today's habits = exactly 100), 7 daily episodes, ranch items and their
   patio spots.

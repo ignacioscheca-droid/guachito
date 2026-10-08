@@ -1,8 +1,9 @@
 // Gauchito service worker: shows the daily notifications and opens the app on tap.
 // Three a day (.github/workflows/reminder.yml): "morning" at 9:00, "reminder" at 16:00
-// and "night" at 21:00. The text is written here, on the phone, from the snapshot the
-// app keeps in IndexedDB (src/game/reminderSnapshot.ts): what is done today, what is
-// missing, and where Gauchito is. The push from GitHub only says which one it is.
+// and "night" at 21:00. The push from GitHub only says which one it is; the text is
+// written here, on the phone. Morning and night are plain greetings. The reminder reads
+// the snapshot the app keeps in IndexedDB (src/game/reminderSnapshot.ts): what is done
+// today, what is missing, and where Gauchito is.
 self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()))
 
@@ -43,17 +44,12 @@ const list = (hs) => {
   const xs = hs.map(label)
   return xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} y ${xs[xs.length - 1]}`
 }
-/** Same variant all day, a different one each day. */
-const pick = (variants, now) => variants[now.getDate() % variants.length]
+/** Same variant all day, the next one the next day. */
+const pick = (variants, now) => variants[Math.floor((now.getTime() - now.getTimezoneOffset() * 60000) / 86400000) % variants.length]
 
-const FALLBACKS = {
-  morning: { title: '¡Buen día! ☀️', body: 'Gauchito ya cebó el primer mate. ¿Arrancamos?' },
-  reminder: { title: 'Gauchito 🧉', body: '¿Cómo vienen los hábitos de hoy?' },
-  night: { title: 'Buenas noches 🌙', body: 'Gauchito ya se va a dormir. Mañana seguimos.' },
-}
-const FALLBACK = FALLBACKS.reminder
+const FALLBACK = { title: 'Gauchito 🧉', body: '¿Cómo vienen los hábitos de hoy?' }
 
-/** What every message needs to know about today. */
+/** What the reminder needs to know about today. */
 function today(s, now) {
   const name = s.name || 'Gauchito'
   const you = (s.playerName || '').trim()
@@ -76,58 +72,17 @@ function today(s, now) {
 }
 const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1)
 
-function composeMorning(s, now = new Date()) {
-  if (!s || !Array.isArray(s.habits)) return FALLBACKS.morning
-  const { name, toYou, a, back, where, done, missing } = today(s, now)
-  const title = `¡Buen día${toYou}! ☀️`
-  const andGift = s.rewardItem ? ' y un regalo para el rancho' : ''
-  if (back) return { title, body: `${name} volvió${where} con una historia${andGift}. Ideal para leer con el primer mate 🧉` }
-  if (a.status === 'running') return { title, body: `${name} salió temprano: anda por las pampas y vuelve a las ${hhmm(a.returnAt)}.` }
-  if (a.status === 'ready') return { title, body: `${name} tiene toda la energía y te espera para salir de aventura 🐴` }
-  if (s.habits.length === 0) return { title, body: `${name} ya cebó el primer mate. ¿Qué hacemos hoy?` }
-  if (missing.length === 0) return { title, body: `¡Ya hiciste todo y recién arranca el día! ${name} no lo puede creer.` }
-  if (done.length > 0) return { title, body: `Ya arrancaste con ${list(done)} 💪 Te ${missing.length === 1 ? 'queda' : 'quedan'} ${list(missing)}.` }
-  const trip = s.nextEpisode ? `Con ${list(missing)}, hoy sale a “${s.nextEpisode}”.` : `Hoy te esperan ${list(missing)}.`
-  return {
-    title,
-    body: pick(
-      [
-        `${name} ya cebó el primer mate. Hoy te esperan ${list(missing)}.`,
-        `Arranca un día nuevo en el rancho. ${trip}`,
-        `El sol ya salió en las pampas 🌄 ¿Arrancamos con ${label(missing[0])}?`,
-      ],
-      now,
-    ),
-  }
+// Buen día and buenas noches are only greetings from Gauchito: they never look at the
+// habits. One variant per day, in turn.
+const GREETINGS = {
+  morning: (you) => [`¡Buen día${you ? `, ${you}` : ''}! ¡Qué buena mañana para unos mates!`, '¡Arriba, que hoy va a ser un gran día!'],
+  night: () => ['¡Día completo, estoy orgulloso de vos! Que descanses.', '¡Qué sueño! Fue un día duro, ¿vamos a descansar?'],
 }
 
-function composeNight(s, now = new Date()) {
-  if (!s || !Array.isArray(s.habits)) return FALLBACKS.night
-  const { name, toYou, a, back, where, done, missing } = today(s, now)
-  const title = `Buenas noches${toYou} 🌙`
-  const andGift = s.rewardItem ? ' y un regalo para el rancho' : ''
-  if (back) return { title, body: `Antes de dormir: ${name} te trajo la historia${where}${andGift} 📖` }
-  if (a.status === 'running') return { title, body: `${name} todavía anda por las pampas. Vuelve a las ${hhmm(a.returnAt)} y mañana te cuenta todo.` }
-  if (a.status === 'ready') return { title, body: `¡Juntaste toda la energía! Mandá a ${name} de aventura y mañana te cuenta.` }
-  if (s.habits.length > 0 && missing.length === 0) {
-    return {
-      title,
-      body: pick([`¡Día completo! ${name} se va a dormir orgulloso de vos.`, `Hoy hiciste todo: ${list(done)}. Que descanses.`], now),
-    }
-  }
-  if (done.length > 0) {
-    return { title, body: `Hoy hiciste ${list(done)} 👏 Si te da, todavía hay tiempo para ${list(missing)}. Si no, mañana seguimos.` }
-  }
-  return {
-    title,
-    body: pick(
-      [
-        `Hoy fue un día tranqui en el rancho, y está bien. Mañana a las 9 ${name} te espera con el mate.`,
-        `${name} ya colgó el sombrero. Mañana arrancamos de nuevo, sin apuro.`,
-      ],
-      now,
-    ),
-  }
+function greet(kind, s, now = new Date()) {
+  const name = (s && s.name) || 'Gauchito'
+  const you = ((s && s.playerName) || '').trim()
+  return { title: `${name} ${kind === 'morning' ? '☀️' : '🌙'}`, body: pick(GREETINGS[kind](you), now) }
 }
 
 function composeReminder(s, now = new Date()) {
@@ -192,15 +147,14 @@ function composeReminder(s, now = new Date()) {
   }
   return { title, body: `¡Vas ${done.length}/${s.habits.length}${toYou}! Ya hiciste ${list(done)}. Faltan ${list(missing)}.` }
 }
-const COMPOSE = { morning: composeMorning, reminder: composeReminder, night: composeNight }
 function compose(kind, s, now = new Date()) {
-  return (COMPOSE[kind] || composeReminder)(s, now)
+  return GREETINGS[kind] ? greet(kind, s, now) : composeReminder(s, now)
 }
 self.compose = compose // exposed for tests
 
 async function showReminder(kind = 'reminder', fallback = {}) {
   const snapshot = await readSnapshot()
-  const msg = snapshot ? compose(kind, snapshot) : { ...(FALLBACKS[kind] || FALLBACK), ...fallback }
+  const msg = snapshot || GREETINGS[kind] ? compose(kind, snapshot) : { ...FALLBACK, ...fallback }
   return self.registration.showNotification(msg.title, {
     body: msg.body,
     icon: 'icon-192.png',

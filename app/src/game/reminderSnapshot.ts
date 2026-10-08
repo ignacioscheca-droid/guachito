@@ -29,8 +29,6 @@ export type ReminderSnapshot = {
   completions: Record<string, string[]>
   adventure: { status: GameState['adventure']['status']; returnAt: number | null; episode: string | null }
   rewardItem: string | null
-  /** The story the next adventure brings (teased in the morning). */
-  nextEpisode: string
 }
 
 function build(s: GameState): ReminderSnapshot {
@@ -49,7 +47,6 @@ function build(s: GameState): ReminderSnapshot {
     completions: Object.fromEntries(days.map((d) => [d, s.completions[d]])),
     adventure: { status, returnAt: startedAt != null ? startedAt + ADVENTURE_MS : null, episode },
     rewardItem: s.pendingReward?.itemId ? itemById(s.pendingReward.itemId).name : null,
-    nextEpisode: EPISODES[runs % EPISODES.length].title,
   }
 }
 
