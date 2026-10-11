@@ -1,6 +1,7 @@
 # Builds the web app and publishes it to GitHub Pages on every push to main.
-# The idle-tycoon exploration (branch idle-tycoon) is built too and published beside
-# the app at /<repo>/idle/; after pushing that branch, run this workflow by hand.
+# Two other branches are built too and published beside the app: the idle-tycoon
+# exploration at /<repo>/idle/ and Gauchito 2 (branch areas) at /<repo>/areas/. After
+# pushing either branch, run this workflow by hand.
 name: Deploy
 
 on:
@@ -42,6 +43,16 @@ jobs:
             npm ci
             BASE_PATH=/${{ github.event.repository.name }}/idle/ npm run build
             cp -r dist "$GITHUB_WORKSPACE/app/dist/idle"
+          fi
+      - name: Build Gauchito 2 (branch areas) into /areas/
+        run: |
+          if git ls-remote --exit-code --heads origin areas > /dev/null; then
+            git fetch --depth 1 origin areas
+            git worktree add ../areas FETCH_HEAD
+            cd ../areas/app
+            npm ci
+            BASE_PATH=/${{ github.event.repository.name }}/areas/ npm run build
+            cp -r dist "$GITHUB_WORKSPACE/app/dist/areas"
           fi
       - uses: actions/upload-pages-artifact@v3
         with:
