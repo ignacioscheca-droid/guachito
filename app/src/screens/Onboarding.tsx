@@ -9,7 +9,8 @@ import { DayOneCard, StreakDay, StreakGoal } from './DayOne'
 import { Generating, StarterPlan } from './PlanScreens'
 import { Questionnaire } from './Questionnaire'
 
-// First open: Gauchito se ceba un mate, te mira y charla con vos (see CLAUDE.md).
+// First open: Gauchito se ceba un mate, te mira y charla con vos (see CLAUDE.md). In this
+// build it happens on the empty lot where he is about to build his casita (area1_0).
 type TalkStep = 'name' | 'purpose' | 'player' | 'mate' | 'reply' | 'about' | 'habits'
 type Step = 'scene' | TalkStep | 'quiz' | 'generating' | 'plan' | 'day1' | 'streak' | 'goal'
 
@@ -271,7 +272,7 @@ function Talk({
   return (
     <>
       <div className="mi-top">
-        <img className="mi-bg" src={art('bg_patio')} alt="" />
+        <img className="mi-bg" src={art('area1_0')} alt="" />
         <Medio pose={pose} talking={talking} />
       </div>
       <Bubble>
@@ -303,7 +304,7 @@ function Scene({ onDone }: { onDone: () => void }) {
   const frame = SCENE[i]
   return (
     <div className={`screen mi-scene${leaving ? ' mi-scene--leaving' : ''}`} onClick={() => setLeaving(true)}>
-      <img className="mi-scene__bg" src={art('bg_patio')} alt="" />
+      <img className="mi-scene__bg" src={art('area1_0')} alt="" />
       <div className="mi-scene__guy">
         {SCENE_POSES.map((p) => (
           <img key={p} src={art(`mate_${p}`)} alt="" style={{ opacity: p === frame.pose ? 1 : 0 }} draggable={false} />
