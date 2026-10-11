@@ -48,7 +48,6 @@ function PieceArt({ obra, look }: { obra: Obra; look?: ObraLook }) {
       <div className={`asign ${cls}`} style={place(p.sign)}>
         <div className="asign__board">
           <b>{obra.emoji}</b>
-          <span>{obra.name}</span>
           {look?.mode === 'charging' && <i style={{ width: `${(look.progress ?? 0) * 100}%` }} />}
         </div>
         <div className="asign__post" />

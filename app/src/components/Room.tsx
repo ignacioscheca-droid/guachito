@@ -77,10 +77,8 @@ export function RoomThing({ id }: { id: string }) {
 }
 
 type Props = {
+  /** Things bought: each has its own place in the room (the player never picks it). */
   items: string[]
-  /** Things not bought yet show as a dashed "+" (tap: see it in the shop). */
-  slots?: string[]
-  onSlot?: (id: string) => void
   /** The thing just bought, to make it pop. */
   fresh?: string | null
   pose?: PauchoPose
@@ -89,7 +87,7 @@ type Props = {
   children?: ReactNode
 }
 
-export function Room({ items, slots = [], onSlot, fresh, pose = 'idle', outfit, celebrateKey, children }: Props) {
+export function Room({ items, fresh, pose = 'idle', outfit, celebrateKey, children }: Props) {
   const box = useRef<HTMLDivElement>(null)
   const [w, setW] = useState(W)
   useLayoutEffect(() => {
@@ -151,19 +149,12 @@ export function Room({ items, slots = [], onSlot, fresh, pose = 'idle', outfit, 
 
         {Object.entries(ROOM_SPOTS).map(([id, [x, y, sw, sh]]) => {
           const style = { left: x, top: y, width: sw, height: sh }
-          if (items.includes(id))
-            return (
-              <div key={id} className={`rthing rthing--${id}${fresh === id ? ' rthing--fresh' : ''}`} style={style}>
-                <RoomThing id={id} />
-              </div>
-            )
-          if (slots.includes(id))
-            return (
-              <button key={id} className="rslot" style={style} onClick={() => onSlot?.(id)} aria-label="Ver en la tienda">
-                +
-              </button>
-            )
-          return null
+          if (!items.includes(id)) return null
+          return (
+            <div key={id} className={`rthing rthing--${id}${fresh === id ? ' rthing--fresh' : ''}`} style={style}>
+              <RoomThing id={id} />
+            </div>
+          )
         })}
 
         <Paucho pose={pose} outfit={outfit} celebrateKey={celebrateKey} className="room__paucho" />

@@ -3690,7 +3690,7 @@ img.apiece[style*='bottom'] {
   container-type: inline-size;
 }
 .asign__board b {
-  font-size: 34cqw;
+  font-size: 48cqw;
   line-height: 1.05;
 }
 .asign__board span {
@@ -3782,23 +3782,6 @@ img.apiece[style*='bottom'] {
 .jobthumb--emoji {
   font-size: 26px;
 }
-.jobsteps {
-  display: flex;
-  gap: 5px;
-  margin-top: 6px;
-}
-.jobsteps span {
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: var(--line);
-  font-size: 11.5px;
-  font-weight: 900;
-  color: var(--muted);
-}
-.jobsteps .on {
-  background: #e6f2dc;
-  color: #4f7a2a;
-}
 .ecard--done {
   background: linear-gradient(180deg, #fff6dc, #ffeab3);
   box-shadow: 0 0 0 2px #f2b33d, var(--shadow);
@@ -3825,22 +3808,15 @@ img.apiece[style*='bottom'] {
 .hlist__open::-webkit-scrollbar {
   display: none;
 }
+.hlist__open--more {
+  mask-image: linear-gradient(#000 78%, transparent);
+}
+.home__top--bare {
+  justify-content: flex-end;
+}
 .hlist .row {
   min-height: 52px;
   margin-bottom: 6px;
-}
-.hlist__easy {
-  display: block;
-  font-size: 12px;
-  font-weight: 900;
-  color: #4f7a2a;
-}
-.hlist__more {
-  margin: -2px 0 4px;
-  text-align: center;
-  font-size: 12px;
-  font-weight: 900;
-  color: var(--brown);
 }
 .track__emoji {
   font-size: 22px;
@@ -4019,17 +3995,6 @@ img.apiece[style*='bottom'] {
   font-size: 26px;
   line-height: 1;
 }
-.rslot {
-  position: absolute;
-  display: grid;
-  place-items: center;
-  border: 3px dashed rgba(139, 94, 60, 0.45);
-  border-radius: 16px;
-  background: rgba(255, 253, 248, 0.35);
-  font-size: 26px;
-  font-weight: 900;
-  color: rgba(139, 94, 60, 0.75);
-}
 .room__paucho {
   left: 316px;
   bottom: 22px;
@@ -4042,48 +4007,9 @@ img.apiece[style*='bottom'] {
   z-index: 9;
   inset: calc(var(--safe-top) + 12px) 14px auto 16px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   gap: 8px;
-}
-.casita__top h1 {
-  font-size: 24px;
-  font-weight: 900;
-  color: #fff8ec;
-  text-shadow: 0 1px 8px rgba(60, 35, 15, 0.6);
-}
-.casita__say {
-  position: absolute;
-  z-index: 9;
-  right: 12px;
-  top: 34%;
-  width: 52%;
-  padding: 10px 14px;
-  border-radius: 16px;
-  background: var(--card);
-  box-shadow: var(--shadow);
-  font-size: 14.5px;
-  font-weight: 800;
-  line-height: 1.3;
-  animation: rise 0.35s ease-out;
-}
-.casita__say--up {
-  z-index: 31;
-}
-.casita__toast {
-  position: absolute;
-  z-index: 9;
-  left: 50%;
-  top: 22%;
-  transform: translateX(-50%);
-  padding: 8px 16px;
-  border-radius: 999px;
-  background: var(--card);
-  box-shadow: var(--shadow);
-  font-size: 14px;
-  font-weight: 900;
-  white-space: nowrap;
-  animation: rise 0.35s ease-out;
 }
 .shopstrip {
   position: relative;
@@ -4214,9 +4140,6 @@ img.apiece[style*='bottom'] {
 .scard--on {
   box-shadow: 0 0 0 3px #7a9a4b, var(--shadow);
 }
-.scard--flash {
-  box-shadow: 0 0 0 3px var(--gold), 0 0 18px rgba(242, 179, 61, 0.7);
-}
 .sicon {
   font-size: 34px;
   line-height: 1;
@@ -4238,26 +4161,6 @@ img.apiece[style*='bottom'] {
     0 0 0 2000px rgba(30, 18, 8, 0.6);
   pointer-events: none;
   animation: fade 0.4s;
-}
-.ttip {
-  position: absolute;
-  z-index: 32;
-  width: 250px;
-  padding: 9px 14px;
-  border-radius: 14px;
-  background: var(--card);
-  box-shadow: var(--shadow);
-  font-size: 15px;
-  font-weight: 900;
-  line-height: 1.25;
-  pointer-events: none;
-}
-.ttip small {
-  display: block;
-  margin-top: 2px;
-  font-size: 12.5px;
-  font-weight: 800;
-  color: var(--muted);
 }
 .thand {
   position: absolute;
@@ -4423,66 +4326,96 @@ img.apiece[style*='bottom'] {
   font-size: 24px;
 }
 
-/* ---------- Áreas ---------- */
+/* ---------- Áreas: a road that climbs, area 1 at the bottom ---------- */
 
-.areas {
-  min-height: calc(100dvh - var(--safe-bottom) - 84px);
-  padding: calc(var(--safe-top) + 14px) 16px 24px;
+.aroad {
+  height: calc(100dvh - var(--safe-bottom) - 84px);
+  overflow-y: auto;
+  padding: 30vh 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  align-items: center;
+  gap: 34px;
+  background:
+    radial-gradient(70% 30% at 30% 30%, rgba(170, 196, 120, 0.3), transparent),
+    radial-gradient(60% 30% at 70% 70%, rgba(170, 196, 120, 0.3), transparent),
+    linear-gradient(#f3e4c4, #ead3a6);
+  scrollbar-width: none;
 }
-.areas h1 {
-  text-align: center;
-  font-size: 28px;
-  font-weight: 900;
+.aroad::-webkit-scrollbar {
+  display: none;
 }
-.acard {
-  border-radius: 22px;
+.atile {
+  position: relative;
+  flex: none;
+  width: min(84%, 340px);
+  border-radius: 24px;
   overflow: hidden;
   background: var(--card);
   box-shadow: var(--shadow);
 }
-.acard header {
+/* the dotted road between areas */
+.atile + .atile::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -34px;
+  height: 34px;
+  border-left: 5px dotted #c9a56c;
+}
+.atile {
+  overflow: visible;
+}
+.atile > * {
+  border-radius: inherit;
+}
+.atile header {
   padding: 10px 14px 8px;
 }
-.acard header small {
+.atile header small {
   font-size: 12.5px;
   font-weight: 900;
   color: var(--brown);
 }
-.acard header strong {
+.atile header strong {
   display: block;
-  font-size: 19px;
+  font-size: 18px;
   font-weight: 900;
 }
-.acard__img {
+.atile__img {
   position: relative;
-  height: 170px;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
+  border-radius: 0 0 24px 24px !important;
 }
-.acard__img .ascene {
+.atile__img .ascene {
   position: absolute;
   inset: 0;
 }
-.acard__img .ascene::after {
+.atile__img .ascene::after {
   display: none;
 }
-.acard__blur {
+.atile--now {
+  box-shadow: 0 0 0 4px var(--gold), var(--shadow);
+}
+.atile--locked {
+  opacity: 0.8;
+}
+.atile__blur {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: blur(7px) grayscale(0.5) brightness(1.1);
+  filter: blur(8px) grayscale(0.5) brightness(1.1);
   transform: scale(1.12);
 }
-.acard__lock {
+.atile__lock {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
   font-size: 40px;
 }
-.acard__foot {
+.atile__foot {
   position: absolute;
   z-index: 9;
   left: 10px;
@@ -4492,14 +4425,14 @@ img.apiece[style*='bottom'] {
   justify-content: space-between;
   align-items: center;
 }
-.acard__foot span {
+.atile__foot span {
   padding: 5px 12px;
   border-radius: 999px;
   background: rgba(255, 253, 248, 0.94);
   font-size: 13px;
   font-weight: 900;
 }
-.acard__foot .btn {
+.atile__foot .btn {
   width: auto;
   min-height: 40px;
   padding: 0 22px;
@@ -4692,4 +4625,7 @@ img.apiece[style*='bottom'] {
   display: block;
   font-size: 15px;
   font-weight: 900;
+}
+.unlock__box--small {
+  padding-top: 26px;
 }

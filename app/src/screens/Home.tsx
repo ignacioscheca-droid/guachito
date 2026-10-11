@@ -20,34 +20,7 @@ type Props = {
   onReveal: () => void
   onWatchTrip: () => void
   onTapPaucho: () => void
-  onSecretTap: () => void
   onSettings: () => void
-}
-
-function greeting(player: string) {
-  const h = new Date().getHours()
-  const to = player ? `, ${player}` : ''
-  if (h >= 5 && h < 12) return `¡Buen día${to}!`
-  if (h >= 12 && h < 20) return `¡Buenas tardes${to}!`
-  return `¡Buenas noches${to}!`
-}
-
-/** "arranca la casita" / "sale al sur": what a full bar starts. */
-const startsVerb = (job: Job) => (job.kind === 'trip' ? `sale de viaje al ${TRIP.place.replace('el ', '')}` : `arranca ${jobInfo(job).the}`)
-
-function subline(s: GameState, open: number) {
-  const job = nextJob(s)
-  if (!job) return `${s.name} descansa: ¡terminaron todo lo que hay por ahora!`
-  const info = jobInfo(job)
-  const { status } = s.work
-  if (status === 'done') return job.kind === 'trip' ? `¡${s.name} volvió del sur!` : `¡${s.name} terminó ${info.the}!`
-  if (status === 'working') return job.kind === 'trip' ? `${s.name} está de viaje por el sur` : `${s.name} está construyendo ${info.the}`
-  if (status === 'ready') return `¡${s.name} tiene toda la energía!`
-  if (restingToday(s)) return `¡Hoy ya diste todo! Mañana ${s.name} ${startsVerb(job)}`
-  if (open === 0) return '¡Día completo! Mañana seguimos.'
-  const toGo = Math.ceil((goalOf(s) - s.energy) / ENERGY_PER_HABIT)
-  if (toGo > open) return `${s.name} está listo para un gran día`
-  return `Con ${toGo} hábito${toGo > 1 ? 's' : ''} más, ${s.name} ${startsVerb(job)}`
 }
 
 /** Moves the shown number towards `value` one unit at a time, like Finch's energy counter. */
@@ -102,28 +75,16 @@ export function jobLabel(job: Job) {
 function ChargeCard({ s, job, foodRef }: { s: GameState; job: Job; foodRef: RefObject<HTMLDivElement | null> }) {
   const goal = goalOf(s)
   const shown = useCountTo(s.energy)
-  const info = jobInfo(job)
-  const steps = info.steps.slice(0, goal / ENERGY_PER_HABIT)
   return (
     <div className="ecard jobcard" ref={foodRef}>
       <JobThumb job={job} />
       <div className="ecard__body">
-        <small>
-          {jobLabel(job)} · <b>{info.name}</b>
-        </small>
+        <small>{jobInfo(job).name}</small>
         <div className="ecard__bar">
           <i style={{ width: `${(shown / goal) * 100}%` }} />
           <span>
             {shown} / {goal}
           </span>
-        </div>
-        <div className="jobsteps">
-          {steps.map((label, i) => (
-            <span key={label} className={s.energy >= (i + 1) * ENERGY_PER_HABIT ? 'on' : ''}>
-              {s.energy >= (i + 1) * ENERGY_PER_HABIT ? '✓ ' : ''}
-              {label}
-            </span>
-          ))}
         </div>
       </div>
     </div>
@@ -138,7 +99,6 @@ export function Home(p: Props) {
   const panel = useRef<HTMLDivElement>(null)
   const card = useRef<HTMLDivElement>(null)
   const coinsRef = useRef<HTMLSpanElement>(null)
-  const taps = useRef<number[]>([])
   const done = doneToday(s)
   const open = s.habits.filter((h) => !done.includes(h))
   const doneIds = s.habits.filter((h) => done.includes(h))
@@ -148,15 +108,6 @@ export function Home(p: Props) {
   const charging = status === 'charging' && job != null && !resting
   const traveling = job?.kind === 'trip' && status === 'working'
   const view = areaView(s.jobsDone)
-
-  const secret = () => {
-    const t = Date.now()
-    taps.current = [...taps.current.filter((x) => t - x < 1500), t]
-    if (taps.current.length >= 5) {
-      taps.current = []
-      p.onSecretTap()
-    }
-  }
 
   // Finch's tick: confetti on the habit, its energy (or herraduras) flies off, the row leaves.
   const tick = (id: string, e: MouseEvent<HTMLButtonElement>) => {
@@ -183,12 +134,9 @@ export function Home(p: Props) {
   }
   const pose = status === 'working' ? 'build' : status === 'done' ? 'wave' : 'idle'
 
+  // No text over the scene (the owner's call): just the herraduras and the settings.
   const top = (
-    <div className="home__top">
-      <div className="home__greet" onClick={secret}>
-        <h1>{greeting(s.playerName)}</h1>
-        <p>{subline(s, open.length)}</p>
-      </div>
+    <div className="home__top home__top--bare">
       <span ref={coinsRef}>
         <CoinPill coins={s.coins} />
       </span>
@@ -241,11 +189,8 @@ export function Home(p: Props) {
           <div className="ecard jobcard">
             <JobThumb job={job} />
             <div className="ecard__body">
-              <small>
-                Mañana · <b>{jobInfo(job).name}</b>
-              </small>
-              <strong className="jobcard__rest">Hoy ya llenaste la energía</strong>
-              <small>Lo que hagas ahora suma herraduras para la casita.</small>
+              <small>{jobInfo(job).name}</small>
+              <strong className="jobcard__rest">Sigue mañana</strong>
             </div>
           </div>
         )}
@@ -253,9 +198,7 @@ export function Home(p: Props) {
           <button className="ecard ecard--ready jobcard" onClick={p.onStartJob}>
             <JobThumb job={job} />
             <div className="ecard__body">
-              <small>
-                {jobLabel(job)} · <b>{jobInfo(job).name}</b>
-              </small>
+              <small>{jobInfo(job).name}</small>
               <div className="ecard__bar">
                 <i style={{ width: '100%' }} />
                 <span>¡Al máximo!</span>
@@ -299,17 +242,14 @@ export function Home(p: Props) {
               </button>
             </span>
           </h3>
-          <ul className="hlist__open">
-            {open.map((id, i) => {
+          <ul className={`hlist__open${open.length > 4 ? ' hlist__open--more' : ''}`}>
+            {open.map((id) => {
               const h = findHabit(s, id)
               return (
                 <li key={id} className={leaving === id ? 'today__leaving' : ''}>
                   <button className="row" onClick={(e) => tick(id, e)}>
                     <HabitIcon habit={h} />
-                    <span>
-                      {h.name}
-                      {i === 0 && doneIds.length === 0 && <small className="hlist__easy">la más fácil, para arrancar</small>}
-                    </span>
+                    <span>{h.name}</span>
                     <em className="row__reward">
                       +{charging ? ENERGY_PER_HABIT : EXTRA_HABIT_COINS}
                       <img src={art(charging ? 'ui_energia' : 'ui_herradura')} alt="" />
@@ -320,7 +260,6 @@ export function Home(p: Props) {
               )
             })}
           </ul>
-          {open.length > 4 && <p className="hlist__more">{open.length - 4} más ↓</p>}
           {doneIds.length > 0 && (
             <details className="today__done">
               <summary>Hechos hoy · {doneIds.length}</summary>

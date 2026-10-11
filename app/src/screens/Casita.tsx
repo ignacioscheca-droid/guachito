@@ -1,6 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
+import { PauchoFace } from '../components/Paucho'
 import { Room, RoomThing } from '../components/Room'
-import { CoinPill } from '../components/ui'
+import { Button, CoinPill } from '../components/ui'
 import { art } from '../game/content'
 import { TRIP } from '../game/journey'
 import { CLOTHES, ROOM_ITEMS, type Clothes } from '../game/shop'
@@ -15,26 +16,26 @@ function ClothesIcon({ c }: { c: Clothes }) {
 }
 
 /**
- * Paucho's room, with its shop below (the owner's call: one screen). The first time,
- * he asks for help setting it up and the shop leads to the bed, the first purchase.
+ * Paucho's room, with its shop below (the owner's call: one screen). Whatever you buy
+ * goes straight to its place in the room. The first time, a pop-up asks for help and the
+ * shop leads to the bed, the first purchase; everything he says is said in pop-ups.
  */
 export function Casita() {
   const s = useGame((g) => g)
   const [tab, setTab] = useState<Tab>('pieza')
   const [fresh, setFresh] = useState<string | null>(null)
   const [cheer, setCheer] = useState(0)
-  const [say, setSay] = useState<string | null>(null)
-  const [toast, setToast] = useState<string | null>(null)
-  const [flash, setFlash] = useState<string | null>(null)
   const screen = useRef<HTMLDivElement>(null)
   const bedCard = useRef<HTMLButtonElement>(null)
   const [spot, setSpot] = useState<DOMRect | null>(null)
   const tutorial = !s.room.includes('cama')
+  // the first visit opens with his ask; the bed, with his thanks
+  const [popup, setPopup] = useState<'ask' | 'thanks' | null>(tutorial ? 'ask' : null)
   const you = s.playerName ? `, ${s.playerName}` : ''
 
   // The first visit: everything waits for the bed.
   useLayoutEffect(() => {
-    if (!tutorial) return setSpot(null)
+    if (!tutorial || popup) return setSpot(null)
     const place = () => {
       const a = bedCard.current?.getBoundingClientRect()
       const b = screen.current?.getBoundingClientRect()
@@ -47,67 +48,33 @@ export function Casita() {
       clearTimeout(t)
       window.removeEventListener('resize', place)
     }
-  }, [tutorial, tab])
-
-  useEffect(() => {
-    if (!toast) return
-    const t = window.setTimeout(() => setToast(null), 2400)
-    return () => clearTimeout(t)
-  }, [toast])
-  useEffect(() => {
-    if (!say) return
-    const t = window.setTimeout(() => setSay(null), 3600)
-    return () => clearTimeout(t)
-  }, [say])
+  }, [tutorial, tab, popup])
 
   const buyThing = (id: string) => {
     const item = ROOM_ITEMS.find((i) => i.id === id)!
     if (!actions.buyRoomItem(id)) return
     setFresh(id)
     setCheer((c) => c + 1)
-    setToast(`−${item.price} herraduras`)
-    setSay(id === 'cama' ? `¡Gracias${you}! Esta noche duermo como un rey 👑` : '¡Me encanta cómo va quedando!')
+    if (item.id === 'cama') setPopup('thanks')
   }
   const buyClothes = (c: Clothes) => {
     if (!actions.buyClothes(c.id)) return
     setCheer((k) => k + 1)
-    setToast(`−${c.price} herraduras`)
-    setSay('¿Cómo me queda? ¡Me siento un señor!')
-  }
-
-  const showInShop = (id: string) => {
-    setTab('pieza')
-    setFlash(id)
-    window.setTimeout(() => setFlash(null), 1200)
-    document.getElementById(`shop-${id}`)?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
   }
 
   const southLocked = !southOpen(s)
-  const bubble = tutorial ? '¿Me ayudás a armarla? Arranquemos por una cama.' : say
 
   return (
     <div className="casita" ref={screen}>
-      <Room
-        items={s.room}
-        slots={tutorial ? [] : ROOM_ITEMS.map((i) => i.id).filter((id) => !s.room.includes(id))}
-        onSlot={showInShop}
-        fresh={fresh}
-        pose={tutorial ? 'wave' : 'idle'}
-        outfit={s.outfit}
-        celebrateKey={cheer}
-      >
+      <Room items={s.room} fresh={fresh} pose={tutorial ? 'wave' : 'idle'} outfit={s.outfit} celebrateKey={cheer}>
         <div className="casita__top">
-          <h1>La casita de {s.name}</h1>
-          <CoinPill coins={s.coins} />
+          <CoinPill coins={s.coins} bump={cheer > 0} key={cheer} />
         </div>
-        {bubble && <p className={`casita__say${tutorial ? ' casita__say--up' : ''}`}>{bubble}</p>}
-        {toast && <div className="casita__toast">{toast}</div>}
       </Room>
 
       <section className="shopstrip">
         <header>
           <strong>Tienda</strong>
-          <span>Las herraduras se ganan con los hábitos de más</span>
         </header>
         <div className="shopstrip__tabs" role="tablist">
           <button className={tab === 'pieza' ? 'on' : ''} onClick={() => setTab('pieza')} disabled={tutorial}>
@@ -127,7 +94,7 @@ export function Casita() {
                   key={item.id}
                   id={`shop-${item.id}`}
                   ref={item.id === 'cama' ? bedCard : undefined}
-                  className={`scard${have ? ' scard--have' : ''}${flash === item.id ? ' scard--flash' : ''}`}
+                  className={`scard${have ? ' scard--have' : ''}`}
                   disabled={have || off}
                   onClick={() => buyThing(item.id)}
                 >
@@ -185,14 +152,37 @@ export function Casita() {
       {tutorial && spot && (
         <>
           <div className="tspot" style={{ left: spot.x - 5, top: spot.y - 5, width: spot.width + 10, height: spot.height + 10 }} />
-          <div className="ttip" style={{ left: Math.max(12, spot.x), top: spot.y - 92 }}>
-            Tocá la cama para comprarla
-            <small>Tenés {s.coins} herraduras: las ganaste con tus hábitos</small>
-          </div>
           <span className="thand" style={{ left: spot.x + spot.width - 30, top: spot.y + spot.height - 58 }}>
             👆
           </span>
         </>
+      )}
+
+      {popup && (
+        <div className="overlay unlock">
+          <div className="modal unlock__box">
+            <span className="unlock__icon">
+              <PauchoFace outfit={s.outfit} className="unlock__face" />
+            </span>
+            {popup === 'ask' ? (
+              <>
+                <h2>¿Me ayudás a armarla?</h2>
+                <p>Arranquemos por una cama. Está en la tienda y la pagás con las {s.coins} herraduras que ganaste con tus hábitos.</p>
+                <Button variant="gold" onClick={() => setPopup(null)}>
+                  ¡Dale!
+                </Button>
+              </>
+            ) : (
+              <>
+                <h2>¡Gracias{you}!</h2>
+                <p>Esta noche duermo como un rey 👑. Todo lo que compres en la tienda va directo a la casita.</p>
+                <Button variant="gold" onClick={() => setPopup(null)}>
+                  ¡De nada!
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </div>
   )

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { HabitToast } from './components/DayLoop'
 import { PauchoFace, preloadPaucho } from './components/Paucho'
-import { BottomNav } from './components/ui'
+import { BottomNav, Button } from './components/ui'
 import { actions, getState, goalOf, nextJob, useGame, workRemainingMs, type TabId } from './game/store'
 import { AreasTab } from './screens/AreasTab'
 import { AventurasTab } from './screens/AventurasTab'
@@ -52,6 +52,7 @@ export default function App() {
   const [settings, setSettings] = useState(false)
   const [replayOnboarding, setReplayOnboarding] = useState(false)
   const [arriving, setArriving] = useState(false)
+  const [lockedTap, setLockedTap] = useState(false)
   const remaining = useWorkClock()
   const testMode = new URLSearchParams(location.search).has('test')
 
@@ -152,7 +153,6 @@ export default function App() {
               onReveal={reveal}
               onWatchTrip={() => setView('trip')}
               onTapPaucho={() => setCelebrateKey((k) => k + 1)}
-              onSecretTap={() => setTestMenu(true)}
               onSettings={() => setSettings(true)}
             />
           )}
@@ -173,7 +173,7 @@ export default function App() {
             casita: s.unlocked.includes('casita') && !s.room.includes('cama'),
           }}
           onTab={setTab}
-          onLocked={() => setToast({ key: Date.now(), title: 'Todavía no 🔒', sub: 'Se desbloquea más adelante' })}
+          onLocked={() => setLockedTap(true)}
         />
       </>
     )
@@ -187,6 +187,17 @@ export default function App() {
       {toast && view === 'tabs' && <HabitToast key={toast.key} title={toast.title} sub={toast.sub} />}
       {welcome && s.dog.arrived && !s.dog.name && <DogName />}
       {welcome && !(s.dog.arrived && !s.dog.name) && s.unlockQueue.length > 0 && <UnlockWelcome tab={s.unlockQueue[0]} onGo={setTab} />}
+      {lockedTap && (
+        <div className="overlay" onClick={() => setLockedTap(false)}>
+          <div className="modal unlock__box unlock__box--small" onClick={(e) => e.stopPropagation()}>
+            <h2>Todavía no 🔒</h2>
+            <p>Se abre más adelante, a medida que {s.name} y vos avancen juntos.</p>
+            <Button variant="light" onClick={() => setLockedTap(false)}>
+              ¡Dale!
+            </Button>
+          </div>
+        </div>
+      )}
       {settings && (
         <Settings
           onClose={() => setSettings(false)}
