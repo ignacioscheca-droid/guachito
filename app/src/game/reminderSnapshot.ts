@@ -1,8 +1,8 @@
 // The daily notifications are composed on the phone, by the service worker (public/sw.js),
 // from what you have done today. The SW can't read localStorage, so the app keeps a
 // small copy of the relevant state in IndexedDB. Nothing leaves the phone.
-import { ADVENTURE_MS, ENERGY_GOAL, ENERGY_PER_HABIT, EPISODES, itemById } from './content'
-import { findHabit, getState, subscribe, type GameState } from './store'
+import { ENERGY_PER_HABIT, jobInfo, WORK_MS } from './journey'
+import { findHabit, getState, goalOf, nextJob, subscribe, type GameState } from './store'
 
 /** Emoji for catalog habits, which use artist icons in the app. */
 const CATALOG_EMOJI: Record<string, string> = {
@@ -21,25 +21,22 @@ const CATALOG_EMOJI: Record<string, string> = {
 }
 
 export type ReminderSnapshot = {
-  v: 1
+  v: 2
   name: string
   playerName: string
   habits: { id: string; name: string; emoji: string }[]
   /** Completed habit ids per local day (last 14 days). */
   completions: Record<string, string[]>
-  adventure: { status: GameState['adventure']['status']; returnAt: number | null; episode: string | null }
-  rewardItem: string | null
-  /** Habits still needed today for the adventure (0 once the bar is full). */
+  work: { status: GameState['work']['status']; doneAt: number | null; job: string | null }
+  /** Habits still needed today for the day's job (0 once the bar is full). */
   toGo: number
 }
 
 function build(s: GameState): ReminderSnapshot {
   const days = Object.keys(s.completions).sort().slice(-14)
-  const { status, startedAt, runs } = s.adventure
-  const episode =
-    status === 'running' ? EPISODES[runs % EPISODES.length].title : s.pendingReward ? EPISODES[s.pendingReward.episode].title : null
+  const job = nextJob(s)
   return {
-    v: 1,
+    v: 2,
     name: s.name,
     playerName: s.playerName,
     habits: s.habits.map((id) => {
@@ -47,15 +44,14 @@ function build(s: GameState): ReminderSnapshot {
       return { id, name: h.name, emoji: h.emoji ?? CATALOG_EMOJI[id] ?? '⭐' }
     }),
     completions: Object.fromEntries(days.map((d) => [d, s.completions[d]])),
-    adventure: { status, returnAt: startedAt != null ? startedAt + ADVENTURE_MS : null, episode },
-    rewardItem: s.pendingReward?.itemId ? itemById(s.pendingReward.itemId).name : null,
-    toGo: status === 'charging' ? Math.ceil((ENERGY_GOAL - s.energy) / ENERGY_PER_HABIT) : 0,
+    work: { status: s.work.status, doneAt: s.work.startedAt != null ? s.work.startedAt + WORK_MS : null, job: job ? jobInfo(job).name : null },
+    toGo: s.work.status === 'charging' ? Math.ceil((goalOf(s) - s.energy) / ENERGY_PER_HABIT) : 0,
   }
 }
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open('guachito', 1)
+    const req = indexedDB.open('gauchito-v2', 1)
     req.onupgradeneeded = () => req.result.createObjectStore('kv')
     req.onsuccess = () => resolve(req.result)
     req.onerror = () => reject(req.error)

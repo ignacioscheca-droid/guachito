@@ -1,35 +1,38 @@
 import { useSyncExternalStore } from 'react'
 import type { AboutYou } from './aboutYou'
+import { HABITS, STARTER_GOALS, type HabitDef } from './content'
+import { daysTogether } from './friendship'
 import {
-  ADVENTURE_COINS,
-  ADVENTURE_MS,
-  ENERGY_GOAL,
   ENERGY_PER_HABIT,
-  energyShare,
+  energyGoal,
   EXTRA_HABIT_COINS,
   FULL_ENERGY_COINS,
-  EPISODES,
-  HABITS,
-  ITEMS,
-  itemById,
-  STARTER_GOALS,
-  type HabitDef,
-} from './content'
+  JOURNEY,
+  TRIP,
+  TRIP_JOB,
+  WORK_MS,
+} from './journey'
+import { CLOTHES, clothesById, ROOM_ITEMS, type Slot } from './shop'
 
-export type AdventureStatus = 'charging' | 'ready' | 'running' | 'returned'
+/**
+ * The day's work: the bar fills (charging), it is full (ready), Paucho builds or travels
+ * for eight hours (working), the job is finished and waits to be seen (done).
+ */
+export type WorkStatus = 'charging' | 'ready' | 'working' | 'done'
 
-export type Reward = { coins: number; itemId: string | null; episode: number }
+/** Bottom bar: Áreas · Aventuras · Inicio · Paucho · Casita. Only Inicio is open on day 0. */
+export type TabId = 'areas' | 'aventuras' | 'inicio' | 'paucho' | 'casita'
 
-/** What ticking a habit gave: energy while the bar fills, coins once it is full. */
+/** What ticking a habit gave: energy while the bar fills, herraduras once it is full. */
 export type Completion = { energy: number; coins: number; full: boolean; firstTime: boolean }
 
 export type GameState = {
-  version: 1
+  version: 2
   onboarded: boolean
   name: string
-  /** The player's own name (used in greetings and reminders). */
+  /** The player's own name (used in greetings). */
   playerName: string
-  /** Onboarding questionnaire answers ("Contame un poco de vos"), for the personalized plan. */
+  /** Onboarding questionnaire answers ("Contame un poco de vos"). */
   aboutYou: AboutYou | null
   /** Days in a row the player committed to on day 1 (2, 5, 7 or 14). */
   streakGoal: number | null
@@ -40,34 +43,41 @@ export type GameState = {
   completions: Record<string, string[]>
   /** Energy each completion gave, per day, so a mistaken tick can be undone. */
   energyGains: Record<string, Record<string, number>>
-  /** Same for the coins a completion gave (the bar filling, or a habit after it was full). */
+  /** Same for the herraduras a completion gave. */
   coinGains: Record<string, Record<string, number>>
-  /** Days the bar got full (they make the ranch grow, see RANCH_STAGES), and the last one. */
-  fullEnergyDays: number
-  lastFullDay: string | null
-  /** Energy rules the save follows ('finch': 5 per habit, 15 to go; older saves used 100). */
-  energyRule: 'finch'
   energy: number
+  /** Herraduras, the game's currency. */
   coins: number
-  adventure: { status: AdventureStatus; startedAt: number | null; runs: number }
-  pendingReward: Reward | null
-  ownedItems: string[]
-  /** Item to spotlight next time the ranch is shown. */
-  newItemId: string | null
-  /** Push subscription for the daily reminder (JSON), once notifications are on. */
+  /** The day the bar was last filled: one full bar a day (one obra a day, like Finch's adventure). */
+  lastFullDay: string | null
+  work: { status: WorkStatus; startedAt: number | null }
+  /** Jobs of JOURNEY finished and seen (the next one is JOURNEY[jobsDone]). */
+  jobsDone: number
+  unlocked: TabId[]
+  /** Tabs just unlocked whose welcome hasn't been shown yet. */
+  unlockQueue: TabId[]
+  /** Things bought for Paucho's room. */
+  room: string[]
+  /** Clothes bought, and what he is wearing (no entry: his usual). */
+  clothes: string[]
+  outfit: Partial<Record<Slot, string>>
+  /** The dog arrives with La cucha; the player names him. */
+  dog: { arrived: boolean; name: string }
+  /** Push subscription for the daily notifications (JSON), once they are on. */
   pushSubscription: string | null
   /** Debug: whole days added to the clock by the test menu. */
   dayOffset: number
-  /** Debug: adventures finish this many ms sooner. */
-  adventureSkipMs: number
+  /** Debug: jobs finish this many ms sooner. */
+  workSkipMs: number
 }
 
-const KEY = 'guachito.v1'
+// Its own key, so this build never touches the save of the app on main ("guachito.v1").
+const KEY = 'gauchito.v2'
 
 const initial = (): GameState => ({
-  version: 1,
+  version: 2,
   onboarded: false,
-  name: 'Gauchito',
+  name: 'Paucho',
   playerName: '',
   aboutYou: null,
   streakGoal: null,
@@ -76,37 +86,26 @@ const initial = (): GameState => ({
   completions: {},
   energyGains: {},
   coinGains: {},
-  fullEnergyDays: 0,
-  lastFullDay: null,
-  energyRule: 'finch',
   energy: 0,
   coins: 0,
-  adventure: { status: 'charging', startedAt: null, runs: 0 },
-  pendingReward: null,
-  ownedItems: [],
-  newItemId: null,
+  lastFullDay: null,
+  work: { status: 'charging', startedAt: null },
+  jobsDone: 0,
+  unlocked: ['inicio'],
+  unlockQueue: [],
+  room: [],
+  clothes: [],
+  outfit: {},
+  dog: { arrived: false, name: '' },
   pushSubscription: null,
   dayOffset: 0,
-  adventureSkipMs: 0,
+  workSkipMs: 0,
 })
 
 function parse(raw: string): GameState {
   const data = JSON.parse(raw)
-  if (typeof data !== 'object' || data == null || data.version !== 1) throw new Error('not a Gauchito save')
-  // The app was first spelled "Guachito": rename a companion that still has that default.
-  if (data.name === 'Guachito') data.name = 'Gauchito'
-  const s: GameState = { ...initial(), ...data }
-  // Saves from before Finch's energy rules (a bar of 100 split among all habits): today's
-  // ticks count 5 each now, and three of them fill the bar.
-  if (data.energyRule !== 'finch') {
-    s.energyRule = 'finch'
-    if (s.adventure.status === 'charging') {
-      s.energy = Math.min(ENERGY_GOAL, (s.completions[todayKey(s)] ?? []).length * ENERGY_PER_HABIT)
-      if (s.energy >= ENERGY_GOAL) s.adventure = { ...s.adventure, status: 'ready' }
-    } else if (s.adventure.status === 'ready') s.energy = ENERGY_GOAL
-    else s.energy = 0
-  }
-  return s
+  if (typeof data !== 'object' || data == null || data.version !== 2) throw new Error('not a Gauchito save')
+  return { ...initial(), ...data }
 }
 
 function load(): GameState {
@@ -162,8 +161,12 @@ export function findHabit(s: GameState, id: string): HabitDef {
   )
 }
 
-/** Today's episode while out, or the one just finished. */
-export const currentEpisode = (s: GameState) => EPISODES[s.adventure.runs % EPISODES.length]
+export const goalOf = (s: GameState) => energyGoal(s.jobsDone)
+/** The bar was already filled today: the next job waits for tomorrow's energy. */
+export const restingToday = (s: GameState) => s.work.status === 'charging' && s.lastFullDay === todayKey(s)
+export const nextJob = (s: GameState) => JOURNEY[s.jobsDone] ?? null
+/** Clothes from the south are sold once Paucho is back from the trip. */
+export const southOpen = (s: GameState) => s.jobsDone > TRIP_JOB
 
 // ---- time -------------------------------------------------------------
 
@@ -176,16 +179,28 @@ export function todayKey(s: GameState = state) {
 
 export const doneToday = (s: GameState) => s.completions[todayKey(s)] ?? []
 
-export function adventureRemainingMs(s: GameState = state) {
-  if (s.adventure.status !== 'running' || s.adventure.startedAt == null) return 0
-  return Math.max(0, s.adventure.startedAt + ADVENTURE_MS - (Date.now() + s.adventureSkipMs))
+export function workRemainingMs(s: GameState = state) {
+  if (s.work.status !== 'working' || s.work.startedAt == null) return 0
+  return Math.max(0, s.work.startedAt + WORK_MS - (Date.now() + s.workSkipMs))
 }
+
+// ---- unlocks ----------------------------------------------------------
+
+/** Opens tabs and queues their welcome (once each). */
+function unlock(s: GameState, ...tabs: TabId[]): GameState {
+  const fresh = tabs.filter((t) => !s.unlocked.includes(t))
+  if (!fresh.length) return s
+  return { ...s, unlocked: [...s.unlocked, ...fresh], unlockQueue: [...s.unlockQueue, ...fresh] }
+}
+
+/** The Paucho tab opens on the third day you come back: you are "compañeros" by then. */
+const PAUCHO_TAB_DAYS = 3
 
 // ---- actions ----------------------------------------------------------
 
 export const actions = {
   finishOnboarding(o: { name: string; playerName: string; habits: string[]; aboutYou: AboutYou; streakGoal: number }) {
-    set({ ...state, ...o, onboarded: true, name: o.name.trim() || 'Gauchito', playerName: o.playerName.trim() })
+    set({ ...state, ...o, onboarded: true, name: o.name.trim() || 'Paucho', playerName: o.playerName.trim() })
   },
 
   /** Creates a habit of the player's own and returns its id. */
@@ -201,43 +216,43 @@ export const actions = {
 
   /**
    * Ticks a habit. While the bar fills it gives energy; the tick that fills it also gives
-   * FULL_ENERGY_COINS and counts a full-energy day; after that, habits give coins.
+   * FULL_ENERGY_COINS; after that (or with no job left) habits give herraduras.
    */
   completeHabit(id: string): Completion {
     const day = todayKey()
     const done = state.completions[day] ?? []
     if (done.includes(id)) return { energy: 0, coins: 0, full: false, firstTime: false }
     const firstTime = !Object.values(state.completions).some((ids) => ids.includes(id))
-    const charging = state.adventure.status === 'charging'
-    const energy = charging ? Math.min(ENERGY_GOAL, state.energy + energyShare(state.habits, id)) : state.energy
-    const full = charging && energy >= ENERGY_GOAL
+    const goal = goalOf(state)
+    const charging = state.work.status === 'charging' && nextJob(state) != null && state.lastFullDay !== day
+    const energy = charging ? Math.min(goal, state.energy + ENERGY_PER_HABIT) : state.energy
+    const full = charging && energy >= goal
     const coins = full ? FULL_ENERGY_COINS : charging ? 0 : EXTRA_HABIT_COINS
-    const newDay = full && state.lastFullDay !== day
-    set({
+    let next: GameState = {
       ...state,
       completions: { ...state.completions, [day]: [...done, id] },
       energyGains: { ...state.energyGains, [day]: { ...state.energyGains[day], [id]: energy - state.energy } },
       coinGains: { ...state.coinGains, [day]: { ...state.coinGains[day], [id]: coins } },
       energy,
       coins: state.coins + coins,
-      fullEnergyDays: state.fullEnergyDays + (newDay ? 1 : 0),
       lastFullDay: full ? day : state.lastFullDay,
-      adventure: { ...state.adventure, status: full ? 'ready' : state.adventure.status },
-    })
+      work: full ? { status: 'ready', startedAt: null } : state.work,
+    }
+    if (done.length === 0 && daysTogether(next.completions) >= PAUCHO_TAB_DAYS) next = unlock(next, 'paucho')
+    set(next)
     return { energy: energy - state.energy, coins, full, firstTime }
   },
 
-  /** Unticks a habit; its energy comes back out unless the adventure already used it. */
+  /** Unticks a habit; its energy comes back out unless the job already started. */
   uncompleteHabit(id: string) {
     const day = todayKey()
     const done = state.completions[day] ?? []
     if (!done.includes(id)) return
     const { [id]: gained = 0, ...gains } = state.energyGains[day] ?? {}
     const { [id]: coins = 0, ...coinGains } = state.coinGains[day] ?? {}
-    const unspent = state.adventure.status === 'charging' || state.adventure.status === 'ready'
+    const unspent = state.work.status === 'charging' || state.work.status === 'ready'
     const energy = unspent ? Math.max(0, state.energy - gained) : state.energy
-    const unfilled = state.adventure.status === 'ready' && energy < ENERGY_GOAL
-    const undoFullDay = unfilled && state.lastFullDay === day
+    const unfilled = state.work.status === 'ready' && energy < goalOf(state)
     set({
       ...state,
       completions: { ...state.completions, [day]: done.filter((h) => h !== id) },
@@ -245,55 +260,74 @@ export const actions = {
       coinGains: { ...state.coinGains, [day]: coinGains },
       energy,
       coins: Math.max(0, state.coins - coins),
-      fullEnergyDays: state.fullEnergyDays - (undoFullDay ? 1 : 0),
-      lastFullDay: undoFullDay ? null : state.lastFullDay,
-      adventure: { ...state.adventure, status: unfilled ? 'charging' : state.adventure.status },
+      lastFullDay: unfilled && state.lastFullDay === day ? null : state.lastFullDay,
+      work: unfilled ? { status: 'charging', startedAt: null } : state.work,
     })
   },
 
-  startAdventure() {
-    if (state.adventure.status !== 'ready') return
-    set({ ...state, energy: 0, adventureSkipMs: 0, adventure: { ...state.adventure, status: 'running', startedAt: Date.now() } })
+  /** Full bar → Paucho starts the next job (an obra or the trip). */
+  startWork() {
+    if (state.work.status !== 'ready') return
+    set({ ...state, energy: 0, workSkipMs: 0, work: { status: 'working', startedAt: Date.now() } })
   },
 
-  /** Called when the timer runs out; prepares the reward. */
-  returnFromAdventure() {
-    if (state.adventure.status !== 'running') return
-    const episode = state.adventure.runs % EPISODES.length
-    const wanted = EPISODES[episode].itemId
-    const itemId = !state.ownedItems.includes(wanted)
-      ? wanted
-      : (ITEMS.find((i) => !state.ownedItems.includes(i.id))?.id ?? null)
-    const coins = itemId ? ADVENTURE_COINS : ADVENTURE_COINS * 2
-    set({
-      ...state,
-      adventure: { status: 'returned', startedAt: null, runs: state.adventure.runs + 1 },
-      pendingReward: { coins, itemId, episode },
-    })
+  /** The eight hours are up: the job waits to be seen. */
+  finishWork() {
+    if (state.work.status !== 'working') return
+    set({ ...state, work: { status: 'done', startedAt: null } })
   },
 
-  claimReward() {
-    const r = state.pendingReward
-    if (!r) return
-    set({
-      ...state,
-      coins: state.coins + r.coins,
-      ownedItems: r.itemId && !state.ownedItems.includes(r.itemId) ? [...state.ownedItems, r.itemId] : state.ownedItems,
-      newItemId: r.itemId,
-      pendingReward: null,
-      adventure: { ...state.adventure, status: 'charging' },
-    })
+  /**
+   * Seen: the job counts, and what it opens opens. The casita opens the room (and its
+   * shop), the first finished area opens Áreas, La cucha brings the dog, and the end of
+   * La chacra opens Aventuras (he is off to the south next).
+   */
+  completeJob() {
+    if (state.work.status !== 'done') return
+    const job = JOURNEY[state.jobsDone]
+    let next: GameState = { ...state, jobsDone: state.jobsDone + 1, work: { status: 'charging', startedAt: null } }
+    if (job?.kind === 'build') {
+      const lastOfArea = JOURNEY[state.jobsDone + 1]?.kind !== 'build' || (JOURNEY[state.jobsDone + 1] as { area: number }).area !== job.area
+      if (job.area === 0 && job.obra === 0) next = unlock(next, 'casita')
+      if (lastOfArea) next = unlock(next, 'areas')
+      if (job.area === 1 && job.obra === 0) next = { ...next, dog: { arrived: true, name: next.dog.name } }
+    }
+    // the trip is next: Aventuras opens to say why he is going
+    if (state.jobsDone + 1 === TRIP_JOB) next = unlock(next, 'aventuras')
+    if (job?.kind === 'trip') next = { ...next, coins: next.coins + TRIP.coins }
+    set(next)
   },
 
-  buyItem(id: string): boolean {
-    const item = itemById(id)
-    if (state.ownedItems.includes(id) || state.coins < item.price) return false
-    set({ ...state, coins: state.coins - item.price, ownedItems: [...state.ownedItems, id], newItemId: id })
+  dismissUnlock() {
+    if (state.unlockQueue.length) set({ ...state, unlockQueue: state.unlockQueue.slice(1) })
+  },
+
+  nameDog(name: string) {
+    set({ ...state, dog: { arrived: true, name: name.trim() || 'Tero' } })
+  },
+
+  buyRoomItem(id: string): boolean {
+    const item = ROOM_ITEMS.find((i) => i.id === id)
+    if (!item || state.room.includes(id) || state.coins < item.price) return false
+    set({ ...state, coins: state.coins - item.price, room: [...state.room, id] })
     return true
   },
 
-  clearNewItem() {
-    if (state.newItemId) set({ ...state, newItemId: null })
+  /** Buys clothes and puts them on straight away. */
+  buyClothes(id: string): boolean {
+    const c = clothesById(id)
+    if (!c || state.clothes.includes(id) || state.coins < c.price) return false
+    if (c.south && !southOpen(state)) return false
+    set({ ...state, coins: state.coins - c.price, clothes: [...state.clothes, id], outfit: { ...state.outfit, [c.slot]: id } })
+    return true
+  },
+
+  /** Puts on something he owns, or (null) goes back to his usual in that slot. */
+  wear(slot: Slot, id: string | null) {
+    const outfit = { ...state.outfit }
+    if (id && state.clothes.includes(id) && CLOTHES.some((c) => c.id === id && c.slot === slot)) outfit[slot] = id
+    else delete outfit[slot]
+    set({ ...state, outfit })
   },
 
   setNames(companion: string, player: string) {
@@ -308,7 +342,7 @@ export const actions = {
   exportData(): string {
     return JSON.stringify(state, null, 1)
   },
-  /** Replaces everything with a backup; false if the file isn't a Gauchito save. */
+  /** Replaces everything with a backup; false if the file isn't a save of this build. */
   importData(raw: string): boolean {
     try {
       set(parse(raw))
@@ -323,22 +357,21 @@ export const actions = {
     set({ ...state, dayOffset: state.dayOffset + 1 })
   },
   debugFillEnergy() {
-    if (state.adventure.status !== 'charging') return
-    const day = todayKey()
-    set({
-      ...state,
-      energy: ENERGY_GOAL,
-      coins: state.coins + FULL_ENERGY_COINS,
-      fullEnergyDays: state.fullEnergyDays + (state.lastFullDay !== day ? 1 : 0),
-      lastFullDay: day,
-      adventure: { ...state.adventure, status: 'ready' },
-    })
+    if (state.work.status !== 'charging' || !nextJob(state)) return
+    set({ ...state, energy: goalOf(state), coins: state.coins + FULL_ENERGY_COINS, work: { status: 'ready', startedAt: null } })
   },
   debugCoins() {
     set({ ...state, coins: state.coins + 100 })
   },
-  debugFinishAdventure() {
-    if (state.adventure.status === 'running') set({ ...state, adventureSkipMs: ADVENTURE_MS })
+  debugFinishWork() {
+    if (state.work.status === 'working') set({ ...state, workSkipMs: WORK_MS })
+  },
+  /** Leaves the current job finished, waiting to be seen (whatever stage it was at). */
+  debugSkipJob() {
+    if (!nextJob(state) || state.work.status === 'done') return
+    // a skipped bar still pays, so the bed (30) can always be bought after the casita
+    const paid = state.work.status === 'charging' ? FULL_ENERGY_COINS : 0
+    set({ ...state, energy: 0, coins: state.coins + paid, work: { status: 'done', startedAt: null } })
   },
   debugReset() {
     set(initial())

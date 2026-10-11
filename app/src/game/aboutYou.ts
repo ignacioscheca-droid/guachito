@@ -190,6 +190,8 @@ export const QUESTIONS: Question[] = [
   },
 ]
 
+/** The goal Home shows first: the easiest one to tick. */
+const EASY_FIRST = 'levantarme'
 /** Finch's starter plan, in its order. */
 const FINCH_PLAN = ['levantarme', 'dientes', 'cara', 'vaso-agua', 'estirarme', 'feliz', 'respirar']
 /** At most this many goals come from the answers, so the plan stays mostly Finch's. */
@@ -205,7 +207,7 @@ const COVERS: Record<string, string[]> = {
 
 /**
  * The starter plan: the habits you picked, then goals your answers point to, then
- * Finch's, up to PLAN_SIZE in all.
+ * Finch's, up to PLAN_SIZE in all; "Levantarme de la cama" moves to the top.
  */
 export function buildPlan(picked: string[], a: AboutYou, size: number): string[] {
   const has = (q: string, ...ids: string[]) => (a[q] ?? []).some((id) => ids.includes(id))
@@ -238,5 +240,8 @@ export function buildPlan(picked: string[], a: AboutYou, size: number): string[]
   picked.forEach(add)
   fromAnswers.filter((id) => !plan.includes(id) && !skip.has(id)).slice(0, FROM_ANSWERS).forEach(add)
   FINCH_PLAN.forEach(add)
+  // Home lists one very easy goal first, then the habits they chose (the owner's call).
+  const easy = plan.indexOf(EASY_FIRST)
+  if (easy > 0) plan.unshift(...plan.splice(easy, 1))
   return plan
 }

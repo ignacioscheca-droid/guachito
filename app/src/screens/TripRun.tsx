@@ -1,7 +1,7 @@
 import { RideWorld } from '../components/RideWorld'
 import { Button } from '../components/ui'
-import { ADVENTURE, ADVENTURE_MS } from '../game/content'
-import { currentEpisode, useGame } from '../game/store'
+import { TRIP, WORK_MS } from '../game/journey'
+import { useGame } from '../game/store'
 
 /** Countdown: "1:42:05", or "4:05" under an hour. */
 export const formatClock = (ms: number) => {
@@ -12,24 +12,25 @@ export const formatClock = (ms: number) => {
   return h > 0 ? `${h}:${String(mm).padStart(2, '0')}:${ss}` : `${mm}:${ss}`
 }
 
-/** Wall-clock time Gauchito gets back, e.g. "18:40". */
+/** Wall-clock time he is back, e.g. "18:40". */
 export const returnTime = (remainingMs: number) =>
   new Date(Date.now() + remainingMs).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
 
-export function AdventureRun({ remainingMs, onHome }: { remainingMs: number; onHome: () => void }) {
+/** Paucho riding south: the pampas going by and how the trip is going. */
+export function TripRun({ remainingMs, onHome }: { remainingMs: number; onHome: () => void }) {
   const name = useGame((s) => s.name)
-  const episode = useGame(currentEpisode)
-  const progress = 1 - remainingMs / ADVENTURE_MS
-  const beat = episode.beats[Math.min(episode.beats.length - 1, Math.floor(progress * episode.beats.length))]
+  const dog = useGame((s) => s.dog.arrived)
+  const progress = 1 - remainingMs / WORK_MS
+  const beat = TRIP.beats[Math.min(TRIP.beats.length - 1, Math.floor(progress * TRIP.beats.length))]
 
   return (
     <div className="screen run">
-      <RideWorld />
+      <RideWorld dog={dog} />
 
       <div className="run__text">
-        <h1>{name} está de aventura…</h1>
+        <h1>{name} está de viaje…</h1>
         <p>
-          {episode.title} · {ADVENTURE.name}
+          {TRIP.name} · busca {TRIP.brings}
         </p>
       </div>
 
@@ -44,7 +45,7 @@ export function AdventureRun({ remainingMs, onHome }: { remainingMs: number; onH
           Vuelve a las {returnTime(remainingMs)} · faltan {formatClock(remainingMs)}
         </small>
         <Button variant="ghost" onClick={onHome}>
-          Esperarlo en el rancho
+          Esperarlo en casa
         </Button>
       </div>
     </div>

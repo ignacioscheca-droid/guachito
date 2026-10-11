@@ -1,8 +1,10 @@
-import { actions, todayKey, useGame } from '../game/store'
+import { nextJob, actions, todayKey, useGame } from '../game/store'
+import { jobInfo } from '../game/journey'
 
 /** Playtest helpers. Open by tapping the Home greeting 5 times, or with ?test in the URL. */
 export function TestMenu({ onClose, onOnboarding }: { onClose: () => void; onOnboarding: () => void }) {
   const s = useGame((g) => g)
+  const job = nextJob(s)
   const run = (fn: () => void) => () => {
     fn()
     onClose()
@@ -12,12 +14,14 @@ export function TestMenu({ onClose, onOnboarding }: { onClose: () => void; onOnb
       <div className="modal testmenu" onClick={(e) => e.stopPropagation()}>
         <h2>Menú de prueba</h2>
         <p>
-          Día: {todayKey(s)} · Energía {s.energy} · Aventura: {s.adventure.status} · Monedas {s.coins}
+          Día: {todayKey(s)} · Trabajo {s.jobsDone + 1}: {job ? jobInfo(job).name : 'nada'} ({s.work.status}) · Energía {s.energy} · Herraduras{' '}
+          {s.coins}
         </p>
         <button onClick={run(actions.debugNextDay)}>Pasar al día siguiente</button>
         <button onClick={run(actions.debugFillEnergy)}>Llenar la energía</button>
-        <button onClick={run(actions.debugFinishAdventure)}>Terminar la aventura ya</button>
-        <button onClick={run(actions.debugCoins)}>+100 monedas</button>
+        <button onClick={run(actions.debugFinishWork)}>Terminar el trabajo ya</button>
+        <button onClick={run(actions.debugSkipJob)}>Saltar a la obra terminada</button>
+        <button onClick={run(actions.debugCoins)}>+100 herraduras</button>
         <button onClick={run(onOnboarding)}>Ver el onboarding (no borra nada)</button>
         <button
           className="testmenu__danger"

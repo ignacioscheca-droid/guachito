@@ -32,7 +32,7 @@ export function DayOneCard({ companion, onNext }: { companion: string; onNext: (
       <div className="d1-bolt" aria-hidden>
         ⚡
       </div>
-      <p className="d1-text">Ayudá a {companion} a juntar toda la energía hoy para que salga de aventura.</p>
+      <p className="d1-text">Ayudá a {companion} a juntar toda la energía hoy para que construya su casita.</p>
       <div className="d1-foot">
         <Button variant="light" onClick={onNext}>
           Empezar hoy

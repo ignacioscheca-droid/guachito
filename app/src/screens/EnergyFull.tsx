@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { AdventureTrack } from '../components/DayLoop'
+import { AreaScene } from '../components/AreaScene'
+import { WorkTrack } from '../components/DayLoop'
 import { RideWorld } from '../components/RideWorld'
-import { Scene } from '../components/Scene'
 import { Button, CoinPill } from '../components/ui'
-import { ADVENTURE_MS, art, ENERGY_GOAL, FULL_ENERGY_COINS, ranchStage } from '../game/content'
-import { actions, useGame } from '../game/store'
-import { formatClock } from './AdventureRun'
+import { art } from '../game/content'
+import { areaView, FULL_ENERGY_COINS, jobInfo, TRIP, WORK_MS } from '../game/journey'
+import { actions, goalOf, nextJob, useGame } from '../game/store'
+import { JobThumb, jobLabel } from './Home'
+import { formatClock, returnTime } from './TripRun'
 
-export type FillStep = 'max' | 'grow' | 'leave'
+/** max: the bar reaches the top · job: what Paucho will do with it · leave: off he goes. */
+export type FillStep = 'max' | 'job' | 'leave'
 
 const RAIN = Array.from({ length: 26 }, (_, i) => ({
   left: `${(i * 37) % 100}%`,
@@ -16,14 +19,14 @@ const RAIN = Array.from({ length: 26 }, (_, i) => ({
   color: ['#F2B33D', '#D6453D', '#7A9A4B', '#6FB8F9', '#F28C38', '#E86A92'][i % 6],
 }))
 
-/** Coins flying from the reward pill up to the coin counter, one after another. */
+/** Herraduras flying from the reward pill up to the counter, one after another. */
 function flyCoins(from: Element | null, to: Element | null) {
   if (!from || !to) return
   const a = from.getBoundingClientRect()
   const b = to.getBoundingClientRect()
   for (let i = 0; i < 6; i++) {
     const el = document.createElement('img')
-    el.src = art('ui_moneda')
+    el.src = art('ui_herradura')
     el.className = 'flyer'
     el.style.left = `${a.left + 22}px`
     el.style.top = `${a.top + a.height / 2 - 14}px`
@@ -42,41 +45,31 @@ function flyCoins(from: Element | null, to: Element | null) {
 }
 
 /**
- * Finch's energy-full sequence: the bar counts up to the top ("¡Yujuuu!"), Gauchito
- * celebrates and earns coins; then his ranch grows a little (Finch: the bird grows up); then off he goes for eight
- * hours, and Home follows him on the pampas.
+ * Finch's energy-full sequence: the bar counts up to the top ("¡Yujuuu!") and herraduras
+ * fly in; then what Paucho will do with the energy (build the next obra, or travel);
+ * then he starts, for eight hours.
  */
-export function EnergyFull({
-  width,
-  from,
-  start,
-  remainingMs,
-  onDone,
-}: {
-  width: number
-  from: number
-  start: FillStep
-  remainingMs: number
-  onDone: () => void
-}) {
+export function EnergyFull({ from, start, remainingMs, onDone }: { from: number; start: FillStep; remainingMs: number; onDone: () => void }) {
   const s = useGame((g) => g)
+  const goal = goalOf(s)
   const [step, setStep] = useState<FillStep>(start)
-  const [shown, setShown] = useState(start === 'max' ? Math.min(from, ENERGY_GOAL) : ENERGY_GOAL)
+  const [shown, setShown] = useState(start === 'max' ? Math.min(from, goal) : goal)
   const [cheer, setCheer] = useState(0)
   const [coins, setCoins] = useState(start === 'max' ? s.coins - FULL_ENERGY_COINS : s.coins)
+  // the job is read once: after "¡A construir!" the store already moved on
+  const [job] = useState(() => nextJob(s))
   const pill = useRef<HTMLDivElement>(null)
   const counter = useRef<HTMLSpanElement>(null)
-  const full = shown >= ENERGY_GOAL
-  const sceneH = Math.round(Math.min(470, width * 1.12))
+  const full = shown >= goal
 
   // The bar counts the last of the energy in, one by one.
   useEffect(() => {
     if (step !== 'max' || full) return
-    const t = window.setTimeout(() => setShown((v) => v + 1), 140)
+    const t = window.setTimeout(() => setShown((v) => v + 1), 70)
     return () => clearTimeout(t)
   }, [step, shown, full])
 
-  // At the top: he celebrates, then the coins fly to the counter and it counts up.
+  // At the top: he celebrates, then the herraduras fly to the counter and it counts up.
   useEffect(() => {
     if (step !== 'max' || !full) return
     setCheer((c) => c + 1)
@@ -91,27 +84,36 @@ export function EnergyFull({
     }
   }, [step, full]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const { stage, next, justGrew } = ranchStage(s.fullEnergyDays)
-  const span = next ? next.days - stage.days : 1
-  const done = next ? s.fullEnergyDays - stage.days : 1
-  const left = next ? next.days - s.fullEnergyDays : 0
+  if (!job) return null
+  const info = jobInfo(job)
+  const trip = job.kind === 'trip'
+  const view = areaView(s.jobsDone)
+  const riding = trip && step === 'leave'
 
   return (
     <div className={`screen ef ef--${step}${full ? ' ef--full' : ''}`}>
-      <div className="ef__top" style={{ height: sceneH }}>
-        {step === 'leave' ? (
-          <RideWorld className="run__world--home ef__ride" />
+      <div className="ef__top ef__top--area">
+        {riding ? (
+          <RideWorld dog={s.dog.arrived} className="run__world--home ef__ride" />
         ) : (
-          <Scene width={width} height={sceneH} view="cheer" items={s.ownedItems} celebrateKey={cheer} />
+          <AreaScene
+            area={view.area}
+            built={view.built}
+            current={trip ? null : { mode: step === 'leave' ? 'raw' : 'charging', progress: shown / goal }}
+            pose={step === 'leave' ? 'build' : 'idle'}
+            outfit={s.outfit}
+            celebrateKey={cheer}
+            dog={s.dog.arrived}
+          />
         )}
-        {step !== 'leave' && (
+        {!riding && (
           <span className="ef__coins" ref={counter}>
             <CoinPill coins={coins} />
           </span>
         )}
       </div>
 
-      {(step === 'grow' || (step === 'max' && full)) && (
+      {(step === 'job' || (step === 'max' && full)) && (
         <div className="ef__rain" aria-hidden>
           {RAIN.map((r, i) => (
             <i key={i} style={{ left: r.left, animationDelay: r.delay, animationDuration: r.duration, background: r.color }} />
@@ -123,24 +125,24 @@ export function EnergyFull({
         {step === 'max' && (
           <div className="ef__step" key="max">
             <div className="ef__bar">
-              <i style={{ width: `${(shown / ENERGY_GOAL) * 100}%` }} />
-              <span>{full ? '¡Al máximo!' : `${shown} / ${ENERGY_GOAL}`}</span>
+              <i style={{ width: `${(shown / goal) * 100}%` }} />
+              <span>{full ? '¡Al máximo!' : `${shown} / ${goal}`}</span>
               {full && <img className="ef__food" src={art('habit_mate')} alt="" />}
             </div>
             {full && (
               <>
                 <h2 className="ef__in">¡Yujuuu!</h2>
                 <p className="ef__in ef__in--2">
-                  {s.name} se tomó unos mates y juntó energía para el día {Math.max(1, s.fullEnergyDays)}
+                  {s.name} se tomó unos mates y juntó energía para {trip ? 'el viaje' : info.the}
                 </p>
                 <div className="ef__pill ef__in ef__in--3" ref={pill}>
-                  <img src={art('ui_moneda')} alt="" />
+                  <img src={art('ui_herradura')} alt="" />
                   <span>
-                    <small>{s.name} ganó</small>+{FULL_ENERGY_COINS} monedas
+                    <small>{s.name} ganó</small>+{FULL_ENERGY_COINS} herraduras
                   </span>
                 </div>
                 <div className="ef__foot ef__in ef__in--4">
-                  <Button variant="light" onClick={() => setStep('grow')}>
+                  <Button variant="light" onClick={() => setStep('job')}>
                     Continuar
                   </Button>
                 </div>
@@ -149,39 +151,28 @@ export function EnergyFull({
           </div>
         )}
 
-        {step === 'grow' && (
-          <div className="ef__step" key="grow">
-            <h2 className="ef__in ef__small">
-              {justGrew ? `¡El rancho creció! Ahora es ${stage.a} 🎉` : `El rancho de ${s.name} está creciendo`}
-            </h2>
+        {step === 'job' && (
+          <div className="ef__step" key="job">
+            <h2 className="ef__in ef__small">{trip ? `${s.name} se va de viaje al sur` : `${s.name} va a construir ${info.the}`}</h2>
             <div className="ef__card ef__in ef__in--2">
-              <span className="ef__card-icon ef__card-icon--ranch">
-                <img src={art('nav_rancho')} alt="" />
-              </span>
+              <JobThumb job={job} />
               <div>
-                <strong>{next ? `De ${stage.the.split(' ').pop()} a ${next.the.split(' ').pop()}` : `Tu rancho es ${stage.a}`}</strong>
-                <small>{next ? `Lográ ${span} días con energía completa` : 'Llegaste a la última etapa'}</small>
-                <div className="ef__progress">
-                  <i style={{ width: `${(done / span) * 100}%` }} />
-                  <span>{next ? `${done} / ${span}` : '¡Completo!'}</span>
-                </div>
+                <strong>{trip ? `Va a buscar ${TRIP.brings}` : info.name}</strong>
+                <small>{trip ? TRIP.reason : jobLabel(job)}</small>
               </div>
             </div>
-            {next && (
-              <p className="ef__in ef__in--3 ef__note">
-                Faltan {left} día{left > 1 ? 's' : ''} para que {stage.the} se convierta en <b>{next.a}</b>.
-              </p>
-            )}
-            <p className="ef__in ef__in--4 ef__ready">{s.name} está listo para salir a recorrer las pampas y aprender algo nuevo.</p>
-            <div className="ef__foot ef__in ef__in--5">
+            <p className="ef__in ef__in--3 ef__note">
+              {trip ? 'Vuelve' : 'Termina'} a las <b>{returnTime(WORK_MS)}</b>. Mientras, cada hábito que hagas suma herraduras.
+            </p>
+            <div className="ef__foot ef__in ef__in--4">
               <Button
                 variant="light"
                 onClick={() => {
-                  actions.startAdventure()
+                  actions.startWork()
                   setStep('leave')
                 }}
               >
-                ¡Salir de aventura!
+                {trip ? '¡Buen viaje!' : '¡A construir!'}
               </Button>
             </div>
           </div>
@@ -189,12 +180,14 @@ export function EnergyFull({
 
         {step === 'leave' && (
           <div className="ef__step" key="leave">
-            <h2 className="ef__in ef__small">¡Arrancó una nueva aventura!</h2>
+            <h2 className="ef__in ef__small">{trip ? '¡Arrancó el viaje!' : '¡Manos a la obra!'}</h2>
             <div className="ef__track ef__in ef__in--2">
-              <AdventureTrack progress={1 - remainingMs / ADVENTURE_MS} />
+              <WorkTrack progress={1 - remainingMs / WORK_MS} start={trip ? '🧉' : '🔨'} end={trip ? TRIP.bringsEmoji : info.emoji} />
             </div>
             <p className="ef__in ef__in--2 ef__note">
-              {s.name} va a tener algo para contarte cuando termine la aventura de hoy, en {formatClock(remainingMs)}.
+              {trip
+                ? `${s.name} vuelve en ${formatClock(remainingMs)} con ${TRIP.brings} y algo para contarte.`
+                : `${s.name} termina ${info.the} en ${formatClock(remainingMs)}. ¡Volvé a ver cómo quedó!`}
             </p>
             <div className="ef__foot ef__in ef__in--3">
               <Button variant="light" onClick={onDone}>

@@ -4,6 +4,37 @@ Habit app MVP (spec: `GUACHITO_MVP_BUILD_SPEC.docx`). Completing daily habits gi
 energy to Gauchito, a chibi gaucho; a full bar sends him on a 2-hour adventure that
 brings back a story and a ranch item. The owner uses it for a real one-week test.
 
+## Branch "areas": Gauchito 2
+
+This branch is a separate build, published at `/guachito/areas/` (installs as "Gauchito 2").
+It keeps its own save (`gauchito.v2` in localStorage) and sends no notifications, so the
+owner's app on main is untouched. Its design is the owner's, from his Royal Match references:
+- **Day loop:** each habit gives 10 energy. The bar asks 30, and one more habit at each of
+  Finch's stages (`energyGoal` in `src/game/journey.ts`). One full bar a day starts the
+  next job for 8 hours; after that, habits give herraduras (the currency, +30 for filling the
+  bar, +5 each). Seeing a finished job (`Reveal`) is what counts it (`actions.completeJob`).
+- **The journey (`JOURNEY`):** Área 1 "El rancho de Paucho" (casita, fogón, corral),
+  Área 2 "La chacra" (the cucha brings the dog, then huerta, molino, gallinero), a trip to the
+  south (`TRIP`), then Área 3 "La pulpería".
+- **Tab bar:** Áreas · Aventuras · Inicio · Paucho · Casita. On day 0 only Inicio is open:
+  - the casita opens Casita, where the room and its shop share one screen and the first
+    purchase, the bed, is forced;
+  - the third day with habits opens Paucho (friendship by days together, streak, clothes);
+  - the first finished area opens Áreas;
+  - the end of La chacra opens Aventuras.
+- **Home:** 4 habits in view, the rest scroll, "Levantarme de la cama" first.
+- **Art:** the brief is the Claude Doc "Gauchito — Arte para la build",
+  https://claude.ai/code/artifact/0d52723f-435d-4f8a-a172-92b8d327966b. References are in
+  `kit_build/` and ChatGPT's results go in `arte_build/` (both local only).
+  - Until that art arrives, the build runs on stand-ins made by
+    `design/tools/build_placeholders.py`: the empty lot, the casita cut out of the patio,
+    Lucero, pampa fields, a gold horseshoe and recoloured neckerchiefs. Obras without art show
+    as wooden signs, and the room is drawn in SVG (`src/components/Room.tsx`).
+  - Areas are a base image plus one piece per obra (`Piece` in journey.ts). Clothes are
+    overlays per pose (`WEAR` in `src/game/shop.ts`).
+- **Publishing:** main's deploy workflow builds this branch into `/areas/`. After pushing it,
+  run `gh workflow run deploy.yml --ref main`.
+
 ## Name
 
 The app and character are **Gauchito**. The spec and first builds said "Guachito";

@@ -29,3 +29,7 @@ kit_rancho_etapas/
 rancho_etapas/
 kit_rancho_idle/
 rancho_idle/
+
+# art for the areas build: brief refs and ChatGPT results (local only)
+kit_build/
+arte_build/

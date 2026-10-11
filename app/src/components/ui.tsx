@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
-import { art, ENERGY_GOAL, type HabitDef } from '../game/content'
+import { art, type HabitDef } from '../game/content'
+import type { TabId } from '../game/store'
 
 export function Button({
   variant = 'primary',
@@ -9,25 +10,10 @@ export function Button({
   return <button className={`btn btn--${variant} ${className}`} {...rest} />
 }
 
-export function EnergyBar({ energy, compact }: { energy: number; compact?: boolean }) {
-  const pct = Math.min(100, (energy / ENERGY_GOAL) * 100)
-  return (
-    <div className={`energy${compact ? ' energy--compact' : ''}${pct >= 100 ? ' energy--full' : ''}`}>
-      <img className="energy__icon" src={art('ui_energia')} alt="Energía" />
-      <div className="energy__track">
-        <div className="energy__fill" style={{ width: `${pct}%` }} />
-      </div>
-      <span className="energy__label">
-        {energy} / {ENERGY_GOAL}
-      </span>
-    </div>
-  )
-}
-
 export function CoinPill({ coins, bump }: { coins: number; bump?: boolean }) {
   return (
     <div className={`coins${bump ? ' coins--bump' : ''}`}>
-      <img src={art('ui_moneda')} alt="" />
+      <img src={art('ui_herradura')} alt="Herraduras" />
       <span>{coins}</span>
     </div>
   )
@@ -43,26 +29,52 @@ export function Check({ on }: { on: boolean }) {
   )
 }
 
-export type Tab = 'home' | 'adventure' | 'ranch'
-
-const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: 'home', label: 'Inicio', icon: 'nav_inicio' },
-  { id: 'adventure', label: 'Aventura', icon: 'nav_aventura' },
-  { id: 'ranch', label: 'Rancho', icon: 'nav_rancho' },
+/** Royal Match's bar: Inicio in the middle, the rest open as the game goes on. */
+const TABS: { id: TabId; label: string; icon: string }[] = [
+  { id: 'areas', label: 'Áreas', icon: 'nav_rancho' },
+  { id: 'aventuras', label: 'Aventuras', icon: 'nav_aventura' },
+  { id: 'inicio', label: 'Inicio', icon: 'habit_mate' },
+  { id: 'paucho', label: 'Paucho', icon: 'g_avatar' },
+  { id: 'casita', label: 'Casita', icon: 'nav_inicio' },
 ]
 
-export function BottomNav({ tab, onTab, badges }: { tab: Tab; onTab: (t: Tab) => void; badges?: Partial<Record<Tab, boolean>> }) {
+export function BottomNav({
+  tab,
+  open,
+  name,
+  face,
+  badges,
+  onTab,
+  onLocked,
+}: {
+  tab: TabId
+  open: TabId[]
+  /** Paucho's tab is labelled with his name, and shows his (dressed) face. */
+  name: string
+  face: ReactNode
+  badges?: Partial<Record<TabId, boolean>>
+  onTab: (t: TabId) => void
+  onLocked: () => void
+}) {
   return (
-    <nav className="nav">
-      {TABS.map((t) => (
-        <button key={t.id} className={`nav__tab${tab === t.id ? ' nav__tab--on' : ''}`} onClick={() => onTab(t.id)}>
-          <span className="nav__icon">
-            <img src={art(t.icon)} alt="" />
-            {badges?.[t.id] && <i className="nav__badge" />}
-          </span>
-          {t.label}
-        </button>
-      ))}
+    <nav className="nav nav5">
+      {TABS.map((t) => {
+        const unlocked = open.includes(t.id)
+        return (
+          <button
+            key={t.id}
+            className={`nav__tab${tab === t.id ? ' nav__tab--on' : ''}${t.id === 'inicio' ? ' nav5__home' : ''}${unlocked ? '' : ' nav5__locked'}`}
+            onClick={() => (unlocked ? onTab(t.id) : onLocked())}
+            aria-label={unlocked ? undefined : 'Se desbloquea más adelante'}
+          >
+            <span className="nav__icon">
+              {t.id === 'paucho' && unlocked ? face : <img src={art(t.icon)} alt="" />}
+              {badges?.[t.id] && <i className="nav__badge" />}
+            </span>
+            {unlocked ? (t.id === 'paucho' ? name : t.label) : ''}
+          </button>
+        )
+      })}
     </nav>
   )
 }

@@ -1,93 +1,81 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { preloadGauchito } from './components/Gauchito'
+import { useEffect, useRef, useState } from 'react'
 import { HabitToast } from './components/DayLoop'
-import { BottomNav, type Tab } from './components/ui'
-import { ENERGY_GOAL } from './game/content'
-import { actions, adventureRemainingMs, getState, useGame } from './game/store'
-import { AdventureRun } from './screens/AdventureRun'
-import { AdventureTab } from './screens/AdventureTab'
+import { PauchoFace, preloadPaucho } from './components/Paucho'
+import { BottomNav } from './components/ui'
+import { actions, getState, goalOf, nextJob, useGame, workRemainingMs, type TabId } from './game/store'
+import { AreasTab } from './screens/AreasTab'
+import { AventurasTab } from './screens/AventurasTab'
+import { Casita } from './screens/Casita'
 import { EnergyFull, type FillStep } from './screens/EnergyFull'
 import { Home } from './screens/Home'
 import { Onboarding } from './screens/Onboarding'
-import { Ranch } from './screens/Ranch'
-import { StoryReward } from './screens/StoryReward'
+import { PauchoTab } from './screens/PauchoTab'
+import { Reveal } from './screens/Reveal'
 import { Settings } from './screens/Settings'
 import { TestMenu } from './screens/TestMenu'
+import { TripRun } from './screens/TripRun'
+import { TripStory } from './screens/TripStory'
+import { DogName, UnlockWelcome } from './screens/Welcomes'
 
-type View = 'tabs' | 'ready' | 'run' | 'story'
+type View = 'tabs' | 'full' | 'reveal' | 'story' | 'trip'
 
 /** Finch's toasts after ticking a habit. */
 const PRAISE = ['¡Sos un genio!', '¡Bien ahí!', '¡Qué crack!', '¡Increíble!', '¡Bravo!', '¡Así se hace!']
 
-function useWidth() {
-  const ref = useRef<HTMLDivElement>(null)
-  const [w, setW] = useState(390)
-  useLayoutEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const ro = new ResizeObserver(([e]) => setW(e.contentRect.width))
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
-  return [ref, w] as const
-}
-
-/** Ticks while an adventure runs and lands it when time is up. */
-function useAdventureClock() {
-  const running = useGame((s) => s.adventure.status === 'running')
-  const skip = useGame((s) => s.adventureSkipMs)
-  const [remaining, setRemaining] = useState(adventureRemainingMs())
+/** Ticks while Paucho works and marks the job finished when the eight hours are up. */
+function useWorkClock() {
+  const working = useGame((s) => s.work.status === 'working')
+  const skip = useGame((s) => s.workSkipMs)
+  const [remaining, setRemaining] = useState(workRemainingMs())
   useEffect(() => {
-    if (!running) return
+    if (!working) return
     const tick = () => {
-      const ms = adventureRemainingMs()
+      const ms = workRemainingMs()
       setRemaining(ms)
-      if (ms <= 0) actions.returnFromAdventure()
+      if (ms <= 0) actions.finishWork()
     }
     tick()
     const id = window.setInterval(tick, 250)
     return () => clearInterval(id)
-  }, [running, skip])
+  }, [working, skip])
   return remaining
 }
 
 export default function App() {
-  const onboarded = useGame((s) => s.onboarded)
-  const status = useGame((s) => s.adventure.status)
-  const [ref, width] = useWidth()
-  const [tab, setTab] = useState<Tab>('home')
+  const s = useGame((g) => g)
+  const [tab, setTab] = useState<TabId>('inicio')
   const [view, setView] = useState<View>('tabs')
   const [toast, setToast] = useState<{ key: number; title: string; sub: string } | null>(null)
-  const [fill, setFill] = useState<{ from: number; start: FillStep }>({ from: ENERGY_GOAL, start: 'grow' })
+  const [fill, setFill] = useState<{ from: number; start: FillStep }>({ from: 0, start: 'job' })
   const [celebrateKey, setCelebrateKey] = useState(0)
   const [testMenu, setTestMenu] = useState(false)
   const [settings, setSettings] = useState(false)
   const [replayOnboarding, setReplayOnboarding] = useState(false)
   const [arriving, setArriving] = useState(false)
-  const remaining = useAdventureClock()
+  const remaining = useWorkClock()
   const testMode = new URLSearchParams(location.search).has('test')
 
-  useEffect(preloadGauchito, [])
+  useEffect(preloadPaucho, [])
 
   // Out of the onboarding into Home: the blue of the last screen fades away, the panel
-  // comes up like Finch's, and Gauchito celebrates as he lands.
+  // comes up like Finch's, and Paucho celebrates as he lands.
   const arrive = () => {
-    setTab('home')
+    setTab('inicio')
     setView('tabs')
     setArriving(true)
     window.setTimeout(() => setCelebrateKey((k) => k + 1), 450)
     window.setTimeout(() => setArriving(false), 1200)
   }
-  const wasOnboarded = useRef(onboarded)
+  const wasOnboarded = useRef(s.onboarded)
   useEffect(() => {
-    if (onboarded && !wasOnboarded.current) arrive()
-    wasOnboarded.current = onboarded
-  }, [onboarded]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (s.onboarded && !wasOnboarded.current) arrive()
+    wasOnboarded.current = s.onboarded
+  }, [s.onboarded]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Every screen starts at the top (the story screen is long and scrolls).
   useEffect(() => {
     window.scrollTo(0, 0)
-  }, [view, tab, onboarded])
+  }, [view, tab, s.onboarded])
 
   useEffect(() => {
     if (!toast) return
@@ -95,19 +83,16 @@ export default function App() {
     return () => clearTimeout(t)
   }, [toast])
 
-  // When the adventure ends while watching it, go straight to the story.
+  // Watching the trip when he gets back: straight to his story.
   useEffect(() => {
-    if (status === 'returned' && view === 'run') setView('story')
-  }, [status, view])
+    if (s.work.status === 'done' && view === 'trip') setView('story')
+  }, [s.work.status, view])
 
-  const openAdventure = () => {
-    if (status === 'ready') {
-      setFill({ from: ENERGY_GOAL, start: 'grow' })
-      setView('ready')
-    } else if (status === 'running') setView('run')
-    else if (status === 'returned') setView('story')
-    else setTab('adventure')
+  const startJob = () => {
+    setFill({ from: goalOf(getState()), start: 'job' })
+    setView('full')
   }
+  const reveal = () => setView(nextJob(getState())?.kind === 'trip' ? 'story' : 'reveal')
 
   // Like Finch: a toast for each habit, and when the bar fills, the full-energy sequence.
   const completeHabit = (id: string) => {
@@ -117,19 +102,24 @@ export default function App() {
     setToast({
       key: Date.now(),
       title: PRAISE[Math.floor(Math.random() * PRAISE.length)],
-      sub: r.firstTime ? '¡Primera vez que lo completás!' : r.coins > 0 ? `+${r.coins} monedas` : `+${r.energy} de energía`,
+      sub: r.firstTime ? '¡Primera vez que lo completás!' : r.coins > 0 ? `+${r.coins} herraduras` : `+${r.energy} de energía`,
     })
     if (r.full) {
       window.setTimeout(() => {
         setToast(null)
         setFill({ from: before, start: 'max' })
-        setView('ready')
+        setView('full')
       }, 900)
     }
   }
 
+  const backHome = () => {
+    setTab('inicio')
+    setView('tabs')
+  }
+
   let content
-  if (!onboarded) {
+  if (!s.onboarded) {
     content = <Onboarding />
   } else if (replayOnboarding) {
     content = (
@@ -140,60 +130,63 @@ export default function App() {
         }}
       />
     )
-  } else if (view === 'ready') {
-    content = (
-      <EnergyFull
-        width={width}
-        from={fill.from}
-        start={fill.start}
-        remainingMs={remaining}
-        onDone={() => {
-          setTab('home')
-          setView('tabs')
-        }}
-      />
-    )
-  } else if (view === 'run') {
-    content = <AdventureRun remainingMs={remaining} onHome={() => setView('tabs')} />
+  } else if (view === 'full') {
+    content = <EnergyFull from={fill.from} start={fill.start} remainingMs={remaining} onDone={backHome} />
+  } else if (view === 'reveal') {
+    content = <Reveal onDone={backHome} />
   } else if (view === 'story') {
-    content = (
-      <StoryReward
-        onClaim={() => {
-          actions.claimReward()
-          setTab('ranch')
-          setView('tabs')
-        }}
-      />
-    )
+    content = <TripStory onDone={backHome} />
+  } else if (view === 'trip') {
+    content = <TripRun remainingMs={remaining} onHome={() => setView('tabs')} />
   } else {
+    const status = s.work.status
     content = (
       <>
         <main className={`tabs${arriving ? ' tabs--arriving' : ''}`} key={tab}>
-          {tab === 'home' && (
+          {tab === 'inicio' && (
             <Home
-              width={width}
               celebrateKey={celebrateKey}
               remainingMs={remaining}
               onCompleteHabit={completeHabit}
-              onAdventure={openAdventure}
-              onTapGauchito={() => setCelebrateKey((k) => k + 1)}
+              onStartJob={startJob}
+              onReveal={reveal}
+              onWatchTrip={() => setView('trip')}
+              onTapPaucho={() => setCelebrateKey((k) => k + 1)}
               onSecretTap={() => setTestMenu(true)}
               onSettings={() => setSettings(true)}
             />
           )}
-          {tab === 'adventure' && <AdventureTab remainingMs={remaining} onOpen={openAdventure} />}
-          {tab === 'ranch' && <Ranch width={width} />}
+          {tab === 'casita' && <Casita />}
+          {tab === 'paucho' && <PauchoTab onShop={() => setTab('casita')} />}
+          {tab === 'areas' && <AreasTab onGoHome={() => setTab('inicio')} />}
+          {tab === 'aventuras' && (
+            <AventurasTab remainingMs={remaining} onStart={startJob} onWatch={() => setView('trip')} onStory={() => setView('story')} />
+          )}
         </main>
-        <BottomNav tab={tab} onTab={setTab} badges={{ adventure: status === 'ready' || status === 'returned' }} />
+        <BottomNav
+          tab={tab}
+          open={s.unlocked}
+          name={s.name}
+          face={<PauchoFace outfit={s.outfit} className="nav5__face" />}
+          badges={{
+            inicio: tab !== 'inicio' && (status === 'ready' || status === 'done'),
+            casita: s.unlocked.includes('casita') && !s.room.includes('cama'),
+          }}
+          onTab={setTab}
+          onLocked={() => setToast({ key: Date.now(), title: 'Todavía no 🔒', sub: 'Se desbloquea más adelante' })}
+        />
       </>
     )
   }
 
+  const welcome = view === 'tabs' && s.onboarded && !replayOnboarding
   return (
-    <div className="app" ref={ref}>
+    <div className="app">
       {content}
       {arriving && <div className="arrive-veil" aria-hidden />}
       {toast && view === 'tabs' && <HabitToast key={toast.key} title={toast.title} sub={toast.sub} />}
+      {welcome && s.dog.arrived && !s.dog.name && <DogName />}
+      {welcome && !(s.dog.arrived && !s.dog.name) && s.unlockQueue.length > 0 && <UnlockWelcome tab={s.unlockQueue[0]} onGo={setTab} />}
       {settings && (
         <Settings
           onClose={() => setSettings(false)}
@@ -204,7 +197,7 @@ export default function App() {
         />
       )}
       {testMenu && <TestMenu onClose={() => setTestMenu(false)} onOnboarding={() => setReplayOnboarding(true)} />}
-      {testMode && onboarded && !testMenu && !replayOnboarding && view === 'tabs' && (
+      {testMode && s.onboarded && !testMenu && !replayOnboarding && view === 'tabs' && (
         <button className="testfab" onClick={() => setTestMenu(true)} aria-label="Menú de prueba">
           🛠
         </button>
