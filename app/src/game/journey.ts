@@ -1,8 +1,11 @@
 // The road Paucho and the player walk together: three areas to build, one obra per day
 // of full energy, and a trip to the south between the second and the third (Royal Match
-// areas, Finch's day loop). Art per area: a base image (the area before any obra) plus
-// one piece per obra laid over it; until ChatGPT's art arrives an obra without a piece
-// shows as a wooden sign (see AreaScene).
+// areas, Finch's day loop).
+//
+// Área 1 is the final art (the casa v2, design/tools/import_area_casa.py): the whole area
+// drawn finished, in layers (sky, drifting clouds, the scene), and each obra cut out so
+// the app can draw it faded until it is built ("fixes bring the colour back"). Areas 2
+// and 3 still run on stand-ins: a base image and a wooden sign per obra.
 
 import type { Spot } from './content'
 
@@ -13,6 +16,8 @@ export type Piece =
   | { image: string; spot: Spot }
   /** No art yet: a sign at `spot` with the obra's emoji and name. */
   | { sign: Spot }
+  /** Drawn in the area's art already: `cut` is it cut out, laid faded on top until built. */
+  | { cut: string; box: { left: number; top: number; width: number } }
 
 export type Obra = {
   id: string
@@ -30,14 +35,26 @@ export type Obra = {
 export type Area = {
   id: string
   name: string
-  /** Art of the area before any obra. */
+  /** Art of the area (before any obra, or finished when its obras are `cut`). */
   base: string
+  /** Height / width of the art. */
+  aspect: number
+  /** The art in layers: a cloudless sky, the art's own clouds, the scene with no sky. */
+  layers?: { sky: string; skyHeight: number; scene: string; clouds: { image: string; box: { left: number; top: number; width: number } }[] }
+  /** Colour above the art when the screen is taller than it. */
+  skyTop: string
+  /** Fraction of the art's height where Home's habit cards begin. */
+  cardsAt: number
+  /** Fraction of the art's height kept in view when it is shown cropped (Áreas cards). */
+  focusY: number
   obras: Obra[]
-  /** Where Paucho and the dog stand. */
+  /** Where Paucho and the dog stand (x % of width; y, h % of height). */
   hero: Spot
   dog: Spot
-  /** Camera for Home: which point of the square stays in view, and where the ground meets the card. */
-  camera: { focusX: number; screenX: number; groundY: number; minZoom: number }
+  /** Paucho's own thing to do here while he isn't building (Área 1: cebar mate). */
+  sit?: Spot
+  /** Little things that move (see AreaLife). */
+  life?: 'casa'
   /** Paucho's line when the area opens. */
   intro: string
 }
@@ -48,38 +65,52 @@ export const AREAS: Area[] = [
   {
     id: 'rancho',
     name: 'El rancho de Paucho',
-    base: 'area1_0',
-    hero: { x: 42, y: 79, h: HERO_H },
-    dog: { x: 58, y: 80, h: 11.3 },
-    camera: { focusX: 58, screenX: 50, groundY: 95, minZoom: 1.15 },
+    base: 'area_casa_v2',
+    aspect: 1.5,
+    layers: {
+      sky: 'area1_sky',
+      skyHeight: 21.48,
+      scene: 'area1_scene',
+      clouds: [
+        { image: 'area1_cloud_1', box: { left: 0.1, top: 6.05, width: 25.29 } },
+        { image: 'area1_cloud_2', box: { left: 68.36, top: 5.4, width: 31.54 } },
+      ],
+    },
+    skyTop: '#50a8fc',
+    cardsAt: 0.69,
+    focusY: 0.42,
+    hero: { x: 57.6, y: 62.8, h: 21 },
+    sit: { x: 57.6, y: 62.6, h: 21.2 },
+    dog: { x: 46, y: 64, h: 7.5 },
+    life: 'casa',
     intro: 'Acá voy a hacer mi rancho. ¡Con tu ayuda, en tres días está!',
     obras: [
       {
-        id: 'casita',
-        name: 'La casita',
-        the: 'la casita',
+        id: 'casa',
+        name: 'La casa',
+        the: 'la casa',
         emoji: '🏠',
-        steps: ['Postes', 'Paredes', 'Techo', 'Puerta'],
-        piece: { image: 'area1_casita', box: { left: 47.77, top: 16.59, width: 52.23 } },
-        done: '¡Ya tengo casita! Gracias a vos.',
+        steps: ['Paredes', 'Techo', 'Galería', 'Puerta'],
+        piece: { cut: 'area1_obra_casa', box: { left: 0.1, top: 14.32, width: 99.8 } },
+        done: '¡Ya tengo casa! Gracias a vos.',
       },
       {
         id: 'fogon',
         name: 'El fogón',
         the: 'el fogón',
         emoji: '🔥',
-        steps: ['Piedras', 'Leña', 'Banco', 'Pava'],
-        piece: { image: 'item_fogon', spot: { x: 19, y: 70, h: 12 } },
+        steps: ['Piedras', 'Leña', 'Pava', 'Troncos'],
+        piece: { cut: 'area1_obra_fogon', box: { left: 1.27, top: 50.98, width: 45.9 } },
         done: 'Ahora tenemos dónde tomar unos mates juntos.',
       },
       {
-        id: 'corral',
-        name: 'El corral',
-        the: 'el corral',
-        emoji: '🐴',
-        steps: ['Postes', 'Alambrado', 'Tranquera', 'Bebedero'],
-        piece: { image: 'area1_corral', spot: { x: 24, y: 52, h: 13 } },
-        done: '¡Llegó Lucero, mi caballo! Ya tiene su corral.',
+        id: 'aljibe',
+        name: 'El aljibe',
+        the: 'el aljibe',
+        emoji: '🪣',
+        steps: ['Piedras', 'Pozo', 'Roldana', 'Balde'],
+        piece: { cut: 'area1_obra_aljibe', box: { left: 69.63, top: 44.79, width: 30.27 } },
+        done: 'Agua fresquita para el mate, todos los días.',
       },
     ],
   },
@@ -87,9 +118,12 @@ export const AREAS: Area[] = [
     id: 'chacra',
     name: 'La chacra',
     base: 'area2_0',
+    aspect: 1,
+    skyTop: '#62a8f0',
+    cardsAt: 0.95,
+    focusY: 0.6,
     hero: { x: 60, y: 84, h: HERO_H },
     dog: { x: 44, y: 85, h: 11.3 },
-    camera: { focusX: 50, screenX: 50, groundY: 96, minZoom: 1.15 },
     intro: 'Detrás del rancho hay lugar para una chacra. ¿Arrancamos?',
     obras: [
       {
@@ -134,9 +168,12 @@ export const AREAS: Area[] = [
     id: 'pulperia',
     name: 'La pulpería',
     base: 'area3_0',
+    aspect: 1,
+    skyTop: '#7aa6dc',
+    cardsAt: 0.95,
+    focusY: 0.6,
     hero: { x: 30, y: 84, h: HERO_H },
     dog: { x: 16, y: 85, h: 11.3 },
-    camera: { focusX: 50, screenX: 50, groundY: 96, minZoom: 1.15 },
     intro: 'La pulpería del camino está vieja y cerrada. ¡La vamos a dejar como nueva!',
     obras: [
       {

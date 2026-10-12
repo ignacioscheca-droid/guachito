@@ -29,7 +29,10 @@ export function Check({ on }: { on: boolean }) {
   )
 }
 
-/** Royal Match's bar: Inicio in the middle, the rest open as the game goes on. */
+/**
+ * Royal Match's bar: icons only; the chosen tab is wider and lit, its icon raised over its
+ * name. Inicio sits in the middle; the rest open as the game goes on.
+ */
 const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'areas', label: 'Áreas', icon: 'nav_rancho' },
   { id: 'aventuras', label: 'Aventuras', icon: 'nav_aventura' },
@@ -63,7 +66,7 @@ export function BottomNav({
         return (
           <button
             key={t.id}
-            className={`nav__tab${tab === t.id ? ' nav__tab--on' : ''}${t.id === 'inicio' ? ' nav5__home' : ''}${unlocked ? '' : ' nav5__locked'}`}
+            className={`nav__tab${tab === t.id ? ' nav__tab--on' : ''}${unlocked ? '' : ' nav5__locked'}`}
             onClick={() => (unlocked ? onTab(t.id) : onLocked())}
             aria-label={unlocked ? undefined : 'Se desbloquea más adelante'}
           >
@@ -71,7 +74,7 @@ export function BottomNav({
               {t.id === 'paucho' && unlocked ? face : <img src={art(t.icon)} alt="" />}
               {badges?.[t.id] && <i className="nav__badge" />}
             </span>
-            {unlocked ? (t.id === 'paucho' ? name : t.label) : ''}
+            {tab === t.id && <b className="nav5__label">{t.id === 'paucho' ? name : t.label}</b>}
           </button>
         )
       })}

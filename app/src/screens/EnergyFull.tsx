@@ -99,7 +99,7 @@ export function EnergyFull({ from, start, remainingMs, onDone }: { from: number;
           <AreaScene
             area={view.area}
             built={view.built}
-            current={trip ? null : { mode: step === 'leave' ? 'raw' : 'charging', progress: shown / goal }}
+            current={trip ? null : step === 'leave' ? { mode: 'working', progress: 0 } : { mode: 'charging', progress: shown / goal }}
             pose={step === 'leave' ? 'build' : 'idle'}
             outfit={s.outfit}
             celebrateKey={cheer}

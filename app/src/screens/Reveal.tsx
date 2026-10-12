@@ -42,11 +42,10 @@ export function Reveal({ onDone }: { onDone: () => void }) {
         className="reveal__scene"
         area={job.area}
         built={step === 'area' ? area.obras.length : view.built}
-        current={step === 'area' ? null : { mode: shown ? 'reveal' : 'raw' }}
+        current={step === 'area' ? null : shown ? { mode: 'reveal' } : { mode: 'working', progress: 1 }}
         pose={shown ? 'celebrate' : 'idle'}
         outfit={s.outfit}
         dog={s.dog.arrived || (job.area === 1 && job.obra === 0 && shown)}
-        overlap={28}
       />
       {shown && (
         <div className="reveal__burst" aria-hidden>

@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState, type MouseEvent, type RefObject } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type ReactNode, type RefObject } from 'react'
 import { AreaScene, type ObraLook } from '../components/AreaScene'
 import { Confetti } from '../components/Confetti'
-import { WorkTrack } from '../components/DayLoop'
 import { HabitPicker } from '../components/HabitPicker'
 import { RideWorld } from '../components/RideWorld'
-import { Button, Check, CoinPill, HabitIcon } from '../components/ui'
+import { Button, CoinPill, HabitIcon } from '../components/ui'
 import { art } from '../game/content'
-import { AREAS, areaView, ENERGY_PER_HABIT, EXTRA_HABIT_COINS, jobInfo, TRIP, WORK_MS, type Job } from '../game/journey'
-import { actions, doneToday, findHabit, goalOf, nextJob, restingToday, useGame, type GameState } from '../game/store'
+import { AREAS, areaView, ENERGY_PER_HABIT, EXTRA_HABIT_COINS, jobInfo, WORK_MS, type Job } from '../game/journey'
+import { actions, doneToday, findHabit, goalOf, nextJob, restingToday, useGame } from '../game/store'
 import { formatClock } from './TripRun'
 
 type Props = {
@@ -22,6 +21,10 @@ type Props = {
   onTapPaucho: () => void
   onSettings: () => void
 }
+
+/** Room each habit card takes (Finch's size: 70 px and a gap), and how many show whole. */
+const CARD_STEP = 78
+const CARDS_IN_VIEW = 3.5
 
 /** Moves the shown number towards `value` one unit at a time, like Finch's energy counter. */
 function useCountTo(value: number, msPerStep = 45) {
@@ -57,11 +60,17 @@ function fly(from: Element, to: Element | null, icon: string) {
   ).onfinish = () => el.remove()
 }
 
-/** The job's picture for cards: a crop of its art, or its emoji. */
+/** The job's picture: a crop of its art, or its emoji. */
 export function JobThumb({ job }: { job: Job }) {
   if (job.kind === 'build') {
     const p = AREAS[job.area].obras[job.obra].piece
-    if ('image' in p) return <span className="jobthumb"><img src={art(p.image)} alt="" /></span>
+    const src = 'cut' in p ? p.cut : 'image' in p ? p.image : null
+    if (src)
+      return (
+        <span className="jobthumb">
+          <img src={art(src)} alt="" />
+        </span>
+      )
   }
   return <span className="jobthumb jobthumb--emoji">{jobInfo(job).emoji}</span>
 }
@@ -72,51 +81,103 @@ export function jobLabel(job: Job) {
   return `Área ${job.area + 1} · Obra ${job.obra + 1} de ${AREAS[job.area].obras.length}`
 }
 
-function ChargeCard({ s, job, foodRef }: { s: GameState; job: Job; foodRef: RefObject<HTMLDivElement | null> }) {
+/**
+ * Royal Match's top bar: what Paucho is up to, in one bar: the day's energy filling, then
+ * the eight hours, with the obra at its end. Ready to start, or done, it is a button.
+ */
+function ProgressBar({ p, barRef }: { p: Props; barRef: RefObject<HTMLButtonElement | null> }) {
+  const s = useGame((g) => g)
+  const job = nextJob(s)
   const goal = goalOf(s)
-  const shown = useCountTo(s.energy)
+  const energy = useCountTo(s.energy)
+  const { status } = s.work
+  let fill = 0
+  let label = ''
+  let start: ReactNode = <img src={art('ui_energia')} alt="" />
+  let action: (() => void) | undefined
+  let go = false
+  if (!job) {
+    fill = 1
+    label = '¡Todo listo!'
+    start = '🎉'
+  } else if (status === 'ready') {
+    fill = 1
+    label = job.kind === 'trip' ? '¡A viajar!' : '¡A construir!'
+    action = p.onStartJob
+    go = true
+  } else if (status === 'working') {
+    fill = 1 - p.remainingMs / WORK_MS
+    label = formatClock(p.remainingMs)
+    start = job.kind === 'trip' ? '🧉' : '🔨'
+    if (job.kind === 'trip') action = p.onWatchTrip
+  } else if (status === 'done') {
+    fill = 1
+    label = job.kind === 'trip' ? '¡Volvió!' : '¡Terminó!'
+    action = p.onReveal
+    go = true
+  } else if (restingToday(s)) {
+    label = 'Sigue mañana'
+    start = '🌙'
+  } else {
+    fill = energy / goal
+    label = `${energy}/${goal}`
+  }
   return (
-    <div className="ecard jobcard" ref={foodRef}>
-      <JobThumb job={job} />
-      <div className="ecard__body">
-        <small>{jobInfo(job).name}</small>
-        <div className="ecard__bar">
-          <i style={{ width: `${(shown / goal) * 100}%` }} />
-          <span>
-            {shown} / {goal}
-          </span>
-        </div>
-      </div>
-    </div>
+    <button ref={barRef} className={`pbar${go ? ' pbar--go' : ''}`} onClick={action} disabled={!action}>
+      <span className="pbar__track">
+        <i style={{ width: `${Math.max(0, Math.min(1, fill)) * 100}%` }} />
+        <span>{label}</span>
+      </span>
+      <span className="pbar__start">{start}</span>
+      <span className="pbar__end">{job ? <JobThumb job={job} /> : <span className="jobthumb jobthumb--emoji">🏡</span>}</span>
+    </button>
   )
 }
 
+/**
+ * Home, laid out like Royal Match's: the area fills the screen, the progress bar on top,
+ * and the habits where Royal Match has its level button, as Finch-sized cards that run
+ * on under the tab bar. No text floats over the scene (the owner's call).
+ */
 export function Home(p: Props) {
   const s = useGame((g) => g)
   const [editing, setEditing] = useState(false)
+  const [showDone, setShowDone] = useState(false)
   const [leaving, setLeaving] = useState<string | null>(null)
   const [burst, setBurst] = useState({ key: 0, x: 0, y: 0 })
-  const panel = useRef<HTMLDivElement>(null)
-  const card = useRef<HTMLDivElement>(null)
+  const root = useRef<HTMLDivElement>(null)
+  const bar = useRef<HTMLButtonElement>(null)
   const coinsRef = useRef<HTMLSpanElement>(null)
+  const [cardsTop, setCardsTop] = useState(470)
   const done = doneToday(s)
   const open = s.habits.filter((h) => !done.includes(h))
   const doneIds = s.habits.filter((h) => done.includes(h))
   const job = nextJob(s)
   const { status } = s.work
-  const resting = restingToday(s)
-  const charging = status === 'charging' && job != null && !resting
+  const charging = status === 'charging' && job != null && !restingToday(s)
   const traveling = job?.kind === 'trip' && status === 'working'
   const view = areaView(s.jobsDone)
 
-  // Finch's tick: confetti on the habit, its energy (or herraduras) flies off, the row leaves.
+  // The cards start where three and a half fit above the tab bar: the last one is cut by it.
+  useLayoutEffect(() => {
+    const measure = () => {
+      const h = root.current?.clientHeight ?? window.innerHeight
+      const nav = document.querySelector('.nav')?.getBoundingClientRect().height ?? 98
+      setCardsTop(Math.round(h - nav - CARDS_IN_VIEW * CARD_STEP + 8))
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [])
+
+  // Finch's tick: confetti on the habit, its energy (or herraduras) flies off, the card leaves.
   const tick = (id: string, e: MouseEvent<HTMLButtonElement>) => {
-    if (leaving || !panel.current) return
-    const row = e.currentTarget
-    const r = row.getBoundingClientRect()
-    const box = panel.current.getBoundingClientRect()
-    setBurst((b) => ({ key: b.key + 1, x: r.right - 34 - box.left, y: r.top + r.height / 2 - box.top }))
-    fly(row.querySelector('.row__reward') ?? row, charging ? card.current : coinsRef.current, charging ? 'ui_energia' : 'ui_herradura')
+    if (leaving || !root.current) return
+    const card = e.currentTarget
+    const r = card.getBoundingClientRect()
+    const box = root.current.getBoundingClientRect()
+    setBurst((b) => ({ key: b.key + 1, x: r.right - 40 - box.left, y: r.top + r.height / 2 - box.top }))
+    fly(card.querySelector('.hcard__reward') ?? card, charging ? bar.current : coinsRef.current, charging ? 'ui_energia' : 'ui_herradura')
     setLeaving(id)
     window.setTimeout(() => {
       setLeaving(null)
@@ -130,32 +191,20 @@ export function Home(p: Props) {
     const goal = goalOf(s)
     if (status === 'charging') look = { mode: s.energy === 0 ? 'plan' : 'charging', progress: s.energy / goal }
     else if (status === 'ready') look = { mode: 'charging', progress: 1 }
-    else look = { mode: 'raw' }
+    else if (status === 'working') look = { mode: 'working', progress: 1 - p.remainingMs / WORK_MS }
+    else look = { mode: 'working', progress: 1 }
   }
   const pose = status === 'working' ? 'build' : status === 'done' ? 'wave' : 'idle'
 
-  // No text over the scene (the owner's call): just the herraduras and the settings.
-  const top = (
-    <div className="home__top home__top--bare">
-      <span ref={coinsRef}>
-        <CoinPill coins={s.coins} />
-      </span>
-      <button className="home__gear" onClick={p.onSettings} aria-label="Ajustes">
-        ⚙️
-      </button>
-    </div>
-  )
-
   return (
-    <div className="home2">
+    <div className="home3" ref={root}>
       {traveling ? (
-        <div className="scene scene--away home2__scene">
+        <div className="scene scene--away home3__scene">
           <RideWorld dog={s.dog.arrived} className="run__world--home" />
-          {top}
         </div>
       ) : (
         <AreaScene
-          className="home2__scene"
+          className="home3__scene"
           area={view.area}
           built={view.built}
           current={look}
@@ -163,126 +212,84 @@ export function Home(p: Props) {
           outfit={s.outfit}
           celebrateKey={p.celebrateKey}
           dog={s.dog.arrived}
-          overlap={26}
+          cardsTop={cardsTop}
           onTapPaucho={p.onTapPaucho}
-        >
-          {top}
-        </AreaScene>
+        />
       )}
 
-      <div className="panel home2__panel" ref={panel}>
-        <div className="home__burst" style={{ left: burst.x, top: burst.y }}>
-          <Confetti burstKey={burst.key} count={22} spread={0.7} />
-        </div>
+      <div className="home3__top">
+        <span ref={coinsRef}>
+          <CoinPill coins={s.coins} />
+        </span>
+        <button className="home__gear" onClick={p.onSettings} aria-label="Ajustes">
+          ⚙️
+        </button>
+      </div>
+      <ProgressBar p={p} barRef={bar} />
 
-        {!job && (
-          <div className="ecard jobcard">
-            <span className="jobthumb jobthumb--emoji">🎉</span>
-            <div className="ecard__body">
-              <strong>¡Terminaron todo lo que hay por ahora!</strong>
-              <small>Pronto, más áreas. Los hábitos siguen sumando herraduras.</small>
-            </div>
-          </div>
-        )}
-        {job && charging && <ChargeCard s={s} job={job} foodRef={card} />}
-        {job && resting && (
-          <div className="ecard jobcard">
-            <JobThumb job={job} />
-            <div className="ecard__body">
-              <small>{jobInfo(job).name}</small>
-              <strong className="jobcard__rest">Sigue mañana</strong>
-            </div>
-          </div>
-        )}
-        {job && status === 'ready' && (
-          <button className="ecard ecard--ready jobcard" onClick={p.onStartJob}>
-            <JobThumb job={job} />
-            <div className="ecard__body">
-              <small>{jobInfo(job).name}</small>
-              <div className="ecard__bar">
-                <i style={{ width: '100%' }} />
-                <span>¡Al máximo!</span>
-              </div>
-            </div>
-            <span className="ecard__go">{job.kind === 'trip' ? '¡Salir!' : '¡A construir!'}</span>
+      <div className="home3__chips" style={{ top: cardsTop - 46 }}>
+        {doneIds.length > 0 && (
+          <button className="hchip" onClick={() => setShowDone(true)} aria-label="Hechos hoy">
+            ✓ {doneIds.length}
           </button>
         )}
-        {job && status === 'working' && (
-          <button className="ecard ecard--away" onClick={job.kind === 'trip' ? p.onWatchTrip : undefined}>
-            <div className="ecard__head">
-              <strong>{job.kind === 'trip' ? 'De viaje al sur' : `Construyendo ${jobInfo(job).the}`}</strong>
-              <span>
-                {job.kind === 'trip' ? 'vuelve' : 'lista'} en {formatClock(p.remainingMs)}
-              </span>
-            </div>
-            <WorkTrack
-              progress={1 - p.remainingMs / WORK_MS}
-              start={job.kind === 'trip' ? '🧉' : '🔨'}
-              end={job.kind === 'trip' ? TRIP.bringsEmoji : jobInfo(job).emoji}
-            />
-          </button>
-        )}
-        {job && status === 'done' && (
-          <button className="ecard ecard--done" onClick={p.onReveal}>
-            <JobThumb job={job} />
-            <div className="ecard__body">
-              <strong>{job.kind === 'trip' ? '¡Volvió del sur!' : `¡Terminó ${jobInfo(job).the}!`}</strong>
-              <small>{job.kind === 'trip' ? 'Escuchá lo que te cuenta' : '¡Vení a ver cómo quedó!'}</small>
-            </div>
-            <span className="ecard__go">Ver</span>
-          </button>
-        )}
-
-        <section className="card today hlist">
-          <h3>
-            {open.length ? 'Tus hábitos de hoy' : '¡Hiciste todo por hoy! 🎉'}
-            <span>
-              <button className="today__edit" onClick={() => setEditing(true)}>
-                Editar
-              </button>
-            </span>
-          </h3>
-          <ul className={`hlist__open${open.length > 4 ? ' hlist__open--more' : ''}`}>
-            {open.map((id) => {
-              const h = findHabit(s, id)
-              return (
-                <li key={id} className={leaving === id ? 'today__leaving' : ''}>
-                  <button className="row" onClick={(e) => tick(id, e)}>
-                    <HabitIcon habit={h} />
-                    <span>{h.name}</span>
-                    <em className="row__reward">
-                      +{charging ? ENERGY_PER_HABIT : EXTRA_HABIT_COINS}
-                      <img src={art(charging ? 'ui_energia' : 'ui_herradura')} alt="" />
-                    </em>
-                    <Check on={false} />
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-          {doneIds.length > 0 && (
-            <details className="today__done">
-              <summary>Hechos hoy · {doneIds.length}</summary>
-              <ul>
-                {doneIds.map((id) => {
-                  const h = findHabit(s, id)
-                  return (
-                    <li key={id}>
-                      <button className="row row--done" onClick={() => actions.uncompleteHabit(id)} aria-pressed>
-                        <HabitIcon habit={h} />
-                        <span>{h.name}</span>
-                        <Check on />
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-              <p className="today__hint">Tocá uno para desmarcarlo.</p>
-            </details>
-          )}
-        </section>
+        <button className="hchip" onClick={() => setEditing(true)} aria-label="Editar hábitos">
+          ✏️
+        </button>
       </div>
 
+      <div className="home3__cards" style={{ top: cardsTop }}>
+        {open.length === 0 && (
+          <div className="hcard hcard--all">
+            <span className="hcard__icon">🎉</span>
+            <b>¡Hiciste todo por hoy!</b>
+          </div>
+        )}
+        {open.map((id) => {
+          const h = findHabit(s, id)
+          return (
+            <button key={id} className={`hcard${leaving === id ? ' hcard--leaving' : ''}`} onClick={(e) => tick(id, e)}>
+              <span className="hcard__icon">
+                <HabitIcon habit={h} />
+              </span>
+              <b>{h.name}</b>
+              <em className="hcard__reward">
+                +{charging ? ENERGY_PER_HABIT : EXTRA_HABIT_COINS}
+                <img src={art(charging ? 'ui_energia' : 'ui_herradura')} alt="" />
+              </em>
+              <span className="hcard__tick">✓</span>
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="home__burst" style={{ left: burst.x, top: burst.y }}>
+        <Confetti burstKey={burst.key} count={22} spread={0.7} />
+      </div>
+
+      {showDone && (
+        <div className="overlay overlay--top" onClick={() => setShowDone(false)}>
+          <div className="modal donelist" onClick={(e) => e.stopPropagation()}>
+            <h2>Hechos hoy</h2>
+            <p>Tocá uno para desmarcarlo.</p>
+            {doneIds.map((id) => {
+              const h = findHabit(s, id)
+              return (
+                <button key={id} className="hcard hcard--done" onClick={() => actions.uncompleteHabit(id)}>
+                  <span className="hcard__icon">
+                    <HabitIcon habit={h} />
+                  </span>
+                  <b>{h.name}</b>
+                  <span className="hcard__tick hcard__tick--on">✓</span>
+                </button>
+              )
+            })}
+            <Button variant="light" onClick={() => setShowDone(false)}>
+              Listo
+            </Button>
+          </div>
+        </div>
+      )}
       {editing && <EditHabits onClose={() => setEditing(false)} />}
     </div>
   )

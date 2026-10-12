@@ -22,7 +22,15 @@ owner's app on main is untouched. Its design is the owner's, from his Royal Matc
   - the third day with habits opens Paucho (friendship by days together, streak, clothes);
   - the first finished area opens Áreas;
   - the end of La chacra opens Aventuras.
-- **Home:** 4 habits in view, the rest scroll, "Levantarme de la cama" first.
+- **Home, laid out like Royal Match's:**
+  - The area fills the screen. Above it sit the herraduras, the gear and a progress bar: the day's energy, then the 8-hour countdown, with the obra at its end; it becomes a button when ready or done.
+  - Habits are Finch-sized cards (3½ in view, the last cut by the tab bar). "✓ N" and ✏️ chips sit above them. No text floats over the scene.
+  - The tab bar is Royal Match's: icons only, and the chosen tab is wider, lit, with its icon raised over its name.
+- **Área 1 = the casa v2** (`arte_build/area_casa_v2.webp`, made by `design/tools/import_area_casa.py`):
+  - **Layers:** sky, the art's own clouds drifting, and the scene with its sky cut out.
+  - **Obras (casa, fogón, aljibe):** each one is cut out and drawn faded (grey) until built. While Paucho builds, the colour climbs from the ground.
+  - **Life:** tree crowns sway, and the fire flickers under the pava (the art's own flames). Once built, there is chimney smoke, lantern glow and pava steam.
+  - **Paucho idles sitting:** he cebas mate using the onboarding's mate frames on a 10-second loop.
 - **Art:** the brief is the Claude Doc "Gauchito — Arte para la build",
   https://claude.ai/code/artifact/0d52723f-435d-4f8a-a172-92b8d327966b. References are in
   `kit_build/` and ChatGPT's results go in `arte_build/` (both local only).
