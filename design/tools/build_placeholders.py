@@ -6,7 +6,6 @@ Arte para la build"); then each file is replaced with the real one under the sam
     python3 design/tools/build_placeholders.py
 
 Writes into app/public/a/:
-  area2_0.webp          a pampa field (the ride layers), for La chacra
   area3_0.webp          the same field at dusk, for La pulpería
   ui_herradura.webp     a gold horseshoe, the currency
   wear_panuelo_{celeste,amarillo}_{idle,celebrate,avatar}.webp
@@ -145,7 +144,6 @@ def neckerchiefs():
 
 
 if __name__ == '__main__':
-    pampa('area2_0', dusk=False)
     pampa('area3_0', dusk=True)
     herradura()
     neckerchiefs()

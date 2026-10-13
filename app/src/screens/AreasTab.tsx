@@ -48,7 +48,7 @@ export function AreasTab({ onGoHome }: { onGoHome: () => void }) {
               {known && a ? (
                 <AreaScene area={i} built={done ? a.obras.length : view.area === i ? view.built : 0} pose={null} whole />
               ) : (
-                <img className="atile__blur" src={art(a ? a.base : 'area2_0')} alt="" />
+                <img className="atile__blur" src={art(a ? a.base : 'area3_0')} alt="" />
               )}
               {!known && <span className="atile__lock">🔒</span>}
               {known && (

@@ -15,7 +15,7 @@ export function PauchoTab({ onShop }: { onShop: () => void }) {
 
   const memories: { emoji: string; text: string }[] = []
   for (let a = 0; a < finished; a++) memories.push({ emoji: '🏡', text: `Terminaron ${areaName(a, s.name, true)}` })
-  if (s.dog.arrived) memories.push({ emoji: '🐶', text: `Llegó ${s.dog.name || 'un perro'} a la chacra` })
+  if (s.dog.arrived) memories.push({ emoji: '🐶', text: `Llegó ${s.dog.name || 'un perro'} a vivir en su cucha` })
   if (s.jobsDone > TRIP_JOB) memories.push({ emoji: TRIP.emoji, text: `${TRIP.name}: volvió con ${TRIP.brings}` })
 
   return (

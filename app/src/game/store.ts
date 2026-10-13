@@ -280,7 +280,7 @@ export const actions = {
   /**
    * Seen: the job counts, and what it opens opens. The casita opens the room (and its
    * shop), the first finished area opens Áreas, La cucha brings the dog, and the end of
-   * La chacra opens Aventuras (he is off to the south next).
+   * El galpón opens Aventuras (he is off to the south next).
    */
   completeJob() {
     if (state.work.status !== 'done') return

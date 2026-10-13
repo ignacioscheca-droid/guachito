@@ -66,7 +66,7 @@ function StagedObra({ piece, look }: { piece: { obra: string; pile: string; box:
           <i
             key={i}
             className="sobra__work"
-            style={{ left: `${b.left + b.width * (0.2 + 0.6 * v)}%`, top: `${b.top + b.width * 0.35}%`, animationDelay: `${-i * 0.9}s` }}
+            style={{ left: `${b.left + b.width * (0.2 + 0.6 * v)}%`, top: `${b.top + (b.height ?? b.width / 3) * 0.8}%`, animationDelay: `${-i * 0.9}s` }}
           />
         ))}
       </div>
@@ -75,6 +75,9 @@ function StagedObra({ piece, look }: { piece: { obra: string; pile: string; box:
   if (look.mode !== 'reveal') return null
   const r = seeded(60)
   const n = 9
+  // heights in % of the art's height: the dust rises from the obra's ground line
+  const h = b.height ?? (b.width * 0.5) / 1.5
+  const at = (f: number) => `${b.top + h * f}%`
   return (
     <div className="sobra" aria-hidden>
       <img className="sobra__pile" src={art(piece.pile)} style={boxStyle(b)} alt="" />
@@ -90,7 +93,7 @@ function StagedObra({ piece, look }: { piece: { obra: string; pile: string; box:
             style={
               {
                 left: `${b.left + along * b.width - size / 2}%`,
-                top: `calc(${b.top}% + ${b.width * (low ? 0.5 : 0.28 + 0.12 * r[i + 20])}cqw)`,
+                top: `calc(${at(low ? 0.88 : 0.5 + 0.25 * r[i + 20])} - ${size / 2}cqw)`,
                 width: `${size}%`,
                 '--dx': `${(along - 0.5) * 22}cqw`,
                 '--dy': `${-5 - 6 * r[i + 30]}cqw`,
@@ -100,13 +103,13 @@ function StagedObra({ piece, look }: { piece: { obra: string; pile: string; box:
           />
         )
       })}
-      <i className="sobra__ring" style={{ left: `${b.left + b.width * 0.15}%`, top: `calc(${b.top}% + ${b.width * 0.5}cqw)`, width: `${b.width * 0.7}%` }} />
+      <i className="sobra__ring" style={{ left: `${b.left + b.width * 0.15}%`, top: `calc(${at(0.95)} - ${(b.width * 0.7) / 5.6}cqw)`, width: `${b.width * 0.7}%` }} />
       {r.slice(0, 9).map((v, i) => (
         <svg
           key={i}
           className="sobra__spark"
           viewBox="0 0 24 24"
-          style={{ left: `${b.left + v * b.width}%`, top: `calc(${b.top}% + ${b.width * 0.45 * r[i + 10]}cqw)`, animationDelay: `${(r[i + 50] * 0.5).toFixed(2)}s` }}
+          style={{ left: `${b.left + v * b.width}%`, top: at(0.1 + 0.75 * r[i + 10]), animationDelay: `${(r[i + 50] * 0.5).toFixed(2)}s` }}
         >
           <path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z" />
         </svg>
@@ -154,6 +157,20 @@ function PauchoMate({ spot, onTap }: { spot: Spot; onTap?: () => void }) {
         <i />
         <i />
         <i />
+      </div>
+    </div>
+  )
+}
+
+/** Paucho throwing maize to the hens (Área 2): the pose breathing, grains falling from his hand. */
+function PauchoMaiz({ spot, onTap }: { spot: Spot; onTap?: () => void }) {
+  return (
+    <div className="pmaiz" style={{ ...place(spot), aspectRatio: 0.855 }} onClick={onTap}>
+      <img src={art('paucho_maiz')} alt="" draggable={false} />
+      <div className="pmaiz__grains" aria-hidden>
+        {[0, 1, 2, 3, 4, 5].map((k) => (
+          <i key={k} style={{ animationDelay: `${-k * 0.27}s`, left: `${(k % 3) * 4}%` }} />
+        ))}
       </div>
     </div>
   )
@@ -215,6 +232,45 @@ function CasaLife({ built }: { built: number }) {
             ))}
           </div>
           <Puffs x={23.2} y={52.1} n={3} size={2.2} dx={1.2} dy={-6} seconds={2.2} />
+        </>
+      )}
+    </div>
+  )
+}
+
+/** A hen standing, and now and then pecking the ground (sprites from area2_animados). */
+function Hen({ color, box, flip, delay }: { color: 'blanca' | 'colorada'; box: [number, number, number, number]; flip?: boolean; delay: number }) {
+  const [left, top, w, h] = box
+  return (
+    <div className={`ahen${flip ? ' ahen--flip' : ''}`} style={{ left: `${left}%`, top: `${top}%`, width: `${w}%`, height: `${h}%` }}>
+      <img className="ahen__stand" src={art(`area2_gallina_${color}_parada`)} style={{ animationDelay: `${delay}s` }} alt="" />
+      <img className="ahen__peck" src={art(`area2_gallina_${color}_pica`)} style={{ animationDelay: `${delay}s` }} alt="" />
+    </div>
+  )
+}
+
+/**
+ * Área 2 alive: the clothes swinging on the line, and once built, the galpón's veleta
+ * turning with the wind and its lantern's light, the two hens pecking by the gallinero.
+ */
+function GalponLife({ built }: { built: number }) {
+  return (
+    <div className="alife">
+      <img className="aropa" src={art('area2_ropa_1')} style={{ left: '71.97%', top: '30.27%', width: '11.82%' }} alt="" />
+      <img className="aropa" src={art('area2_ropa_2')} style={{ left: '83.59%', top: '30.6%', width: '8.79%', animationDelay: '-1.3s' }} alt="" />
+      {built >= 2 && (
+        <>
+          <div className="aveleta" style={{ left: '55.27%', top: '6.97%', width: '9.28%', height: '7.36%' }}>
+            <img className="aveleta__side" src={art('area2_veleta_side')} alt="" />
+            <img className="aveleta__front" src={art('area2_veleta_front')} alt="" />
+          </div>
+          <Glow x={48.8} y={31.3} r={4.2} />
+        </>
+      )}
+      {built >= 3 && (
+        <>
+          <Hen color="blanca" box={[60.55, 52.47, 11.43, 8.14]} delay={0} />
+          <Hen color="colorada" box={[77.93, 53.12, 15.43, 8.46]} flip delay={-1.7} />
         </>
       )}
     </div>
@@ -285,7 +341,7 @@ export function AreaScene({ area, built, current, pose = 'idle', outfit, celebra
   }
   const left = (size.w - width) / 2
   const cur = current && a.obras[built] ? current : null
-  const sitting = !!a.sit && pose === 'idle' && !cheering
+  const acting = !!a.act && pose === 'idle' && !cheering
   const hero = a.hero
   // past the art, above and below: its sky and its ground
   const seam = Math.max(0, Math.min(size.h, top + (width * a.aspect) / 2))
@@ -295,6 +351,7 @@ export function AreaScene({ area, built, current, pose = 'idle', outfit, celebra
       <div className="scene__stage ascene__stage" style={{ width, height: width * a.aspect, aspectRatio: 'auto', transform: `translate(${left}px, ${top}px)` }}>
         <Layers a={a} built={built} />
         {a.life === 'casa' && <CasaLife built={built} />}
+        {a.life === 'galpon' && <GalponLife built={built} />}
         {!a.layers && a.obras.slice(0, built).map((o) => <PieceArt key={o.id} obra={o} />)}
         {cur && <PieceArt obra={a.obras[built]} look={cur} />}
         {dog && (
@@ -302,12 +359,13 @@ export function AreaScene({ area, built, current, pose = 'idle', outfit, celebra
             <img src={art(a.life === 'casa' ? 'dog_sleep' : 'dog_sit')} alt="" />
           </div>
         )}
-        {pose && sitting && a.sit && <PauchoMate spot={a.sit} onTap={onTapPaucho} />}
-        {pose && !sitting && (
+        {pose && acting && a.act?.kind === 'mate' && <PauchoMate spot={a.act.spot} onTap={onTapPaucho} />}
+        {pose && acting && a.act?.kind === 'maiz' && <PauchoMaiz spot={a.act.spot} onTap={onTapPaucho} />}
+        {pose && !acting && (
           <Paucho
-            pose={cheering && a.sit ? 'celebrate' : pose}
+            pose={cheering && a.act ? 'celebrate' : pose}
             outfit={outfit}
-            celebrateKey={a.sit ? undefined : celebrateKey}
+            celebrateKey={a.act ? undefined : celebrateKey}
             className="ascene__paucho"
             style={{ ...place({ ...hero, y: hero.y + 0.2, h: hero.h / PAUCHO_FILL }), aspectRatio: PAUCHO_ASPECT }}
             onTap={onTapPaucho}

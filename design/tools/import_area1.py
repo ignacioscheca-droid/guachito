@@ -19,47 +19,12 @@ Prints the boxes (in % of the art) for AREAS[0] in app/src/game/journey.ts.
 """
 
 import json
-from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image
 from scipy import ndimage
 
-ROOT = Path(__file__).resolve().parents[2]
-SRC = ROOT / 'arte_build'
-OUT = ROOT / 'app/public/a'
-W, H = 1024, 1536
-
-
-def rgb(path):
-    return np.asarray(Image.open(path).convert('RGB').resize((W, H))).astype(np.float32)
-
-
-def changed(a, b, thr=60, min_size=800, grow=10):
-    """Where two aligned images differ, as solid blobs (re-render noise left out)."""
-    m = ndimage.binary_opening(np.abs(a - b).sum(2) > thr, iterations=2)
-    lab, n = ndimage.label(ndimage.binary_dilation(m, iterations=4))
-    sizes = ndimage.sum(m, lab, range(1, n + 1))
-    m = np.isin(lab, [i + 1 for i, s in enumerate(sizes) if s > min_size])
-    return ndimage.binary_fill_holes(ndimage.binary_dilation(m, iterations=grow))
-
-
-def feather(mask, r=5):
-    return np.asarray(Image.fromarray((mask * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(r))).astype(np.float32) / 255
-
-
-def pct(box):
-    x0, y0, x1, y1 = box
-    return [round(x0 / W * 100, 2), round(y0 / H * 100, 2), round((x1 - x0) / W * 100, 2), round((y1 - y0) / H * 100, 2)]
-
-
-def save_cut(img, alpha, name):
-    """img (H,W,3) with alpha (0..1) cropped to what shows; returns its box in %."""
-    a = (alpha * 255).astype(np.uint8)
-    box = Image.fromarray(a).point(lambda v: 255 if v > 8 else 0).getbbox()
-    Image.fromarray(np.dstack([img.astype(np.uint8), a]), 'RGBA').crop(box).save(OUT / f'{name}.webp', quality=88)
-    return pct(box)
-
+from area_layers import OUT, SRC, H, W, changed, feather, fill_from_neighbours, mask_box, pct, rgb, save_cut, sky_alpha
 
 stages = [rgb(SRC / f'area1_etapa{k}.webp') for k in range(4)]
 clean_sky = rgb(SRC / 'area1_assets/area1_cielo_limpio.png')
@@ -86,9 +51,13 @@ obra_masks = {}
 for k, name in ((1, 'casa'), (2, 'fogon'), (3, 'aljibe')):
     m = changed(stages[k - 1], stages[k], min_size=1500)
     obra_masks[name] = m
+    # the cut-outs keep the sky transparent, so the clouds stay behind them
     al = feather(m, 6)
-    boxes[f'obra_{name}'] = save_cut(stages[k], al, f'area1_obra_{name}')
-    boxes[f'pila_{name}'] = save_cut(stages[k - 1], al, f'area1_pila_{name}')
+    after = al * sky_alpha(stages[k]).astype(np.float32) / 255
+    before = al * sky_alpha(stages[k - 1]).astype(np.float32) / 255
+    # pile and obra share one box, so the transition swaps them in place
+    boxes[f'obra_{name}'] = save_cut(stages[k], after, f'area1_obra_{name}', mask_box(al))
+    boxes[f'pila_{name}'] = save_cut(stages[k - 1], before, f'area1_pila_{name}', mask_box(al))
 
 # --- the stages as scenes: trees and (built) fire taken out, sky cut away
 house = obra_masks['casa']
@@ -99,21 +68,12 @@ for k, st in enumerate(stages):
     if k == 0:
         # behind the trees, no_trees shows the casa's edges: there is no casa yet, so fill
         # those few pixels from the nearest bit of stage 0 that isn't tree or casa
-        hole = trees & house
-        known = ~(trees | house)
-        idx = ndimage.distance_transform_edt(~known, return_distances=False, return_indices=True)
-        filled = st[idx[0], idx[1]]
-        behind[hole] = filled[hole]
+        behind = fill_from_neighbours(st, trees & house, ~(trees | house)) * (trees & house)[..., None] + behind * ~(trees & house)[..., None]
     c = c * (1 - tf) + behind * tf
     if k >= 2:
         ff = feather(fire, 2)[..., None]
         c = c * (1 - ff) + fire_out * ff
-    r, g, b = c[..., 0], c[..., 1], c[..., 2]
-    yy = np.arange(H)[:, None].repeat(W, 1)
-    sky = ((b > 225) & (g - r > 52) & (yy < 420)) | ((r > 170) & (g > 195) & (b > 210) & (yy < 240)) | ((b > 240) & (g > 190) & (yy < 240))
-    lab, _ = ndimage.label(sky)
-    sky = np.isin(lab, list(set(np.unique(lab[:3])) - {0}))
-    alpha = np.asarray(Image.fromarray(np.where(sky, 0, 255).astype(np.uint8)).filter(ImageFilter.MinFilter(3)).filter(ImageFilter.GaussianBlur(0.8)))
+    alpha = sky_alpha(c)
     Image.fromarray(np.dstack([c.astype(np.uint8), alpha]), 'RGBA').save(OUT / f'area1_scene_{k}.webp', quality=86)
 
 Image.fromarray(stages[0].astype(np.uint8)).save(OUT / 'area1_etapa0.webp', quality=86)

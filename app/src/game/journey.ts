@@ -2,16 +2,17 @@
 // of full energy, and a trip to the south between the second and the third (Royal Match
 // areas, Finch's day loop).
 //
-// Área 1 is the final art (design/tools/import_area1.py): one scene per stage (each obra
-// not built yet is a pile of its materials), in layers so it can move: the sky, clouds
-// drifting, the stage, the trees swaying, the fire. Each obra and its pile are also cut
-// out for the build transition (the pile shakes, dust, the obra pops up). Areas 2 and 3
-// still run on stand-ins: a base image and a wooden sign per obra.
+// Areas 1 and 2 are the final art (design/tools/import_area1.py, import_area2.py): one
+// scene per stage (each obra not built yet is a pile of its materials), in layers so it
+// can move: the sky, clouds drifting, the stage, the trees swaying, and the area's own
+// life (AreaLife). Each obra and its pile are also cut out for the build transition (the
+// pile shakes, dust, the obra pops up). Area 3 still runs on stand-ins: a base image and
+// a wooden sign per obra.
 
 import type { Spot } from './content'
 
-/** left, top, width in % of the art (top in % of its height). */
-export type Box = { left: number; top: number; width: number }
+/** left, top, width in % of the art (top and height in % of its height). */
+export type Box = { left: number; top: number; width: number; height?: number }
 
 export type Piece =
   /** A cut-out laid over the base: `box` in % of the square base (left, top, width). */
@@ -65,10 +66,10 @@ export type Area = {
   /** Where Paucho and the dog stand (x % of width; y, h % of height). */
   hero: Spot
   dog: Spot
-  /** Paucho's own thing to do here while he isn't building (Área 1: cebar mate). */
-  sit?: Spot
+  /** Paucho's own thing to do here while he isn't building, and where (Área 1: cebar mate). */
+  act?: { kind: 'mate' | 'maiz'; spot: Spot }
   /** Little things that move (see AreaLife). */
-  life?: 'casa'
+  life?: 'casa' | 'galpon'
   /** Paucho's line when the area opens. */
   intro: string
 }
@@ -100,7 +101,7 @@ export const AREAS: Area[] = [
     cardsAt: 0.69,
     focusY: 0.42,
     hero: { x: 57.6, y: 62.8, h: 21 },
-    sit: { x: 57.6, y: 62.6, h: 21.2 },
+    act: { kind: 'mate', spot: { x: 57.6, y: 62.6, h: 21.2 } },
     dog: { x: 46, y: 64, h: 7.5 },
     life: 'casa',
     intro: 'Acá voy a hacer mi rancho. ¡Con tu ayuda, en tres días está!',
@@ -111,7 +112,7 @@ export const AREAS: Area[] = [
         the: 'la casa',
         emoji: '🏠',
         steps: ['Paredes', 'Techo', 'Galería', 'Puerta'],
-        piece: { obra: 'area1_obra_casa', pile: 'area1_pila_casa', box: { left: 0, top: 4.04, width: 100 } },
+        piece: { obra: 'area1_obra_casa', pile: 'area1_pila_casa', box: { left: 0, top: 4.04, width: 100, height: 47.4 } },
         done: '¡Ya tengo casa! Gracias a vos.',
       },
       {
@@ -120,7 +121,7 @@ export const AREAS: Area[] = [
         the: 'el fogón',
         emoji: '🔥',
         steps: ['Piedras', 'Leña', 'Pava', 'Troncos'],
-        piece: { obra: 'area1_obra_fogon', pile: 'area1_pila_fogon', box: { left: 0, top: 46.81, width: 48.24 } },
+        piece: { obra: 'area1_obra_fogon', pile: 'area1_pila_fogon', box: { left: 0, top: 46.81, width: 48.24, height: 18.68 } },
         done: 'Ahora tenemos dónde tomar unos mates juntos.',
       },
       {
@@ -129,23 +130,39 @@ export const AREAS: Area[] = [
         the: 'el aljibe',
         emoji: '🪣',
         steps: ['Piedras', 'Pozo', 'Roldana', 'Balde'],
-        piece: { obra: 'area1_obra_aljibe', pile: 'area1_pila_aljibe', box: { left: 62.11, top: 44.47, width: 37.89 } },
+        piece: { obra: 'area1_obra_aljibe', pile: 'area1_pila_aljibe', box: { left: 62.11, top: 44.47, width: 37.89, height: 23.05 } },
         done: 'Agua fresquita para el mate, todos los días.',
       },
     ],
   },
   {
-    id: 'chacra',
-    name: 'La chacra',
-    base: 'area2_0',
-    aspect: 1,
-    skyTop: '#62a8f0',
-    ground: '#c99a3f',
-    cardsAt: 0.95,
-    focusY: 0.6,
-    hero: { x: 60, y: 84, h: HERO_H },
-    dog: { x: 44, y: 85, h: 11.3 },
-    intro: 'Detrás del rancho hay lugar para una chacra. ¿Arrancamos?',
+    id: 'galpon',
+    name: 'El galpón',
+    base: 'area2_etapa0',
+    aspect: 1.5,
+    layers: {
+      sky: 'area2_sky',
+      skyHeight: 28.65,
+      stages: ['area2_scene_0', 'area2_scene_1', 'area2_scene_2', 'area2_scene_3'],
+      clouds: [
+        { image: 'area2_cloud_1', top: 4, width: 32.23, seconds: 220 },
+        { image: 'area2_cloud_2', top: 9, width: 24.41, seconds: 180 },
+        { image: 'area2_cloud_3', top: 2, width: 16.6, seconds: 150 },
+      ],
+      trees: [
+        { image: 'area2_tree_l', box: { left: 0, top: 7.49, width: 21 } },
+        { image: 'area2_tree_r', box: { left: 81.05, top: 9.7, width: 18.95 } },
+      ],
+    },
+    skyTop: '#35a4fd',
+    ground: '#fca846',
+    cardsAt: 0.69,
+    focusY: 0.38,
+    hero: { x: 44, y: 62.5, h: 21 },
+    act: { kind: 'maiz', spot: { x: 44, y: 62.5, h: 21 } },
+    dog: { x: 30, y: 63, h: 7.5 },
+    life: 'galpon',
+    intro: 'Detrás del rancho hay lugar para un galpón. ¿Arrancamos?',
     obras: [
       {
         id: 'cucha',
@@ -153,26 +170,17 @@ export const AREAS: Area[] = [
         the: 'la cucha',
         emoji: '🛖',
         steps: ['Tablas', 'Techo', 'Mantita', 'Plato'],
-        piece: { sign: { x: 24, y: 72, h: 15 } },
+        piece: { obra: 'area2_obra_cucha', pile: 'area2_pila_cucha', box: { left: 1.46, top: 47.01, width: 31.74, height: 14.58 } },
         done: '¡Mirá quién llegó! Un perrito encontró su cucha.',
       },
       {
-        id: 'huerta',
-        name: 'La huerta',
-        the: 'la huerta',
-        emoji: '🥬',
-        steps: ['Surcos', 'Semillas', 'Riego', 'Cerco'],
-        piece: { sign: { x: 48, y: 66, h: 15 } },
-        done: 'En unos días comemos verduras de nuestra huerta.',
-      },
-      {
-        id: 'molino',
-        name: 'El molino',
-        the: 'el molino',
-        emoji: '💨',
-        steps: ['Torre', 'Aspas', 'Tanque', 'Caños'],
-        piece: { sign: { x: 76, y: 60, h: 15 } },
-        done: 'Con el molino no nos falta agua nunca más.',
+        id: 'galpon',
+        name: 'El galpón',
+        the: 'el galpón',
+        emoji: '🛠️',
+        steps: ['Paredes', 'Techo', 'Portones', 'Veleta'],
+        piece: { obra: 'area2_obra_galpon', pile: 'area2_pila_galpon', box: { left: 1.37, top: 5.86, width: 77.64, height: 49.28 } },
+        done: 'Ahora las herramientas tienen dónde dormir.',
       },
       {
         id: 'gallinero',
@@ -180,8 +188,8 @@ export const AREAS: Area[] = [
         the: 'el gallinero',
         emoji: '🐔',
         steps: ['Paredes', 'Nidos', 'Rampita', 'Gallinas'],
-        piece: { sign: { x: 36, y: 58, h: 15 } },
-        done: '¡Tres gallinas nuevas! Mañana hay huevos frescos.',
+        piece: { obra: 'area2_obra_gallinero', pile: 'area2_pila_gallinero', box: { left: 54.39, top: 40.04, width: 45.61, height: 22.72 } },
+        done: '¡Dos gallinas nuevas! Mañana hay huevos frescos.',
       },
     ],
   },
@@ -244,14 +252,14 @@ export function areaName(area: number, companion: string, the = false) {
   return the ? name.replace(/^El /, 'el ').replace(/^La /, 'la ') : name
 }
 
-/** The trip between La chacra and La pulpería. */
+/** The trip between El galpón and La pulpería. */
 export const TRIP = {
   id: 'sur',
   name: 'Viaje al sur',
   place: 'el sur',
   emoji: '🏔️',
   steps: ['Ensillar', 'Provisiones', 'Mate', 'Poncho'],
-  /** Why he goes, told when La chacra is done. */
+  /** Why he goes, told when El galpón is done. */
   reason: 'Para arreglar la pulpería necesito madera de lenga, y esa solo hay en el sur.',
   brings: 'madera de lenga',
   bringsEmoji: '🪵',
@@ -312,7 +320,7 @@ export function jobInfo(job: Job) {
 
 /**
  * Which area Home shows after `jobsDone` jobs, and how many of its obras stand. While the
- * trip is next or under way, La chacra stays on screen (finished); after it, La pulpería.
+ * trip is next or under way, El galpón stays on screen (finished); after it, La pulpería.
  */
 export function areaView(jobsDone: number) {
   let done = 0

@@ -13,9 +13,9 @@ owner's app on main is untouched. Its design is the owner's, from his Royal Matc
   Finch's stages (`energyGoal` in `src/game/journey.ts`). One full bar a day starts the
   next job for 8 hours; after that, habits give herraduras (the currency, +30 for filling the
   bar, +5 each). Seeing a finished job (`Reveal`) is what counts it (`actions.completeJob`).
-- **The journey (`JOURNEY`):** Área 1 "El rancho de Paucho" (casita, fogón, corral),
-  Área 2 "La chacra" (the cucha brings the dog, then huerta, molino, gallinero), a trip to the
-  south (`TRIP`), then Área 3 "La pulpería".
+- **The journey (`JOURNEY`):** Área 1 "El rancho de Paucho" (casa, fogón, aljibe),
+  Área 2 "El galpón" (the cucha brings the dog, then galpón, gallinero), a trip to the south
+  (`TRIP`), then Área 3 "La pulpería" (still stand-ins).
 - **Tab bar:** Áreas · Aventuras · Inicio · Paucho · Casita. On day 0 only Inicio is open:
   - the casita opens Casita, where the room and its shop share one screen and the first
     purchase, the bed, is forced;
@@ -35,6 +35,10 @@ owner's app on main is untouched. Its design is the owner's, from his Royal Matc
   - **Paucho idles sitting:** he cebas mate using the mate-scene frames.
   - **The onboarding's mate scene** happens on stage 0.
   - **Animation rule:** anything that moves needs a "plano limpio" (the area without it) and the thing alone on a transparent background. Doc: "Gauchito — Área 1: arte para animar".
+- **Área 2 (El galpón):** ChatGPT's art in `arte_build/area2_assets/`, imported by `design/tools/import_area2.py` (shared helpers in `design/tools/area_layers.py`).
+  - Built the same way as Área 1: stages, a clean plate, and a sprite sheet. Doc: "Gauchito — Área 2: todo el arte".
+  - **What moves:** the clothes swing on the line; the veleta wobbles and turns with the wind (side and front frames); the lantern glows; the two hens peck (standing and pecking frames).
+  - **Paucho idles** throwing maize to the hens (`paucho_maiz`), with grains falling. The dog sits by his cucha.
 - **Art:** the brief is the Claude Doc "Gauchito — Arte para la build",
   https://claude.ai/code/artifact/0d52723f-435d-4f8a-a172-92b8d327966b. References are in
   `kit_build/` and ChatGPT's results go in `arte_build/` (both local only).
