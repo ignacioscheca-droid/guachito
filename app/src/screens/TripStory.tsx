@@ -58,8 +58,8 @@ export function TripStory({ onDone }: { onDone: () => void }) {
             <div className="reward__row">
               <div className="reward__tile">
                 <b className="reward__emoji">{TRIP.bringsEmoji}</b>
-                <strong>Madera de lenga</strong>
-                <small>para la pulpería</small>
+                <strong>Postes de lenga</strong>
+                <small>para los corrales</small>
               </div>
               <div className="reward__tile">
                 <b className="reward__emoji">🧶</b>
@@ -79,7 +79,7 @@ export function TripStory({ onDone }: { onDone: () => void }) {
                 onDone()
               }}
             >
-              ¡A arreglar la pulpería!
+              ¡A armar los corrales!
             </Button>
           </div>
         )}

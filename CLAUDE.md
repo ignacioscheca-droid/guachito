@@ -15,7 +15,9 @@ owner's app on main is untouched. Its design is the owner's, from his Royal Matc
   bar, +5 each). Seeing a finished job (`Reveal`) is what counts it (`actions.completeJob`).
 - **The journey (`JOURNEY`):** Área 1 "El rancho de Paucho" (casa, fogón, aljibe),
   Área 2 "El galpón" (the cucha brings the dog, then galpón, gallinero), a trip to the south
-  (`TRIP`), then Área 3 "La pulpería" (still stand-ins).
+  (`TRIP`, which brings lenga posts for the corrales), then Área 3 "Los corrales" (corral, molino,
+  bebedero; still stand-ins until its art arrives: doc "Gauchito — Área 3: todo el arte"). Area
+  order agreed with the owner: casa, galpón, corrales, cocina, laguna, estación.
 - **Tab bar:** Áreas · Aventuras · Inicio · Paucho · Casita. On day 0 only Inicio is open:
   - the casita opens Casita, where the room and its shop share one screen and the first
     purchase, the bed, is forced;

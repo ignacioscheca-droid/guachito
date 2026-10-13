@@ -6,8 +6,8 @@
 // scene per stage (each obra not built yet is a pile of its materials), in layers so it
 // can move: the sky, clouds drifting, the stage, the trees swaying, and the area's own
 // life (AreaLife). Each obra and its pile are also cut out for the build transition (the
-// pile shakes, dust, the obra pops up). Area 3 still runs on stand-ins: a base image and
-// a wooden sign per obra.
+// pile shakes, dust, the obra pops up). Area 3 (Los corrales) still runs on stand-ins: a
+// base image and a wooden sign per obra.
 
 import type { Spot } from './content'
 
@@ -194,53 +194,44 @@ export const AREAS: Area[] = [
     ],
   },
   {
-    id: 'pulperia',
-    name: 'La pulpería',
+    id: 'corrales',
+    name: 'Los corrales',
     base: 'area3_0',
     aspect: 1,
     skyTop: '#7aa6dc',
     ground: '#c08a48',
     cardsAt: 0.95,
     focusY: 0.6,
-    hero: { x: 30, y: 84, h: HERO_H },
-    dog: { x: 16, y: 85, h: 11.3 },
-    intro: 'La pulpería del camino está vieja y cerrada. ¡La vamos a dejar como nueva!',
+    hero: { x: 50, y: 84, h: HERO_H },
+    dog: { x: 36, y: 85, h: 11.3 },
+    intro: 'Con la madera del sur hacemos los corrales. ¡Y Lucero va a tener su casa!',
     obras: [
       {
-        id: 'techo',
-        name: 'El techo',
-        the: 'el techo',
-        emoji: '🪵',
-        steps: ['Vigas', 'Tablas', 'Tejas', 'Canaleta'],
-        piece: { sign: { x: 50, y: 56, h: 15 } },
-        done: 'La madera del sur quedó hermosa en el techo.',
+        id: 'corral',
+        name: 'El corral',
+        the: 'el corral',
+        emoji: '🐴',
+        steps: ['Postes', 'Travesaños', 'Tranquera', 'Montura'],
+        piece: { sign: { x: 30, y: 60, h: 15 } },
+        done: 'Lucero ya tiene su corral. ¡Mirá cómo corre!',
       },
       {
-        id: 'mostrador',
-        name: 'El mostrador',
-        the: 'el mostrador',
-        emoji: '🫙',
-        steps: ['Estantes', 'Mostrador', 'Frascos', 'Pintura'],
-        piece: { sign: { x: 70, y: 64, h: 15 } },
-        done: 'Ya abrimos puertas y ventanas. ¡Hay de todo!',
+        id: 'molino',
+        name: 'El molino',
+        the: 'el molino',
+        emoji: '💨',
+        steps: ['Torre', 'Aspas', 'Tanque', 'Caños'],
+        piece: { sign: { x: 74, y: 56, h: 15 } },
+        done: 'Con el molino no nos falta agua nunca más.',
       },
       {
-        id: 'palenque',
-        name: 'El palenque',
-        the: 'el palenque',
-        emoji: '🐎',
-        steps: ['Postes', 'Barra', 'Bebedero', 'Sombra'],
-        piece: { sign: { x: 30, y: 66, h: 15 } },
-        done: 'Ahora los que pasan pueden atar el caballo y quedarse.',
-      },
-      {
-        id: 'cartel',
-        name: 'El cartel',
-        the: 'el cartel',
-        emoji: '🪧',
-        steps: ['Tablas', 'Letras', 'Faroles', 'Banderines'],
-        piece: { sign: { x: 58, y: 48, h: 15 } },
-        done: '¡Abrió la pulpería! Gracias por acompañarme todo el camino.',
+        id: 'bebedero',
+        name: 'El bebedero',
+        the: 'el bebedero',
+        emoji: '🪣',
+        steps: ['Tablas', 'Agua', 'Comedero', 'Fardos'],
+        piece: { sign: { x: 48, y: 68, h: 15 } },
+        done: 'Agua y pasto para Lucero. ¡Está chocho!',
       },
     ],
   },
@@ -252,7 +243,7 @@ export function areaName(area: number, companion: string, the = false) {
   return the ? name.replace(/^El /, 'el ').replace(/^La /, 'la ') : name
 }
 
-/** The trip between El galpón and La pulpería. */
+/** The trip between El galpón and Los corrales. */
 export const TRIP = {
   id: 'sur',
   name: 'Viaje al sur',
@@ -260,8 +251,8 @@ export const TRIP = {
   emoji: '🏔️',
   steps: ['Ensillar', 'Provisiones', 'Mate', 'Poncho'],
   /** Why he goes, told when El galpón is done. */
-  reason: 'Para arreglar la pulpería necesito madera de lenga, y esa solo hay en el sur.',
-  brings: 'madera de lenga',
+  reason: 'Para los corrales necesito postes de lenga, una madera dura que solo hay en el sur.',
+  brings: 'postes de lenga',
   bringsEmoji: '🪵',
   coins: 50,
   /** Shown while he rides, one after the other. */
@@ -320,7 +311,7 @@ export function jobInfo(job: Job) {
 
 /**
  * Which area Home shows after `jobsDone` jobs, and how many of its obras stand. While the
- * trip is next or under way, El galpón stays on screen (finished); after it, La pulpería.
+ * trip is next or under way, El galpón stays on screen (finished); after it, Los corrales.
  */
 export function areaView(jobsDone: number) {
   let done = 0
