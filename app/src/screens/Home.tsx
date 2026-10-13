@@ -64,7 +64,7 @@ function fly(from: Element, to: Element | null, icon: string) {
 export function JobThumb({ job }: { job: Job }) {
   if (job.kind === 'build') {
     const p = AREAS[job.area].obras[job.obra].piece
-    const src = 'cut' in p ? p.cut : 'image' in p ? p.image : null
+    const src = 'obra' in p ? p.obra : 'image' in p ? p.image : null
     if (src)
       return (
         <span className="jobthumb">

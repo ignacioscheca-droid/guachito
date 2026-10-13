@@ -1742,7 +1742,7 @@ img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 30% 100%;
+  object-position: 50% 100%;
 }
 .mi-scene__guy {
   position: absolute;
@@ -4908,41 +4908,6 @@ img.apiece[style*='bottom'] {
   top: 0;
   width: 100%;
 }
-.ascene__cloud {
-  position: absolute;
-  height: auto;
-  animation: cloud-drift 46s ease-in-out infinite alternate;
-}
-@keyframes cloud-drift {
-  from {
-    transform: translateX(-2.6cqw);
-  }
-  to {
-    transform: translateX(2.6cqw);
-  }
-}
-.apiece--faded {
-  filter: grayscale(1) brightness(1.2) contrast(0.8);
-  transition:
-    clip-path 1s linear,
-    opacity 0.6s;
-}
-.apiece--fading {
-  animation: obra-fade 1.6s ease-out 0.4s both;
-}
-@keyframes obra-fade {
-  from {
-    clip-path: inset(0 0 85% 0);
-    opacity: 1;
-  }
-  to {
-    clip-path: inset(0 0 100% 0);
-    opacity: 0;
-  }
-}
-.apiece--flash {
-  animation: obra-reveal 2s ease-out 0.4s both;
-}
 .alife {
   position: absolute;
   inset: 0;
@@ -4951,21 +4916,6 @@ img.apiece[style*='bottom'] {
 }
 .alife > * {
   position: absolute;
-}
-.alife__sway {
-  background-repeat: no-repeat;
-  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 80%);
-  mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 80%);
-  animation: crown-sway 4.6s ease-in-out infinite;
-}
-@keyframes crown-sway {
-  0%,
-  100% {
-    transform: rotate(-0.9deg);
-  }
-  50% {
-    transform: rotate(0.9deg);
-  }
 }
 .alife__puff {
   aspect-ratio: 1;
@@ -5017,31 +4967,6 @@ img.apiece[style*='bottom'] {
     transform: scale(1.04);
   }
 }
-/* the art's own fire, flickering under the pava */
-.alife__fire {
-  background-repeat: no-repeat;
-  transform-origin: 50% 100%;
-  animation: fire-flicker 0.9s steps(1) infinite;
-}
-@keyframes fire-flicker {
-  0% {
-    transform: scale(1, 1);
-    filter: brightness(1);
-  }
-  25% {
-    transform: scale(1.04, 1.12);
-    filter: brightness(1.18);
-  }
-  50% {
-    transform: scale(0.98, 0.94);
-    filter: brightness(1.05);
-  }
-  75% {
-    transform: scale(1.03, 1.08);
-    filter: brightness(1.25);
-  }
-}
-
 /* Paucho cebando mate: the mate scene's frames on a 10 s loop */
 .pmate {
   position: absolute;
@@ -5173,4 +5098,248 @@ img.apiece[style*='bottom'] {
     opacity: 0;
     transform: translate(4px, -26px) scale(1.8);
   }
+}
+
+/* ---------- Área 1 in layers: clouds, trees, fire, the build transition ---------- */
+
+.ascene__cloud {
+  position: absolute;
+  left: 0;
+  height: auto;
+  animation: cloud-cross 200s linear infinite;
+}
+@keyframes cloud-cross {
+  from {
+    transform: translateX(-40cqw);
+  }
+  to {
+    transform: translateX(110cqw);
+  }
+}
+.ascene__tree {
+  position: absolute;
+  z-index: 20;
+  height: auto;
+  transform-origin: 50% 100%;
+  animation: tree-sway 4.6s ease-in-out infinite;
+}
+@keyframes tree-sway {
+  0%,
+  100% {
+    transform: rotate(-0.8deg);
+  }
+  50% {
+    transform: rotate(0.8deg);
+  }
+}
+.alife__flame {
+  aspect-ratio: 1;
+}
+.alife__flame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom;
+  opacity: 0;
+  animation: flame-frame 0.42s steps(1) infinite;
+}
+.alife__flame img:nth-child(2) {
+  animation-delay: -0.14s;
+}
+.alife__flame img:nth-child(3) {
+  animation-delay: -0.28s;
+}
+@keyframes flame-frame {
+  0% {
+    opacity: 1;
+  }
+  33.3% {
+    opacity: 0;
+  }
+}
+
+/* the obra while Paucho builds it, and its transition (4.2 s, once) */
+.sobra {
+  position: absolute;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+}
+.sobra > * {
+  position: absolute;
+}
+.sobra__work {
+  width: 3.4%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #fffaf0, #f0d7ad 60%, rgba(226, 195, 147, 0));
+  opacity: 0;
+  animation: work-dust 5.4s ease-out infinite;
+}
+@keyframes work-dust {
+  0%,
+  70% {
+    opacity: 0;
+    transform: translateY(0) scale(0.4);
+  }
+  76% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-3cqw) scale(1.6);
+  }
+}
+.sobra__pile,
+.sobra__obra {
+  height: auto;
+  transform-origin: 50% 100%;
+  animation-duration: 4.2s;
+  animation-fill-mode: both;
+}
+.sobra__pile {
+  animation-name: pile-shake;
+  animation-timing-function: linear;
+}
+@keyframes pile-shake {
+  0%,
+  11% {
+    transform: none;
+  }
+  13% {
+    transform: rotate(-1.2deg) translateY(-1px);
+  }
+  15% {
+    transform: rotate(1.2deg);
+  }
+  17% {
+    transform: rotate(-1deg) translateY(-1px);
+  }
+  19% {
+    transform: rotate(1deg);
+  }
+  21% {
+    transform: rotate(-0.6deg);
+  }
+  23%,
+  30% {
+    transform: none;
+    opacity: 1;
+  }
+  30.5%,
+  100% {
+    opacity: 0;
+  }
+}
+.sobra__obra {
+  animation-name: obra-pop;
+  animation-timing-function: linear;
+}
+@keyframes obra-pop {
+  0%,
+  30% {
+    opacity: 0;
+    transform: scale(0.72);
+    filter: brightness(1.8);
+  }
+  30.5% {
+    opacity: 1;
+    transform: scale(0.72);
+    filter: brightness(1.8);
+  }
+  38% {
+    transform: scale(1.08, 1.05);
+    filter: brightness(1.45);
+  }
+  44% {
+    transform: scale(0.97, 1.02);
+  }
+  50%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+.sobra__dust {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #fffaf0, #f3dfbf 55%, #e2c393);
+  box-shadow: inset 0 -6px 10px rgba(170, 120, 60, 0.25);
+  opacity: 0;
+  animation: build-dust 4.2s ease-out both;
+}
+@keyframes build-dust {
+  0%,
+  17% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0);
+  }
+  24% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1.05);
+  }
+  34% {
+    opacity: 1;
+    transform: translate(calc(var(--dx) * 0.2), calc(var(--dy) * 0.2)) scale(1);
+  }
+  60%,
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) scale(1.35);
+  }
+}
+.sobra__ring {
+  aspect-ratio: 2.8;
+  border-radius: 50%;
+  border: 0.6cqw solid rgba(255, 214, 90, 0.95);
+  box-shadow: 0 0 14px rgba(255, 214, 90, 0.8);
+  opacity: 0;
+  animation: build-ring 4.2s ease-out both;
+}
+@keyframes build-ring {
+  0%,
+  31% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  33% {
+    opacity: 1;
+    transform: scale(0.3);
+  }
+  52%,
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+.sobra__spark {
+  width: 5.5%;
+  aspect-ratio: 1;
+  fill: #ffe066;
+  filter: drop-shadow(0 0 4px rgba(255, 220, 80, 0.9));
+  opacity: 0;
+  animation: build-spark 4.2s linear both;
+}
+@keyframes build-spark {
+  0%,
+  34% {
+    opacity: 0;
+    transform: scale(0) rotate(0);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.1) rotate(45deg);
+  }
+  52%,
+  100% {
+    opacity: 0;
+    transform: scale(0.2) rotate(90deg);
+  }
+}
+/* the mate scene's background fills the screen (a tall stage-0 art now) */
+.mi-scene__bg {
+  height: 100dvh;
 }

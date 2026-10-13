@@ -26,11 +26,15 @@ owner's app on main is untouched. Its design is the owner's, from his Royal Matc
   - The area fills the screen. Above it sit the herraduras, the gear and a progress bar: the day's energy, then the 8-hour countdown, with the obra at its end; it becomes a button when ready or done.
   - Habits are Finch-sized cards (3½ in view, the last cut by the tab bar). "✓ N" and ✏️ chips sit above them. No text floats over the scene.
   - The tab bar is Royal Match's: icons only, and the chosen tab is wider, lit, with its icon raised over its name.
-- **Área 1 = the casa v2** (`arte_build/area_casa_v2.webp`, made by `design/tools/import_area_casa.py`):
-  - **Layers:** sky, the art's own clouds drifting, and the scene with its sky cut out.
-  - **Obras (casa, fogón, aljibe):** each one is cut out and drawn faded (grey) until built. While Paucho builds, the colour climbs from the ground.
-  - **Life:** tree crowns sway, and the fire flickers under the pava (the art's own flames). Once built, there is chimney smoke, lantern glow and pava steam.
-  - **Paucho idles sitting:** he cebas mate using the onboarding's mate frames on a 10-second loop.
+- **Área 1:** ChatGPT's art in `arte_build/` (area1_etapa0..3 and area1_assets/), imported by `design/tools/import_area1.py`.
+  - **One scene per stage:** each obra not built yet shows as a pile of its materials.
+  - **Layers, so things move:** the cloudless sky, three clouds crossing it, the stage (no sky, no trees, fire out), and two tree sprites swaying.
+  - **Once built:** chimney smoke, lantern glow, three flame frames in the fogón, pava steam.
+  - **While Paucho builds:** dust rises from the pile.
+  - **The build transition, in Reveal:** the pile shakes, dust covers it, the obra (cut out of the next stage) pops up, then sparkles, a gold ring and confetti.
+  - **Paucho idles sitting:** he cebas mate using the mate-scene frames.
+  - **The onboarding's mate scene** happens on stage 0.
+  - **Animation rule:** anything that moves needs a "plano limpio" (the area without it) and the thing alone on a transparent background. Doc: "Gauchito — Área 1: arte para animar".
 - **Art:** the brief is the Claude Doc "Gauchito — Arte para la build",
   https://claude.ai/code/artifact/0d52723f-435d-4f8a-a172-92b8d327966b. References are in
   `kit_build/` and ChatGPT's results go in `arte_build/` (both local only).

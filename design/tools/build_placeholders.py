@@ -6,9 +6,6 @@ Arte para la build"); then each file is replaced with the real one under the sam
     python3 design/tools/build_placeholders.py
 
 Writes into app/public/a/:
-  area1_0.webp          the patio without the house (the empty lot of day 0)
-  area1_casita.webp     the house, cut out of the patio, to lay over area1_0
-  area1_corral.webp     Lucero standing (until the corral art)
   area2_0.webp          a pampa field (the ride layers), for La chacra
   area3_0.webp          the same field at dusk, for La pulpería
   ui_herradura.webp     a gold horseshoe, the currency
@@ -148,8 +145,6 @@ def neckerchiefs():
 
 
 if __name__ == '__main__':
-    empty_lot()
-    lucero()
     pampa('area2_0', dusk=False)
     pampa('area3_0', dusk=True)
     herradura()

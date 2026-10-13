@@ -2,12 +2,16 @@
 // of full energy, and a trip to the south between the second and the third (Royal Match
 // areas, Finch's day loop).
 //
-// Área 1 is the final art (the casa v2, design/tools/import_area_casa.py): the whole area
-// drawn finished, in layers (sky, drifting clouds, the scene), and each obra cut out so
-// the app can draw it faded until it is built ("fixes bring the colour back"). Areas 2
-// and 3 still run on stand-ins: a base image and a wooden sign per obra.
+// Área 1 is the final art (design/tools/import_area1.py): one scene per stage (each obra
+// not built yet is a pile of its materials), in layers so it can move: the sky, clouds
+// drifting, the stage, the trees swaying, the fire. Each obra and its pile are also cut
+// out for the build transition (the pile shakes, dust, the obra pops up). Areas 2 and 3
+// still run on stand-ins: a base image and a wooden sign per obra.
 
 import type { Spot } from './content'
+
+/** left, top, width in % of the art (top in % of its height). */
+export type Box = { left: number; top: number; width: number }
 
 export type Piece =
   /** A cut-out laid over the base: `box` in % of the square base (left, top, width). */
@@ -16,8 +20,8 @@ export type Piece =
   | { image: string; spot: Spot }
   /** No art yet: a sign at `spot` with the obra's emoji and name. */
   | { sign: Spot }
-  /** Drawn in the area's art already: `cut` is it cut out, laid faded on top until built. */
-  | { cut: string; box: { left: number; top: number; width: number } }
+  /** Drawn in the area's stages: the obra and its pile cut out, for the build transition. */
+  | { obra: string; pile: string; box: Box }
 
 export type Obra = {
   id: string
@@ -39,10 +43,20 @@ export type Area = {
   base: string
   /** Height / width of the art. */
   aspect: number
-  /** The art in layers: a cloudless sky, the art's own clouds, the scene with no sky. */
-  layers?: { sky: string; skyHeight: number; scene: string; clouds: { image: string; box: { left: number; top: number; width: number } }[] }
-  /** Colour above the art when the screen is taller than it. */
+  /**
+   * The art in layers: a cloudless sky (`skyHeight` % of the art), clouds crossing it, the
+   * scene for each number of obras built (no sky, no trees), the trees on top.
+   */
+  layers?: {
+    sky: string
+    skyHeight: number
+    stages: string[]
+    clouds: { image: string; top: number; width: number; seconds: number }[]
+    trees: { image: string; box: Box }[]
+  }
+  /** Colours above and below the art when the screen is taller than it. */
   skyTop: string
+  ground: string
   /** Fraction of the art's height where Home's habit cards begin. */
   cardsAt: number
   /** Fraction of the art's height kept in view when it is shown cropped (Áreas cards). */
@@ -65,18 +79,24 @@ export const AREAS: Area[] = [
   {
     id: 'rancho',
     name: 'El rancho de Paucho',
-    base: 'area_casa_v2',
+    base: 'area1_etapa0',
     aspect: 1.5,
     layers: {
       sky: 'area1_sky',
-      skyHeight: 21.48,
-      scene: 'area1_scene',
+      skyHeight: 27.34,
+      stages: ['area1_scene_0', 'area1_scene_1', 'area1_scene_2', 'area1_scene_3'],
       clouds: [
-        { image: 'area1_cloud_1', box: { left: 0.1, top: 6.05, width: 25.29 } },
-        { image: 'area1_cloud_2', box: { left: 68.36, top: 5.4, width: 31.54 } },
+        { image: 'area1_cloud_1', top: 6, width: 32.23, seconds: 210 },
+        { image: 'area1_cloud_2', top: 3, width: 24.41, seconds: 170 },
+        { image: 'area1_cloud_3', top: 11, width: 16.6, seconds: 140 },
+      ],
+      trees: [
+        { image: 'area1_tree_l', box: { left: 0, top: 9.77, width: 18.65 } },
+        { image: 'area1_tree_r', box: { left: 83.01, top: 8.53, width: 16.99 } },
       ],
     },
     skyTop: '#50a8fc',
+    ground: '#fba239',
     cardsAt: 0.69,
     focusY: 0.42,
     hero: { x: 57.6, y: 62.8, h: 21 },
@@ -91,7 +111,7 @@ export const AREAS: Area[] = [
         the: 'la casa',
         emoji: '🏠',
         steps: ['Paredes', 'Techo', 'Galería', 'Puerta'],
-        piece: { cut: 'area1_obra_casa', box: { left: 0.1, top: 14.32, width: 99.8 } },
+        piece: { obra: 'area1_obra_casa', pile: 'area1_pila_casa', box: { left: 0, top: 4.04, width: 100 } },
         done: '¡Ya tengo casa! Gracias a vos.',
       },
       {
@@ -100,7 +120,7 @@ export const AREAS: Area[] = [
         the: 'el fogón',
         emoji: '🔥',
         steps: ['Piedras', 'Leña', 'Pava', 'Troncos'],
-        piece: { cut: 'area1_obra_fogon', box: { left: 1.27, top: 50.98, width: 45.9 } },
+        piece: { obra: 'area1_obra_fogon', pile: 'area1_pila_fogon', box: { left: 0, top: 46.81, width: 48.24 } },
         done: 'Ahora tenemos dónde tomar unos mates juntos.',
       },
       {
@@ -109,7 +129,7 @@ export const AREAS: Area[] = [
         the: 'el aljibe',
         emoji: '🪣',
         steps: ['Piedras', 'Pozo', 'Roldana', 'Balde'],
-        piece: { cut: 'area1_obra_aljibe', box: { left: 69.63, top: 44.79, width: 30.27 } },
+        piece: { obra: 'area1_obra_aljibe', pile: 'area1_pila_aljibe', box: { left: 62.11, top: 44.47, width: 37.89 } },
         done: 'Agua fresquita para el mate, todos los días.',
       },
     ],
@@ -120,6 +140,7 @@ export const AREAS: Area[] = [
     base: 'area2_0',
     aspect: 1,
     skyTop: '#62a8f0',
+    ground: '#c99a3f',
     cardsAt: 0.95,
     focusY: 0.6,
     hero: { x: 60, y: 84, h: HERO_H },
@@ -170,6 +191,7 @@ export const AREAS: Area[] = [
     base: 'area3_0',
     aspect: 1,
     skyTop: '#7aa6dc',
+    ground: '#c08a48',
     cardsAt: 0.95,
     focusY: 0.6,
     hero: { x: 30, y: 84, h: HERO_H },

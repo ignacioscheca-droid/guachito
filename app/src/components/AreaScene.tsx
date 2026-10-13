@@ -1,13 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { art, type Spot } from '../game/content'
-import { AREAS, type Area, type Obra } from '../game/journey'
+import { AREAS, type Area, type Box, type Obra } from '../game/journey'
 import type { Slot } from '../game/shop'
 import { Paucho, PAUCHO_ASPECT, PAUCHO_FILL, type PauchoPose } from './Paucho'
 
 /**
  * How the obra under way looks: `plan` = not started; `charging` = the bar filling
  * (`progress` 0..1); `working` = Paucho building it (`progress` = the eight hours gone by);
- * `reveal` = turning into its real colours (the reveal screen).
+ * `reveal` = the build transition (the pile shakes, dust, the obra pops up).
  */
 export type ObraLook = { mode: 'plan' | 'charging' | 'working' | 'reveal'; progress?: number }
 
@@ -33,8 +33,6 @@ type Props = {
   children?: ReactNode
 }
 
-type Box = { left: number; top: number; width: number }
-
 const place = (s: Spot): CSSProperties => ({
   left: `${s.x}%`,
   bottom: `${100 - s.y}%`,
@@ -43,41 +41,84 @@ const place = (s: Spot): CSSProperties => ({
 })
 const boxStyle = (b: Box): CSSProperties => ({ left: `${b.left}%`, top: `${b.top}%`, width: `${b.width}%` })
 
-/** A window onto the art (left, top, width, height in % of it), drawn at the same place. */
-const artWindow = (src: string, left: number, top: number, w: number, h: number): CSSProperties => ({
-  left: `${left}%`,
-  top: `${top}%`,
-  width: `${w}%`,
-  height: `${h}%`,
-  backgroundImage: `url(${art(src)})`,
-  backgroundSize: `${(100 / w) * 100}% ${(100 / h) * 100}%`,
-  backgroundPosition: `${(left / (100 - w)) * 100}% ${(top / (100 - h)) * 100}%`,
-})
-
 const DOG_BOX = 720 / 630
 const DOG_FILL = 0.875
-/** While Paucho builds, the colour comes back up to this much of the obra; the reveal does the rest. */
-const WORK_SHARE = 85
 
+/** A fixed pseudo-random sequence, so the dust and sparkles land in the same places each time. */
+function seeded(n: number) {
+  let s = 7
+  return Array.from({ length: n }, () => (s = (s * 9301 + 49297) % 233280) / 233280)
+}
+
+/**
+ * The obra of a staged area while it is being built, and its build transition: the pile
+ * (already in the stage) shakes, dust covers it, the obra pops up from the ground, then
+ * sparkles, a gold ring and confetti. Positions in % of the art.
+ */
+function StagedObra({ piece, look }: { piece: { obra: string; pile: string; box: Box }; look: ObraLook }) {
+  const b = piece.box
+  if (look.mode === 'working') {
+    // Paucho at work: a little dust now and then from the pile
+    const r = seeded(6)
+    return (
+      <div className="sobra" aria-hidden>
+        {r.map((v, i) => (
+          <i
+            key={i}
+            className="sobra__work"
+            style={{ left: `${b.left + b.width * (0.2 + 0.6 * v)}%`, top: `${b.top + b.width * 0.35}%`, animationDelay: `${-i * 0.9}s` }}
+          />
+        ))}
+      </div>
+    )
+  }
+  if (look.mode !== 'reveal') return null
+  const r = seeded(60)
+  const n = 9
+  return (
+    <div className="sobra" aria-hidden>
+      <img className="sobra__pile" src={art(piece.pile)} style={boxStyle(b)} alt="" />
+      <img className="sobra__obra" src={art(piece.obra)} style={boxStyle(b)} alt="" />
+      {Array.from({ length: n * 2 }, (_, i) => {
+        const along = (i % n) / (n - 1)
+        const low = i < n
+        const size = b.width * (0.16 + 0.08 * r[i])
+        return (
+          <i
+            key={i}
+            className="sobra__dust"
+            style={
+              {
+                left: `${b.left + along * b.width - size / 2}%`,
+                top: `calc(${b.top}% + ${b.width * (low ? 0.5 : 0.28 + 0.12 * r[i + 20])}cqw)`,
+                width: `${size}%`,
+                '--dx': `${(along - 0.5) * 22}cqw`,
+                '--dy': `${-5 - 6 * r[i + 30]}cqw`,
+                animationDelay: `${(r[i + 40] * 0.12).toFixed(2)}s`,
+              } as CSSProperties
+            }
+          />
+        )
+      })}
+      <i className="sobra__ring" style={{ left: `${b.left + b.width * 0.15}%`, top: `calc(${b.top}% + ${b.width * 0.5}cqw)`, width: `${b.width * 0.7}%` }} />
+      {r.slice(0, 9).map((v, i) => (
+        <svg
+          key={i}
+          className="sobra__spark"
+          viewBox="0 0 24 24"
+          style={{ left: `${b.left + v * b.width}%`, top: `calc(${b.top}% + ${b.width * 0.45 * r[i + 10]}cqw)`, animationDelay: `${(r[i + 50] * 0.5).toFixed(2)}s` }}
+        >
+          <path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z" />
+        </svg>
+      ))}
+    </div>
+  )
+}
+
+/** Wooden signs and cut-outs for areas still on stand-ins. */
 function PieceArt({ obra, look }: { obra: Obra; look?: ObraLook }) {
   const p = obra.piece
-  if ('cut' in p) {
-    // In the art already: built, there is nothing to add. Otherwise its faded copy goes
-    // on top, and the colour comes back from the ground up as Paucho builds it.
-    if (!look) return null
-    const progress = look.progress ?? 0
-    const style: CSSProperties = { ...boxStyle(p.box), zIndex: 40 }
-    if (look.mode === 'reveal')
-      return (
-        <>
-          <img className="apiece apiece--flash" src={art(p.cut)} style={style} alt="" />
-          <img className="apiece apiece--faded apiece--fading" src={art(p.cut)} style={style} alt="" />
-        </>
-      )
-    const cut = look.mode === 'working' ? progress * WORK_SHARE : 0
-    const opacity = look.mode === 'charging' ? 1 - 0.3 * progress : 1
-    return <img className="apiece apiece--faded" src={art(p.cut)} style={{ ...style, clipPath: `inset(0 0 ${cut}% 0)`, opacity }} alt="" />
-  }
+  if ('obra' in p) return look ? <StagedObra piece={p} look={look} /> : null
   const cls = look ? `apiece apiece--${look.mode}` : 'apiece'
   if ('sign' in p) {
     return (
@@ -149,18 +190,14 @@ const Glow = ({ x, y, r, delay = 0, fire }: { x: number; y: number; r: number; d
 )
 
 /**
- * Área 1 alive: tree crowns swaying, and once built, smoke from the chimney and the
- * lanterns' light (the casa), the fire and the pava's steam (the fogón). All drawn over
- * the still art, in % of it.
+ * Área 1 alive, over its stage: once the casa stands, chimney smoke and the lanterns'
+ * light; once the fogón does, its fire (three flame frames) and the pava's steam.
  */
-function CasaLife({ a, built }: { a: Area; built: number }) {
-  const scene = a.layers?.scene ?? a.base
+function CasaLife({ built }: { built: number }) {
   const casa = built >= 1
   const fogon = built >= 2
   return (
     <div className="alife">
-      <div className="alife__sway" style={{ ...artWindow(scene, 0, 9.8, 18.5, 15), transformOrigin: '15% 100%' }} />
-      <div className="alife__sway" style={{ ...artWindow(scene, 83, 8.8, 17, 16.6), transformOrigin: '85% 100%', animationDelay: '-2.1s' }} />
       {casa && (
         <>
           <Puffs x={29} y={14.4} n={5} size={4.2} dx={3.5} dy={-18} seconds={4.2} />
@@ -171,8 +208,12 @@ function CasaLife({ a, built }: { a: Area; built: number }) {
       )}
       {fogon && (
         <>
-          <Glow x={22.3} y={57.4} r={7} fire />
-          <div className="alife__fire" style={artWindow(a.base, 18.1, 56.15, 8.8, 2.85)} />
+          <Glow x={22.6} y={57.4} r={7} fire />
+          <div className="alife__flame" style={{ left: '19.6%', top: '54.6%', width: '6.2%' }}>
+            {[1, 2, 3].map((k) => (
+              <img key={k} src={art(`area1_flame_${k}`)} alt="" />
+            ))}
+          </div>
           <Puffs x={23.2} y={52.1} n={3} size={2.2} dx={1.2} dy={-6} seconds={2.2} />
         </>
       )}
@@ -192,6 +233,30 @@ function useCheer(key: number | undefined) {
     return () => clearTimeout(t)
   }, [key])
   return on
+}
+
+/** The art's layers: sky, clouds crossing it, the stage (or base), and the trees swaying. */
+function Layers({ a, built }: { a: Area; built: number }) {
+  const l = a.layers
+  if (!l) return <img className="scene__bg" src={art(a.base)} alt="" />
+  return (
+    <>
+      <img className="ascene__sky" src={art(l.sky)} style={{ height: `${l.skyHeight}%` }} alt="" />
+      {l.clouds.map((c, k) => (
+        <img
+          key={c.image}
+          className="ascene__cloud"
+          src={art(c.image)}
+          style={{ top: `${c.top}%`, width: `${c.width}%`, animationDuration: `${c.seconds}s`, animationDelay: `${-c.seconds * (0.25 + 0.3 * k)}s` }}
+          alt=""
+        />
+      ))}
+      <img className="scene__bg" src={art(l.stages[Math.min(built, l.stages.length - 1)])} alt="" />
+      {l.trees.map((t, k) => (
+        <img key={t.image} className="ascene__tree" src={art(t.image)} style={{ ...boxStyle(t.box), animationDelay: `${-k * 2.1}s` }} alt="" />
+      ))}
+    </>
+  )
 }
 
 /** One of the areas: its art (in layers if it has them), the obras, Paucho and the dog. */
@@ -222,33 +287,16 @@ export function AreaScene({ area, built, current, pose = 'idle', outfit, celebra
   const cur = current && a.obras[built] ? current : null
   const sitting = !!a.sit && pose === 'idle' && !cheering
   const hero = a.hero
+  // past the art, above and below: its sky and its ground
+  const seam = Math.max(0, Math.min(size.h, top + (width * a.aspect) / 2))
 
   return (
-    <div className={`scene ascene ${className}`} ref={box} style={{ background: a.skyTop }}>
+    <div className={`scene ascene ${className}`} ref={box} style={{ background: `linear-gradient(${a.skyTop} ${seam}px, ${a.ground} ${seam}px)` }}>
       <div className="scene__stage ascene__stage" style={{ width, height: width * a.aspect, aspectRatio: 'auto', transform: `translate(${left}px, ${top}px)` }}>
-        {a.layers ? (
-          <>
-            <img className="ascene__sky" src={art(a.layers.sky)} style={{ height: `${a.layers.skyHeight}%` }} alt="" />
-            {a.layers.clouds.map((c, k) => (
-              <img key={c.image} className="ascene__cloud" src={art(c.image)} style={{ ...boxStyle(c.box), animationDelay: `${-k * 17}s` }} alt="" />
-            ))}
-            <img className="scene__bg" src={art(a.layers.scene)} alt="" />
-          </>
-        ) : (
-          <img className="scene__bg" src={art(a.base)} alt="" />
-        )}
-        {a.life === 'casa' && <CasaLife a={a} built={built} />}
-        {a.obras.slice(0, built).map((o) => (
-          <PieceArt key={o.id} obra={o} />
-        ))}
-        {/* not built yet: obras drawn in the art go faded; the next one shows how it's going */}
-        {a.obras.slice(built).map((o, k) =>
-          'cut' in o.piece ? (
-            <PieceArt key={o.id} obra={o} look={k === 0 && cur ? cur : { mode: 'plan' }} />
-          ) : k === 0 && cur ? (
-            <PieceArt key={o.id} obra={o} look={cur} />
-          ) : null,
-        )}
+        <Layers a={a} built={built} />
+        {a.life === 'casa' && <CasaLife built={built} />}
+        {!a.layers && a.obras.slice(0, built).map((o) => <PieceArt key={o.id} obra={o} />)}
+        {cur && <PieceArt obra={a.obras[built]} look={cur} />}
         {dog && (
           <div className="scene__dog" style={{ ...place({ ...a.dog, h: a.dog.h / DOG_FILL }), aspectRatio: DOG_BOX }}>
             <img src={art(a.life === 'casa' ? 'dog_sleep' : 'dog_sit')} alt="" />

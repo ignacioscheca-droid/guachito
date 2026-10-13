@@ -133,7 +133,7 @@ export function Room({ items, fresh, pose = 'idle', outfit, celebrateKey, childr
           {[40, 150, 260, 370].map((x) => (
             <rect key={x} x={x - 9} y="0" width="18" height="60" fill="#7a4c2e" />
           ))}
-          <image href={art('area1_0')} x="-200" y={20 + d} width="520" height="520" clipPath="url(#room-win)" preserveAspectRatio="xMidYMid slice" />
+          <image href={art('area1_etapa0')} x="-200" y={20 + d} width="520" height="520" clipPath="url(#room-win)" preserveAspectRatio="xMidYMid slice" />
           <rect x="214" y={120 + d} width="92" height="80" rx="4" fill="none" stroke="#7a4a2c" strokeWidth="9" />
           <line x1="260" y1={120 + d} x2="260" y2={200 + d} stroke="#7a4a2c" strokeWidth="6" />
           <line x1="214" y1={160 + d} x2="306" y2={160 + d} stroke="#7a4a2c" strokeWidth="6" />
