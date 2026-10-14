@@ -7,6 +7,7 @@ import { Button, CoinPill, HabitIcon } from '../components/ui'
 import { art } from '../game/content'
 import { AREAS, areaView, ENERGY_PER_HABIT, EXTRA_HABIT_COINS, jobInfo, WORK_MS, type Job } from '../game/journey'
 import { actions, doneToday, findHabit, goalOf, nextJob, restingToday, useGame } from '../game/store'
+import { haptic, sfx } from '../game/sound'
 import { formatClock } from './TripRun'
 
 type Props = {
@@ -91,6 +92,15 @@ function ProgressBar({ p, barRef }: { p: Props; barRef: RefObject<HTMLButtonElem
   const goal = goalOf(s)
   const energy = useCountTo(s.energy)
   const { status } = s.work
+  // the bar ticks up as it fills: a rising blip and a haptic every other step
+  const last = useRef(energy)
+  useEffect(() => {
+    if (energy > last.current) {
+      sfx('tick', energy / goal)
+      if (energy % 2 === 0) haptic('tick')
+    }
+    last.current = energy
+  }, [energy, goal])
   let fill = 0
   let label = ''
   let start: ReactNode = <img src={art('ui_energia')} alt="" />
@@ -178,6 +188,7 @@ export function Home(p: Props) {
     const box = root.current.getBoundingClientRect()
     setBurst((b) => ({ key: b.key + 1, x: r.right - 40 - box.left, y: r.top + r.height / 2 - box.top }))
     fly(card.querySelector('.hcard__reward') ?? card, charging ? bar.current : coinsRef.current, charging ? 'ui_energia' : 'ui_herradura')
+    if (!charging) sfx('coin', 0, 600)
     setLeaving(id)
     window.setTimeout(() => {
       setLeaving(null)
@@ -275,7 +286,14 @@ export function Home(p: Props) {
             {doneIds.map((id) => {
               const h = findHabit(s, id)
               return (
-                <button key={id} className="hcard hcard--done" onClick={() => actions.uncompleteHabit(id)}>
+                <button
+                  key={id}
+                  className="hcard hcard--done"
+                  onClick={() => {
+                    sfx('uncheck')
+                    actions.uncompleteHabit(id)
+                  }}
+                >
                   <span className="hcard__icon">
                     <HabitIcon habit={h} />
                   </span>

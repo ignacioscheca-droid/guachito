@@ -1,7 +1,62 @@
 import { useRef, useState } from 'react'
 import { Button } from '../components/ui'
 import { isIOS, isStandalone } from '../game/push'
+import { setSoundSettings, sfx, useSoundSettings } from '../game/sound'
 import { actions, useGame } from '../game/store'
+
+/** An on/off pill. */
+function Toggle({ on, onChange, label }: { on: boolean; onChange: (on: boolean) => void; label: string }) {
+  return (
+    <button type="button" role="switch" aria-checked={on} aria-label={label} className={`toggle${on ? ' toggle--on' : ''}`} onClick={() => onChange(!on)}>
+      <i />
+    </button>
+  )
+}
+
+/** Music, sound effects and vibration: on or off, and how loud. */
+function SoundBlock() {
+  const so = useSoundSettings()
+  return (
+    <section className="settings__block">
+      <h3>Sonido y vibración</h3>
+      <div className="sound__row">
+        <span>🎵 Música</span>
+        <Toggle label="Música" on={so.music} onChange={(music) => setSoundSettings({ music })} />
+      </div>
+      <input
+        className="sound__volume"
+        type="range"
+        min={0}
+        max={1}
+        step={0.05}
+        value={so.musicVolume}
+        disabled={!so.music}
+        aria-label="Volumen de la música"
+        onChange={(e) => setSoundSettings({ musicVolume: Number(e.target.value) })}
+      />
+      <div className="sound__row">
+        <span>🔔 Efectos</span>
+        <Toggle label="Efectos" on={so.sfx} onChange={(sfxOn) => setSoundSettings({ sfx: sfxOn })} />
+      </div>
+      <input
+        className="sound__volume"
+        type="range"
+        min={0}
+        max={1}
+        step={0.05}
+        value={so.sfxVolume}
+        disabled={!so.sfx}
+        aria-label="Volumen de los efectos"
+        onChange={(e) => setSoundSettings({ sfxVolume: Number(e.target.value) })}
+        onPointerUp={() => sfx('check')}
+      />
+      <div className="sound__row">
+        <span>📳 Vibración</span>
+        <Toggle label="Vibración" on={so.haptics} onChange={(haptics) => setSoundSettings({ haptics })} />
+      </div>
+    </section>
+  )
+}
 
 export function Settings({ onClose, onTestMenu }: { onClose: () => void; onTestMenu: () => void }) {
   const savedName = useGame((s) => s.name)
@@ -31,6 +86,8 @@ export function Settings({ onClose, onTestMenu }: { onClose: () => void; onTestM
     <div className="overlay overlay--top" onClick={onClose}>
       <div className="modal settings" onClick={(e) => e.stopPropagation()}>
         <h2>Ajustes</h2>
+
+        <SoundBlock />
 
         <section className="settings__block">
           <h3>Nombres</h3>

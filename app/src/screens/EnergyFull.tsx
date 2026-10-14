@@ -7,6 +7,7 @@ import { art } from '../game/content'
 import { areaView, FULL_ENERGY_COINS, jobInfo, TRIP, WORK_MS } from '../game/journey'
 import { actions, goalOf, nextJob, useGame } from '../game/store'
 import { JobThumb, jobLabel } from './Home'
+import { haptic, sfx } from '../game/sound'
 import { formatClock, returnTime } from './TripRun'
 
 /** max: the bar reaches the top · job: what Paucho will do with it · leave: off he goes. */
@@ -65,7 +66,11 @@ export function EnergyFull({ from, start, remainingMs, onDone }: { from: number;
   // The bar counts the last of the energy in, one by one.
   useEffect(() => {
     if (step !== 'max' || full) return
-    const t = window.setTimeout(() => setShown((v) => v + 1), 70)
+    const t = window.setTimeout(() => {
+      setShown((v) => v + 1)
+      sfx('tick', shown / goal)
+      if (shown % 2 === 0) haptic('tick')
+    }, 70)
     return () => clearTimeout(t)
   }, [step, shown, full])
 
@@ -73,9 +78,16 @@ export function EnergyFull({ from, start, remainingMs, onDone }: { from: number;
   useEffect(() => {
     if (step !== 'max' || !full) return
     setCheer((c) => c + 1)
+    sfx('full')
+    haptic('celebrate')
     let tick = 0
     const fly = window.setTimeout(() => {
       flyCoins(pill.current, counter.current)
+      // each herradura lands with a ding (flyCoins: 800 ms each, 140 ms apart)
+      for (let i = 0; i < 6; i++) {
+        sfx('coin', 0, 780 + i * 140)
+        haptic('tick', 780 + i * 140)
+      }
       tick = window.setInterval(() => setCoins((c) => (c < s.coins ? c + 1 : c)), 1200 / FULL_ENERGY_COINS)
     }, 1500)
     return () => {
@@ -169,6 +181,8 @@ export function EnergyFull({ from, start, remainingMs, onDone }: { from: number;
                 variant="light"
                 onClick={() => {
                   actions.startWork()
+                  sfx('start')
+                  haptic('heavy')
                   setStep('leave')
                 }}
               >

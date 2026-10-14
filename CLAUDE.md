@@ -64,6 +64,12 @@ owner's app on main is untouched. Its design is the owner's, from his Royal Matc
     without art show as wooden signs.
   - Areas are a base image plus one piece per obra (`Piece` in journey.ts). Clothes are
     overlays per pose (`WEAR` in `src/game/shop.ts`).
+- **Sound and touch (`src/game/sound.ts`):**
+  - **Music:** the owner's "At Peace With the Plains", with its silences trimmed, is `public/audio/musica.m4a`. It loops through a Web Audio gain, because iPhone ignores an audio element's volume. It starts with the first touch and stops while the app is hidden.
+  - **Effects:** synthesized, with no files: tap, a habit done or undone, the bar ticking up, the full bar, herraduras landing, leaving to work, the build (rumble, then the pop), the area fanfare, buy, place, locked and unlock.
+  - **Haptics:** Android uses `navigator.vibrate`. iPhone has no vibrate, so they click a hidden `<input switch>`; Safari 18 gives a tick each time.
+  - **Every touch** on a button ticks with sound and haptic (`installTouchFeedback` in main.tsx).
+  - **Ajustes → Sonido y vibración** turns each one on or off and sets the volumes. The settings are kept per device in `gauchito.sound`.
 - **Publishing:** main's deploy workflow builds this branch into `/areas/`. After pushing it,
   run `gh workflow run deploy.yml --ref main`.
 

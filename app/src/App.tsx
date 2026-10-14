@@ -4,6 +4,7 @@ import { PauchoFace, preloadPaucho } from './components/Paucho'
 import { BottomNav, Button } from './components/ui'
 import { actions, getState, goalOf, nextJob, useGame, workRemainingMs, type TabId } from './game/store'
 import { FIRST_BED } from './game/room'
+import { feel, sfx } from './game/sound'
 import { AreasTab } from './screens/AreasTab'
 import { AventurasTab } from './screens/AventurasTab'
 import { Casita } from './screens/Casita'
@@ -33,7 +34,10 @@ function useWorkClock() {
     const tick = () => {
       const ms = workRemainingMs()
       setRemaining(ms)
-      if (ms <= 0) actions.finishWork()
+      if (ms <= 0) {
+        actions.finishWork()
+        sfx('ready')
+      }
     }
     tick()
     const id = window.setInterval(tick, 250)
@@ -100,6 +104,7 @@ export default function App() {
   const completeHabit = (id: string) => {
     const before = getState().energy
     const r = actions.completeHabit(id)
+    feel('check', 'success')
     setCelebrateKey((k) => k + 1)
     setToast({
       key: Date.now(),
@@ -153,7 +158,10 @@ export default function App() {
               onStartJob={startJob}
               onReveal={reveal}
               onWatchTrip={() => setView('trip')}
-              onTapPaucho={() => setCelebrateKey((k) => k + 1)}
+              onTapPaucho={() => {
+                sfx('cheer')
+                setCelebrateKey((k) => k + 1)
+              }}
               onSettings={() => setSettings(true)}
             />
           )}
@@ -174,7 +182,10 @@ export default function App() {
             casita: s.unlocked.includes('casita') && !s.room.includes(FIRST_BED),
           }}
           onTab={setTab}
-          onLocked={() => setLockedTap(true)}
+          onLocked={() => {
+            feel('locked', 'warning')
+            setLockedTap(true)
+          }}
         />
       </>
     )

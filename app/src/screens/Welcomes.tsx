@@ -1,9 +1,10 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { PauchoFace } from '../components/Paucho'
 import { Button } from '../components/ui'
 import { art } from '../game/content'
 import { daysTogether } from '../game/friendship'
 import { TRIP } from '../game/journey'
+import { haptic, sfx } from '../game/sound'
 import { actions, useGame, type TabId } from '../game/store'
 
 /** Royal Match-style welcome when a tab opens: what it is, and a button to go there. */
@@ -37,6 +38,10 @@ export function UnlockWelcome({ tab, onGo }: { tab: TabId; onGo: (t: TabId) => v
     },
   }
   const c = copy[tab]
+  useEffect(() => {
+    sfx('unlock')
+    haptic('celebrate')
+  }, [tab])
   if (!c) return null
   const close = (go: boolean) => {
     actions.dismissUnlock()
@@ -65,6 +70,10 @@ const DOG_NAMES = ['Tero', 'Pampa', 'Chispa', 'Lobo', 'Mate', 'Tango', 'Canela',
 /** The dog came with La cucha: you name him. */
 export function DogName() {
   const [name, setName] = useState(DOG_NAMES[0])
+  useEffect(() => {
+    sfx('unlock')
+    haptic('celebrate')
+  }, [])
   return (
     <div className="overlay unlock">
       <form

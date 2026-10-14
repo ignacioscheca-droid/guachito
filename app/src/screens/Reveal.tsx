@@ -4,6 +4,7 @@ import { Confetti } from '../components/Confetti'
 import { Button } from '../components/ui'
 import { art } from '../game/content'
 import { AREAS, areaName, areaView, JOURNEY, TRIP, TRIP_JOB } from '../game/journey'
+import { haptic, sfx } from '../game/sound'
 import { actions, useGame } from '../game/store'
 
 /**
@@ -18,9 +19,23 @@ export function Reveal({ onDone }: { onDone: () => void }) {
   const [step, setStep] = useState<'obra' | 'area'>('obra')
   const [shown, setShown] = useState(false)
   useEffect(() => {
-    const t = window.setTimeout(() => setShown(true), 900)
+    const t = window.setTimeout(() => {
+      setShown(true)
+      // in step with the build transition (4.2 s): the pile shakes, then the obra pops at ~1.4 s
+      sfx('rumble')
+      ;[0, 120, 240, 360, 480, 600].forEach((ms) => haptic('tick', ms))
+      sfx('build', 0, 1350)
+      haptic('heavy', 1350)
+      haptic('success', 1700)
+    }, 900)
     return () => clearTimeout(t)
   }, [])
+  // an area restored: its fanfare
+  useEffect(() => {
+    if (step !== 'area') return
+    sfx('area')
+    haptic('celebrate')
+  }, [step])
 
   const job = JOURNEY[at]
   if (!job || job.kind !== 'build') return null

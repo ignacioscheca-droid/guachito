@@ -6,6 +6,7 @@ import { art } from '../game/content'
 import { TRIP } from '../game/journey'
 import { FIRST_BED, friendDays, optionArt, priceOf, ROOM_SLOTS, ROOM_TABS, type RoomOption, type RoomTab } from '../game/room'
 import { CLOTHES, type Clothes } from '../game/shop'
+import { feel, sfx } from '../game/sound'
 import { actions, roomLock, southOpen, useGame, type GameState } from '../game/store'
 
 type Tab = RoomTab | 'paucho'
@@ -99,17 +100,32 @@ export function Casita() {
   }
 
   const pickRoom = (o: RoomOption) => {
-    if (s.placed[o.slot] === o.id) return actions.placeRoom(o.slot, null)
-    if (s.room.includes(o.id)) return actions.placeRoom(o.slot, o.id)
+    if (s.placed[o.slot] === o.id) {
+      sfx('unplace')
+      return actions.placeRoom(o.slot, null)
+    }
+    if (s.room.includes(o.id)) {
+      sfx('place')
+      return actions.placeRoom(o.slot, o.id)
+    }
     const why = roomLock(s, o)
-    if (why) return setPopup({ kind: 'locked', o, why })
+    if (why) {
+      feel('locked', 'warning')
+      return setPopup({ kind: 'locked', o, why })
+    }
     if (!actions.buyRoom(o.id)) return
+    feel('buy', 'success')
+    sfx('place', 0, 250)
     setFresh(o.id)
     celebrate()
-    if (o.id === FIRST_BED) setPopup({ kind: 'thanks' })
+    if (o.id === FIRST_BED) {
+      setPopup({ kind: 'thanks' })
+      sfx('unlock', 0, 300)
+    }
   }
   const buyClothes = (c: Clothes) => {
     if (!actions.buyClothes(c.id)) return
+    feel('buy', 'success')
     celebrate()
   }
 
@@ -195,7 +211,11 @@ export function Casita() {
                   key={c.id}
                   className={`scard${have ? ' scard--have' : ''}${wearing ? ' scard--on' : ''}`}
                   disabled={!have && (locked || s.coins < c.price)}
-                  onClick={() => (have ? actions.wear(c.slot, wearing ? null : c.id) : buyClothes(c))}
+                  onClick={() => {
+                    if (!have) return buyClothes(c)
+                    sfx(wearing ? 'unplace' : 'place')
+                    actions.wear(c.slot, wearing ? null : c.id)
+                  }}
                 >
                   <span className="scard__pic">
                     <ClothesIcon c={c} />

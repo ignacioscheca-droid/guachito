@@ -5823,3 +5823,45 @@ img.apiece[style*='bottom'] {
 .sgroup .scard__pic > img:first-child {
   max-height: 76px;
 }
+
+/* ---------- Ajustes: sound and vibration ---------- */
+
+.sound__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0 4px;
+  font-weight: 800;
+}
+.sound__volume {
+  width: 100%;
+  accent-color: var(--earth);
+}
+.sound__volume:disabled {
+  opacity: 0.35;
+}
+.toggle {
+  position: relative;
+  width: 52px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--line);
+  transition: background 0.2s;
+}
+.toggle i {
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s;
+}
+.toggle--on {
+  background: #7a9a4b;
+}
+.toggle--on i {
+  transform: translateX(22px);
+}
