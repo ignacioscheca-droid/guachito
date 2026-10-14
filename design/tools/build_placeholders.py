@@ -7,7 +7,6 @@ Arte para la build"); then each file is replaced with the real one under the sam
 
 Writes into app/public/a/:
   area3_0.webp          the same field at dusk, for La pulpería
-  ui_herradura.webp     a gold horseshoe, the currency
   wear_panuelo_{celeste,amarillo}_{idle,celebrate,avatar}.webp
                         Paucho's red neckerchief recoloured, as overlays for those poses
 """
@@ -98,20 +97,6 @@ def pampa(name: str, dusk: bool):
     save(out.convert('RGB'), name)
 
 
-def herradura():
-    im = Image.open(A / 'item_herradura.webp').convert('RGBA')
-    a = np.asarray(im).astype(np.float32)
-    on = a[..., 3] > 0
-    lum = (0.3 * a[..., 0] + 0.59 * a[..., 1] + 0.11 * a[..., 2]) / 255
-    lum = (lum - lum[on].min()) / (np.ptp(lum[on]) + 1e-6)
-    stops = np.array([[120, 66, 10], [214, 140, 30], [246, 190, 64], [255, 236, 160]], np.float32)
-    t = np.clip(lum, 0, 1) * 3
-    i = np.minimum(t.astype(int), 2)
-    f = (t - i)[..., None]
-    rgb = stops[i] * (1 - f) + stops[i + 1] * f
-    save(Image.fromarray(np.dstack([rgb, a[..., 3]]).astype(np.uint8)).resize((256, 256), Image.LANCZOS), 'ui_herradura')
-
-
 NECKERCHIEF = {'celeste': (205, 0.55, 1.08), 'amarillo': (46, 0.78, 1.12)}
 
 
@@ -145,5 +130,4 @@ def neckerchiefs():
 
 if __name__ == '__main__':
     pampa('area3_0', dusk=True)
-    herradura()
     neckerchiefs()

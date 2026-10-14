@@ -1,13 +1,14 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { PauchoFace } from '../components/Paucho'
-import { Room, RoomThing } from '../components/Room'
+import { RoomScene, type PauchoRoomPose } from '../components/RoomScene'
 import { Button, CoinPill } from '../components/ui'
 import { art } from '../game/content'
 import { TRIP } from '../game/journey'
-import { CLOTHES, ROOM_ITEMS, type Clothes } from '../game/shop'
-import { actions, southOpen, useGame } from '../game/store'
+import { FIRST_BED, friendDays, optionArt, priceOf, ROOM_SLOTS, ROOM_TABS, type RoomOption, type RoomTab } from '../game/room'
+import { CLOTHES, type Clothes } from '../game/shop'
+import { actions, roomLock, southOpen, useGame, type GameState } from '../game/store'
 
-type Tab = 'pieza' | 'paucho'
+type Tab = RoomTab | 'paucho'
 
 /** A clothes icon until its art arrives: an emoji or a swatch of its colour. */
 function ClothesIcon({ c }: { c: Clothes }) {
@@ -15,22 +16,63 @@ function ClothesIcon({ c }: { c: Clothes }) {
   return <span className="sicon">{c.emoji}</span>
 }
 
+type Popup = { kind: 'ask' } | { kind: 'thanks' } | { kind: 'locked'; o: RoomOption; why: 'premium' | 'south' | 'friend' | 'dog' }
+
+/** What a room card says at its foot. */
+function RoomPrice({ s, o }: { s: GameState; o: RoomOption }) {
+  if (s.placed[o.slot] === o.id)
+    return (
+      <>
+        <img src={art('ui_puesto')} alt="" />
+        Puesto
+      </>
+    )
+  if (s.room.includes(o.id)) return <>Poner</>
+  const lock = roomLock(s, o)
+  if (lock === 'south')
+    return (
+      <>
+        <img src={art('ui_viaje')} alt="" />
+        Del viaje
+      </>
+    )
+  if (lock === 'friend' && o.source.kind === 'friend')
+    return (
+      <>
+        <img src={art('ui_amistad')} alt="" />
+        {friendDays(o.source.level)} días
+      </>
+    )
+  if (lock === 'dog') return <>Con el perro</>
+  if (priceOf(o) === 0) return <>¡Es tuyo!</>
+  return (
+    <>
+      <img src={art('ui_herradura')} alt="" />
+      {priceOf(o)}
+    </>
+  )
+}
+
 /**
- * Paucho's room, with its shop below (the owner's call: one screen). Whatever you buy
- * goes straight to its place in the room. The first time, a pop-up asks for help and the
- * shop leads to the bed, the first purchase; everything he says is said in pop-ups.
+ * Paucho's room, with its shop below (the owner's call: one screen). The room has 16
+ * places with three options each; what you buy goes straight to its place, and tapping a
+ * thing in the room opens its place in the shop. The first time, a pop-up asks for help and
+ * the shop leads to the catre, the first purchase; everything he says is said in pop-ups.
  */
 export function Casita() {
   const s = useGame((g) => g)
-  const [tab, setTab] = useState<Tab>('pieza')
+  const [tab, setTab] = useState<Tab>('cama')
   const [fresh, setFresh] = useState<string | null>(null)
   const [cheer, setCheer] = useState(0)
+  const [pose, setPose] = useState<PauchoRoomPose>('parado')
+  const [flash, setFlash] = useState<string | null>(null)
   const screen = useRef<HTMLDivElement>(null)
+  const cards = useRef<HTMLDivElement>(null)
   const bedCard = useRef<HTMLButtonElement>(null)
   const [spot, setSpot] = useState<DOMRect | null>(null)
-  const tutorial = !s.room.includes('cama')
+  const tutorial = !s.room.includes(FIRST_BED)
   // the first visit opens with his ask; the bed, with his thanks
-  const [popup, setPopup] = useState<'ask' | 'thanks' | null>(tutorial ? 'ask' : null)
+  const [popup, setPopup] = useState<Popup | null>(tutorial ? { kind: 'ask' } : null)
   const you = s.playerName ? `, ${s.playerName}` : ''
 
   // The first visit: everything waits for the bed.
@@ -50,71 +92,99 @@ export function Casita() {
     }
   }, [tutorial, tab, popup])
 
-  const buyThing = (id: string) => {
-    const item = ROOM_ITEMS.find((i) => i.id === id)!
-    if (!actions.buyRoomItem(id)) return
-    setFresh(id)
+  const celebrate = () => {
     setCheer((c) => c + 1)
-    if (item.id === 'cama') setPopup('thanks')
+    setPose('festeja')
+    window.setTimeout(() => setPose('parado'), 2200)
+  }
+
+  const pickRoom = (o: RoomOption) => {
+    if (s.placed[o.slot] === o.id) return actions.placeRoom(o.slot, null)
+    if (s.room.includes(o.id)) return actions.placeRoom(o.slot, o.id)
+    const why = roomLock(s, o)
+    if (why) return setPopup({ kind: 'locked', o, why })
+    if (!actions.buyRoom(o.id)) return
+    setFresh(o.id)
+    celebrate()
+    if (o.id === FIRST_BED) setPopup({ kind: 'thanks' })
   }
   const buyClothes = (c: Clothes) => {
     if (!actions.buyClothes(c.id)) return
-    setCheer((k) => k + 1)
+    celebrate()
+  }
+
+  // a thing tapped in the room: its place opens in the shop
+  const openSlot = (slotId: string) => {
+    if (tutorial) return
+    const sl = ROOM_SLOTS.find((x) => x.id === slotId)
+    if (!sl) return
+    setTab(sl.tab)
+    setFlash(slotId)
+    window.setTimeout(() => {
+      const el = cards.current?.querySelector<HTMLElement>(`[data-slot="${slotId}"]`)
+      if (el && cards.current) cards.current.scrollTo({ left: el.offsetLeft - 16, behavior: 'smooth' })
+    }, 30)
+    window.setTimeout(() => setFlash(null), 1400)
   }
 
   const southLocked = !southOpen(s)
+  const slots = ROOM_SLOTS.filter((sl) => sl.tab === tab && (!sl.needsDog || s.dog.arrived))
 
   return (
     <div className="casita" ref={screen}>
-      <Room items={s.room} fresh={fresh} pose={tutorial ? 'wave' : 'idle'} outfit={s.outfit} celebrateKey={cheer}>
+      <RoomScene placed={s.placed} fresh={fresh} pose={tutorial && !popup ? 'senala' : pose} dog={s.dog.arrived} onTap={openSlot}>
         <div className="casita__top">
           <CoinPill coins={s.coins} bump={cheer > 0} key={cheer} />
         </div>
-      </Room>
+      </RoomScene>
 
       <section className="shopstrip">
-        <header>
-          <strong>Tienda</strong>
-        </header>
         <div className="shopstrip__tabs" role="tablist">
-          <button className={tab === 'pieza' ? 'on' : ''} onClick={() => setTab('pieza')} disabled={tutorial}>
-            Para la pieza
-          </button>
+          {ROOM_TABS.map((t) => (
+            <button key={t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)} disabled={tutorial && t.id !== 'cama'}>
+              <img src={art(t.icon)} alt="" />
+              {t.name}
+            </button>
+          ))}
           <button className={tab === 'paucho' ? 'on' : ''} onClick={() => setTab('paucho')} disabled={tutorial}>
-            Para {s.name}
+            <PauchoFace outfit={s.outfit} className="shopstrip__face" />
+            {s.name}
           </button>
         </div>
-        <div className="shopstrip__cards">
-          {tab === 'pieza' &&
-            ROOM_ITEMS.map((item) => {
-              const have = s.room.includes(item.id)
-              const off = !have && (s.coins < item.price || (tutorial && item.id !== 'cama'))
-              return (
-                <button
-                  key={item.id}
-                  id={`shop-${item.id}`}
-                  ref={item.id === 'cama' ? bedCard : undefined}
-                  className={`scard${have ? ' scard--have' : ''}`}
-                  disabled={have || off}
-                  onClick={() => buyThing(item.id)}
-                >
-                  <span className="scard__pic">
-                    <RoomThing id={item.id} />
-                  </span>
-                  <b>{item.name}</b>
-                  <span className="scard__price">
-                    {have ? (
-                      'En la pieza'
-                    ) : (
-                      <>
-                        <img src={art('ui_herradura')} alt="" />
-                        {item.price}
-                      </>
-                    )}
-                  </span>
-                </button>
-              )
-            })}
+        <div className="shopstrip__cards" ref={cards}>
+          {tab !== 'paucho' &&
+            slots.map((sl) => (
+              <div key={sl.id} className={`sgroup${flash === sl.id ? ' sgroup--flash' : ''}`} data-slot={sl.id}>
+                <span className="sgroup__name">{sl.name}</span>
+                <div className="sgroup__cards">
+                  {sl.options.map((o) => {
+                    const placed = s.placed[o.slot] === o.id
+                    const have = s.room.includes(o.id)
+                    const lock = roomLock(s, o)
+                    const short = !have && !lock && s.coins < priceOf(o)
+                    return (
+                      <button
+                        key={o.id}
+                        ref={o.id === FIRST_BED ? bedCard : undefined}
+                        className={`scard${have ? ' scard--have' : ''}${placed ? ' scard--on' : ''}${lock ? ' scard--locked' : ''}${o.source.kind === 'premium' ? ' scard--premium' : ''}`}
+                        disabled={short || (tutorial && o.id !== FIRST_BED)}
+                        onClick={() => pickRoom(o)}
+                      >
+                        {o.source.kind === 'premium' && <img className="scard__star" src={art('ui_premium')} alt="Premium" />}
+                        <span className={`scard__pic${optionArt(o).startsWith('thumb_') ? ' scard__pic--photo' : ''}`}>
+                          <img src={art(optionArt(o))} alt="" />
+                          {lock && <img className="scard__lock" src={art('ui_candado')} alt="" />}
+                        </span>
+                        <b>{o.name}</b>
+                        <span className="scard__price">
+                          <RoomPrice s={s} o={o} />
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
           {tab === 'paucho' &&
             CLOTHES.map((c) => {
               const have = s.clothes.includes(c.id)
@@ -161,24 +231,46 @@ export function Casita() {
       {popup && (
         <div className="overlay unlock">
           <div className="modal unlock__box">
-            <span className="unlock__icon">
-              <PauchoFace outfit={s.outfit} className="unlock__face" />
-            </span>
-            {popup === 'ask' ? (
+            {popup.kind === 'locked' ? (
               <>
-                <h2>¿Me ayudás a armarla?</h2>
-                <p>Arranquemos por una cama. Está en la tienda y la pagás con las {s.coins} herraduras que ganaste con tus hábitos.</p>
+                <span className="unlock__icon">
+                  <img src={art(optionArt(popup.o))} alt="" className="unlock__thing" />
+                </span>
+                <h2>{popup.o.name}</h2>
+                <p>
+                  {popup.why === 'premium' && 'Es de Gauchito Premium: cuando te suscribas, la vas a poder comprar con tus herraduras.'}
+                  {popup.why === 'south' && `Esto lo traigo del viaje al sur ${TRIP.emoji}. ¡Cuando vuelva es tuyo!`}
+                  {popup.why === 'friend' &&
+                    popup.o.source.kind === 'friend' &&
+                    `Te lo doy cuando seamos ${popup.o.source.level}: ${friendDays(popup.o.source.level)} días juntos.`}
+                  {popup.why === 'dog' && 'Primero tiene que llegar el perro.'}
+                </p>
                 <Button variant="gold" onClick={() => setPopup(null)}>
-                  ¡Dale!
+                  Bueno
                 </Button>
               </>
             ) : (
               <>
-                <h2>¡Gracias{you}!</h2>
-                <p>Esta noche duermo como un rey 👑. Todo lo que compres en la tienda va directo a la casita.</p>
-                <Button variant="gold" onClick={() => setPopup(null)}>
-                  ¡De nada!
-                </Button>
+                <span className="unlock__icon">
+                  <PauchoFace outfit={s.outfit} className="unlock__face" />
+                </span>
+                {popup.kind === 'ask' ? (
+                  <>
+                    <h2>¿Me ayudás a armarla?</h2>
+                    <p>Arranquemos por una cama. Está en la tienda y la pagás con las {s.coins} herraduras que ganaste con tus hábitos.</p>
+                    <Button variant="gold" onClick={() => setPopup(null)}>
+                      ¡Dale!
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <h2>¡Gracias{you}!</h2>
+                    <p>Esta noche duermo como un rey 👑. Todo lo que compres en la tienda va directo a la casita. Y si tocás algo del cuarto, lo podés cambiar.</p>
+                    <Button variant="gold" onClick={() => setPopup(null)}>
+                      ¡De nada!
+                    </Button>
+                  </>
+                )}
               </>
             )}
           </div>

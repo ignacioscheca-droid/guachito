@@ -3,6 +3,7 @@ import { HabitToast } from './components/DayLoop'
 import { PauchoFace, preloadPaucho } from './components/Paucho'
 import { BottomNav, Button } from './components/ui'
 import { actions, getState, goalOf, nextJob, useGame, workRemainingMs, type TabId } from './game/store'
+import { FIRST_BED } from './game/room'
 import { AreasTab } from './screens/AreasTab'
 import { AventurasTab } from './screens/AventurasTab'
 import { Casita } from './screens/Casita'
@@ -170,7 +171,7 @@ export default function App() {
           face={<PauchoFace outfit={s.outfit} className="nav5__face" />}
           badges={{
             inicio: tab !== 'inicio' && (status === 'ready' || status === 'done'),
-            casita: s.unlocked.includes('casita') && !s.room.includes('cama'),
+            casita: s.unlocked.includes('casita') && !s.room.includes(FIRST_BED),
           }}
           onTab={setTab}
           onLocked={() => setLockedTap(true)}

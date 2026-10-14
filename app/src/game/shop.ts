@@ -1,19 +1,6 @@
-// What the herraduras buy, in the casita's shop: things for Paucho's room and clothes
-// for Paucho. Prices make one thing affordable about every day (30 for the full bar and
-// 5 for each habit after it); the bed costs exactly one full bar, so the first purchase
-// (forced, the day the casita opens) is always within reach.
-
-export type RoomItem = { id: string; name: string; price: number }
-
-/** The room's six things, in shop order. The bed is the first purchase. */
-export const ROOM_ITEMS: RoomItem[] = [
-  { id: 'cama', name: 'Catre de madera', price: 30 },
-  { id: 'matra', name: 'Matra pampa', price: 40 },
-  { id: 'mesita', name: 'Mesita con farol', price: 50 },
-  { id: 'baul', name: 'Baúl de cuero', price: 60 },
-  { id: 'cuadro', name: 'Cuadro de Lucero', price: 70 },
-  { id: 'estante', name: 'Estante con mate', price: 80 },
-]
+// Clothes for Paucho, bought with herraduras in the casita's shop (the room's things are in
+// room.ts). Prices make one thing affordable about every day or two (30 for the full bar and
+// 5 for each habit after it).
 
 export type Slot = 'cabeza' | 'cuello' | 'cuerpo'
 export const SLOTS: { id: Slot; name: string; usual: string }[] = [

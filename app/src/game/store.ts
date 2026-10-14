@@ -12,7 +12,8 @@ import {
   TRIP_JOB,
   WORK_MS,
 } from './journey'
-import { CLOTHES, clothesById, ROOM_ITEMS, type Slot } from './shop'
+import { friendDays, LEGACY_ROOM, priceOf, roomOption, type RoomOption } from './room'
+import { CLOTHES, clothesById, type Slot } from './shop'
 
 /**
  * The day's work: the bar fills (charging), it is full (ready), Paucho builds or travels
@@ -56,8 +57,11 @@ export type GameState = {
   unlocked: TabId[]
   /** Tabs just unlocked whose welcome hasn't been shown yet. */
   unlockQueue: TabId[]
-  /** Things bought for Paucho's room. */
+  /** Room options owned (ids from ROOM_SLOTS, like "cama_1"), and the one in each place. */
   room: string[]
+  placed: Record<string, string>
+  /** Gauchito Premium (for now only the test menu turns it on). */
+  premium: boolean
   /** Clothes bought, and what he is wearing (no entry: his usual). */
   clothes: string[]
   outfit: Partial<Record<Slot, string>>
@@ -94,6 +98,8 @@ const initial = (): GameState => ({
   unlocked: ['inicio'],
   unlockQueue: [],
   room: [],
+  placed: {},
+  premium: false,
   clothes: [],
   outfit: {},
   dog: { arrived: false, name: '' },
@@ -105,7 +111,20 @@ const initial = (): GameState => ({
 function parse(raw: string): GameState {
   const data = JSON.parse(raw)
   if (typeof data !== 'object' || data == null || data.version !== 2) throw new Error('not a Gauchito save')
-  return { ...initial(), ...data }
+  return migrateRoom({ ...initial(), ...data })
+}
+
+/** A save from before the room had places: the bed becomes the catre, the rest is refunded. */
+function migrateRoom(s: GameState): GameState {
+  if (!s.room.some((id) => id in LEGACY_ROOM || id === 'cama')) return s
+  const refund = s.room.reduce((sum, id) => sum + (LEGACY_ROOM[id] ?? 0), 0)
+  const bed = s.room.includes('cama')
+  return {
+    ...s,
+    coins: s.coins + refund,
+    room: bed ? ['cama_1'] : [],
+    placed: bed ? { cama: 'cama_1' } : {},
+  }
 }
 
 function load(): GameState {
@@ -167,6 +186,15 @@ export const restingToday = (s: GameState) => s.work.status === 'charging' && s.
 export const nextJob = (s: GameState) => JOURNEY[s.jobsDone] ?? null
 /** Clothes from the south are sold once Paucho is back from the trip. */
 export const southOpen = (s: GameState) => s.jobsDone > TRIP_JOB
+
+/** Why a room option can't be had yet, or null when it can (bought or, if given, received). */
+export function roomLock(s: GameState, o: RoomOption): 'premium' | 'south' | 'friend' | 'dog' | null {
+  if (o.slot === 'plato' && !s.dog.arrived) return 'dog'
+  if (o.source.kind === 'premium' && !s.premium) return 'premium'
+  if (o.source.kind === 'south' && !southOpen(s)) return 'south'
+  if (o.source.kind === 'friend' && daysTogether(s.completions) < friendDays(o.source.level)) return 'friend'
+  return null
+}
 
 // ---- time -------------------------------------------------------------
 
@@ -306,11 +334,20 @@ export const actions = {
     set({ ...state, dog: { arrived: true, name: name.trim() || 'Tero' } })
   },
 
-  buyRoomItem(id: string): boolean {
-    const item = ROOM_ITEMS.find((i) => i.id === id)
-    if (!item || state.room.includes(id) || state.coins < item.price) return false
-    set({ ...state, coins: state.coins - item.price, room: [...state.room, id] })
+  /** Buys (or receives) a room option and puts it in its place. */
+  buyRoom(id: string): boolean {
+    const o = roomOption(id)
+    if (!o || state.room.includes(id) || roomLock(state, o) || state.coins < priceOf(o)) return false
+    set({ ...state, coins: state.coins - priceOf(o), room: [...state.room, id], placed: { ...state.placed, [o.slot]: id } })
     return true
+  },
+
+  /** Puts an owned option in its place, or (null) leaves the place empty; what comes out stays owned. */
+  placeRoom(slot: string, id: string | null) {
+    const placed = { ...state.placed }
+    if (id && state.room.includes(id) && roomOption(id)?.slot === slot) placed[slot] = id
+    else delete placed[slot]
+    set({ ...state, placed })
   },
 
   /** Buys clothes and puts them on straight away. */
@@ -359,6 +396,9 @@ export const actions = {
   debugFillEnergy() {
     if (state.work.status !== 'charging' || !nextJob(state)) return
     set({ ...state, energy: goalOf(state), coins: state.coins + FULL_ENERGY_COINS, work: { status: 'ready', startedAt: null } })
+  },
+  debugPremium() {
+    set({ ...state, premium: !state.premium })
   },
   debugCoins() {
     set({ ...state, coins: state.coins + 100 })

@@ -22,6 +22,7 @@ export function TestMenu({ onClose, onOnboarding }: { onClose: () => void; onOnb
         <button onClick={run(actions.debugFinishWork)}>Terminar el trabajo ya</button>
         <button onClick={run(actions.debugSkipJob)}>Saltar a la obra terminada</button>
         <button onClick={run(actions.debugCoins)}>+100 herraduras</button>
+        <button onClick={run(actions.debugPremium)}>Gauchito Premium: {s.premium ? 'sí (sacarlo)' : 'no (activarlo)'}</button>
         <button onClick={run(onOnboarding)}>Ver el onboarding (no borra nada)</button>
         <button
           className="testmenu__danger"

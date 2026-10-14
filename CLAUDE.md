@@ -41,13 +41,27 @@ owner's app on main is untouched. Its design is the owner's, from his Royal Matc
   - Built the same way as Área 1: stages, a clean plate, and a sprite sheet. Doc: "Gauchito — Área 2: todo el arte".
   - **What moves:** the clothes swing on the line; the veleta wobbles and turns with the wind (side and front frames); the lantern glows; the two hens peck (standing and pecking frames).
   - **Paucho idles** throwing maize to the hens (`paucho_maiz`), with grains falling. The dog sits by his cucha.
+- **Paucho's room (Casita):** 16 places with 3 options each (`ROOM_SLOTS` in `src/game/room.ts`):
+  - **Option k** is cut from ChatGPT's `cuarto_k`, in `arte_build/cuarto/`. Doc: "Gauchito — El cuarto de Paucho: todo el arte".
+  - **The importer:** `design/tools/import_room.py` compares each room with `cuarto_vacio` inside each place's region (`REGIONS`). It writes the cut-outs, the shop thumbnails and the loose sprites, plus their boxes in `src/game/roomArt.ts`. `design/tools/room_map.py` drew the map that was sent with the brief.
+  - **How you get each option:**
+    - Most cost herraduras.
+    - Three come with the trip to the south and three with friendship.
+    - Six are Gauchito Premium. They still cost herraduras, and the test menu turns premium on.
+  - **The save:** `room` is what you own and `placed` is what sits in each place. A save with the old six things keeps the bed as the catre and refunds the rest.
+  - **`RoomScene` brings the room to life:**
+    - Paucho stands, blinks, celebrates each purchase and points to the bed the first time.
+    - The dog wags its tail and dozes.
+    - Michi sits on the sill and naps.
+    - The pendulum swings, notes come out of the gramophone, the mate steams, the candle flickers and the curtains sway.
+    - The mecedora rocks when you tap it.
+  - **Tapping a thing** in the room opens its place in the shop.
 - **Art:** the brief is the Claude Doc "Gauchito — Arte para la build",
   https://claude.ai/code/artifact/0d52723f-435d-4f8a-a172-92b8d327966b. References are in
   `kit_build/` and ChatGPT's results go in `arte_build/` (both local only).
   - Until that art arrives, the build runs on stand-ins made by
-    `design/tools/build_placeholders.py`: the empty lot, the casita cut out of the patio,
-    Lucero, pampa fields, a gold horseshoe and recoloured neckerchiefs. Obras without art show
-    as wooden signs, and the room is drawn in SVG (`src/components/Room.tsx`).
+    `design/tools/build_placeholders.py` (Área 3's lot and recoloured neckerchiefs). Obras
+    without art show as wooden signs.
   - Areas are a base image plus one piece per obra (`Piece` in journey.ts). Clothes are
     overlays per pose (`WEAR` in `src/game/shop.ts`).
 - **Publishing:** main's deploy workflow builds this branch into `/areas/`. After pushing it,
