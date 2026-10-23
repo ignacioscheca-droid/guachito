@@ -17,7 +17,8 @@ import { Settings } from './screens/Settings'
 import { TestMenu } from './screens/TestMenu'
 import { TripRun } from './screens/TripRun'
 import { TripStory } from './screens/TripStory'
-import { DogName, UnlockWelcome } from './screens/Welcomes'
+import { DogName, NotifAsk, UnlockWelcome } from './screens/Welcomes'
+import { shouldAskPush } from './game/push'
 
 type View = 'tabs' | 'full' | 'reveal' | 'story' | 'trip'
 
@@ -58,6 +59,7 @@ export default function App() {
   const [replayOnboarding, setReplayOnboarding] = useState(false)
   const [arriving, setArriving] = useState(false)
   const [lockedTap, setLockedTap] = useState(false)
+  const [askPush, setAskPush] = useState(false)
   const remaining = useWorkClock()
   const testMode = new URLSearchParams(location.search).has('test')
 
@@ -138,7 +140,18 @@ export default function App() {
       />
     )
   } else if (view === 'full') {
-    content = <EnergyFull from={fill.from} start={fill.start} remainingMs={remaining} onDone={backHome} />
+    content = (
+      <EnergyFull
+        from={fill.from}
+        start={fill.start}
+        remainingMs={remaining}
+        onDone={() => {
+          backHome()
+          // he just set off for eight hours: the moment to offer to let you know
+          if (shouldAskPush(getState())) setAskPush(true)
+        }}
+      />
+    )
   } else if (view === 'reveal') {
     content = <Reveal onDone={backHome} />
   } else if (view === 'story') {
@@ -199,6 +212,7 @@ export default function App() {
       {toast && view === 'tabs' && <HabitToast key={toast.key} title={toast.title} sub={toast.sub} />}
       {welcome && s.dog.arrived && !s.dog.name && <DogName />}
       {welcome && !(s.dog.arrived && !s.dog.name) && s.unlockQueue.length > 0 && <UnlockWelcome tab={s.unlockQueue[0]} onGo={setTab} />}
+      {welcome && askPush && !(s.dog.arrived && !s.dog.name) && s.unlockQueue.length === 0 && <NotifAsk onClose={() => setAskPush(false)} />}
       {lockedTap && (
         <div className="overlay" onClick={() => setLockedTap(false)}>
           <div className="modal unlock__box unlock__box--small" onClick={(e) => e.stopPropagation()}>
@@ -219,7 +233,7 @@ export default function App() {
           }}
         />
       )}
-      {testMenu && <TestMenu onClose={() => setTestMenu(false)} onOnboarding={() => setReplayOnboarding(true)} />}
+      {testMenu && <TestMenu onClose={() => setTestMenu(false)} onOnboarding={() => setReplayOnboarding(true)} onAskPush={() => setAskPush(true)} />}
       {testMode && s.onboarded && !testMenu && !replayOnboarding && view === 'tabs' && (
         <button className="testfab" onClick={() => setTestMenu(true)} aria-label="Menú de prueba">
           🛠

@@ -2,7 +2,7 @@
 // from what you have done today. The SW can't read localStorage, so the app keeps a
 // small copy of the relevant state in IndexedDB. Nothing leaves the phone.
 import { ENERGY_PER_HABIT, jobInfo, WORK_MS } from './journey'
-import { findHabit, getState, goalOf, nextJob, subscribe, type GameState } from './store'
+import { findHabit, getState, goalOf, nextJob, restingToday, subscribe, type GameState } from './store'
 
 /** Emoji for catalog habits, which use artist icons in the app. */
 const CATALOG_EMOJI: Record<string, string> = {
@@ -21,13 +21,16 @@ const CATALOG_EMOJI: Record<string, string> = {
 }
 
 export type ReminderSnapshot = {
-  v: 2
+  v: 3
   name: string
   playerName: string
   habits: { id: string; name: string; emoji: string }[]
   /** Completed habit ids per local day (last 14 days). */
   completions: Record<string, string[]>
+  /** The job under way or next, as said in a sentence ("la casa"), and when it ends. */
   work: { status: GameState['work']['status']; doneAt: number | null; job: string | null }
+  /** Today's bar is already full (one a day): habits now give herraduras. */
+  resting: boolean
   /** Habits still needed today for the day's job (0 once the bar is full). */
   toGo: number
 }
@@ -36,7 +39,7 @@ function build(s: GameState): ReminderSnapshot {
   const days = Object.keys(s.completions).sort().slice(-14)
   const job = nextJob(s)
   return {
-    v: 2,
+    v: 3,
     name: s.name,
     playerName: s.playerName,
     habits: s.habits.map((id) => {
@@ -44,7 +47,8 @@ function build(s: GameState): ReminderSnapshot {
       return { id, name: h.name, emoji: h.emoji ?? CATALOG_EMOJI[id] ?? '⭐' }
     }),
     completions: Object.fromEntries(days.map((d) => [d, s.completions[d]])),
-    work: { status: s.work.status, doneAt: s.work.startedAt != null ? s.work.startedAt + WORK_MS : null, job: job ? jobInfo(job).name : null },
+    work: { status: s.work.status, doneAt: s.work.startedAt != null ? s.work.startedAt + WORK_MS : null, job: job ? jobInfo(job).the : null },
+    resting: restingToday(s),
     toGo: s.work.status === 'charging' ? Math.ceil((goalOf(s) - s.energy) / ENERGY_PER_HABIT) : 0,
   }
 }

@@ -4,6 +4,7 @@ import { Button } from '../components/ui'
 import { art } from '../game/content'
 import { daysTogether } from '../game/friendship'
 import { TRIP } from '../game/journey'
+import { enableReminders } from '../game/push'
 import { haptic, sfx } from '../game/sound'
 import { actions, useGame, type TabId } from '../game/store'
 
@@ -99,6 +100,79 @@ export function DogName() {
           ¡Listo!
         </Button>
       </form>
+    </div>
+  )
+}
+
+/**
+ * Paucho asks before the phone does: the phone's own dialog only shows after "¡Sí,
+ * avisame!" (and it can be shown only once, so it's worth asking well). "Ahora no" asks
+ * again another day (shouldAskPush in push.ts).
+ */
+export function NotifAsk({ onClose }: { onClose: () => void }) {
+  const s = useGame((g) => g)
+  const [step, setStep] = useState<'ask' | 'on' | 'off'>('ask')
+  const [reason, setReason] = useState('')
+  useEffect(() => {
+    actions.pushAsked()
+    sfx('unlock')
+    haptic('success')
+  }, [])
+  const you = s.playerName ? `, ${s.playerName}` : ''
+
+  const yes = async () => {
+    const r = await enableReminders()
+    if (r.ok) {
+      actions.setPushSubscription(r.subscription)
+      sfx('check')
+      haptic('success')
+      setStep('on')
+    } else {
+      setReason(r.reason)
+      setStep('off')
+    }
+  }
+
+  return (
+    <div className="overlay unlock">
+      <div className="modal unlock__box">
+        <span className="unlock__icon">
+          <PauchoFace outfit={s.outfit} className="unlock__face" />
+        </span>
+        {step === 'ask' && (
+          <>
+            <h2>¿Te aviso{you}?</h2>
+            <p>
+              Te escribo un buen día a las 9, a las 16 te cuento cómo va todo y qué te falta, y a las 21 las buenas noches. Así no se nos pasa
+              ningún día.
+            </p>
+            <Button variant="gold" onClick={yes}>
+              ¡Sí, avisame!
+            </Button>
+            <Button variant="ghost" onClick={onClose}>
+              Ahora no
+            </Button>
+          </>
+        )}
+        {step === 'on' && (
+          <>
+            <h2>¡Trato hecho!</h2>
+            <p>Mañana a las 9 te escribo. Si algún día preferís que no, lo cambiás en Ajustes.</p>
+            <Button variant="gold" onClick={onClose}>
+              ¡Dale!
+            </Button>
+          </>
+        )}
+        {step === 'off' && (
+          <>
+            <h2>No pude activarlas</h2>
+            <p>{reason}</p>
+            <Button variant="light" onClick={onClose}>
+              Bueno
+            </Button>
+          </>
+        )}
+      </div>
     </div>
   )
 }

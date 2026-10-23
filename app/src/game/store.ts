@@ -69,6 +69,8 @@ export type GameState = {
   dog: { arrived: boolean; name: string }
   /** Push subscription for the daily notifications (JSON), once they are on. */
   pushSubscription: string | null
+  /** Paucho's own "¿Te aviso?" before the phone's: how many times and when it was last shown. */
+  pushAsk: { times: number; last: string | null }
   /** Debug: whole days added to the clock by the test menu. */
   dayOffset: number
   /** Debug: jobs finish this many ms sooner. */
@@ -104,6 +106,7 @@ const initial = (): GameState => ({
   outfit: {},
   dog: { arrived: false, name: '' },
   pushSubscription: null,
+  pushAsk: { times: 0, last: null },
   dayOffset: 0,
   workSkipMs: 0,
 })
@@ -373,6 +376,10 @@ export const actions = {
 
   setPushSubscription(json: string | null) {
     set({ ...state, pushSubscription: json })
+  },
+
+  pushAsked() {
+    set({ ...state, pushAsk: { times: state.pushAsk.times + 1, last: todayKey(state) } })
   },
 
   // ---- backup ----

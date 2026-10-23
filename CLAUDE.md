@@ -7,8 +7,12 @@ brings back a story and a ranch item. The owner uses it for a real one-week test
 ## Branch "areas": Gauchito 2
 
 This branch is a separate build, published at `/guachito/areas/` (installs as "Gauchito 2").
-It keeps its own save (`gauchito.v2` in localStorage) and sends no notifications, so the
-owner's app on main is untouched. Its design is the owner's, from his Royal Match references:
+It keeps its own save (`gauchito.v2` in localStorage), so the owner's app on main is
+untouched. Since 2026-10-23 it takes the daily notifications: its own `sw.js` (reads the
+"gauchito-v2" IndexedDB snapshot, talks about the obras), and `PUSH_SUBSCRIPTION` holds
+this build's subscription. Paucho asks first with his own pop-up (`NotifAsk` in
+Welcomes.tsx, after a job starts; `shouldAskPush` in push.ts: up to 3 times, 2 days apart),
+and only "¡Sí, avisame!" opens the phone's dialog. Its design is the owner's, from his Royal Match references:
 - **Day loop:** each habit gives 10 energy. The bar asks 30, and one more habit at each of
   Finch's stages (`energyGoal` in `src/game/journey.ts`). One full bar a day starts the
   next job for 8 hours; after that, habits give herraduras (the currency, +30 for filling the

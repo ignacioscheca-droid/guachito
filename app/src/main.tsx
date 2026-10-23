@@ -6,11 +6,14 @@ import '@fontsource/nunito/800.css'
 import '@fontsource/nunito/900.css'
 import './index.css'
 import App from './App.tsx'
+import { registerServiceWorker } from './game/push'
+import { startReminderSnapshots } from './game/reminderSnapshot'
 import { installTouchFeedback } from './game/sound'
 
-// This build (branch "areas", published at /areas/) sends no notifications yet: they stay
-// with the app on main. Re-enable registerServiceWorker() and startReminderSnapshots()
-// (src/game/push.ts, src/game/reminderSnapshot.ts) when it replaces it.
+// The daily notifications: the service worker shows them, from a snapshot of today kept
+// in IndexedDB (src/game/push.ts, src/game/reminderSnapshot.ts).
+registerServiceWorker()
+startReminderSnapshots()
 
 // every touch ticks (sound and haptic); the first one also starts the music
 installTouchFeedback()

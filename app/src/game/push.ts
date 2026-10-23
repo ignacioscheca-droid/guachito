@@ -2,6 +2,7 @@
 // Action (.github/workflows/reminder.yml) sends them at 9:00, 16:00 and 21:00 (Madrid).
 // iPhone only allows this once Gauchito is added to the Home Screen.
 import { saveReminderSnapshot } from './reminderSnapshot'
+import { todayKey, type GameState } from './store'
 
 /** VAPID public key (the private half lives only in the GitHub secret). */
 const VAPID_PUBLIC_KEY = 'BCp_BYxwkOCUJcUayhzQTSXevG3sz8tBXnbzUht2Bso5O9TI_vyP8bKTezjZu4rTEjJ88yNiRtRS2u6CIDFuxW8'
@@ -51,4 +52,19 @@ export async function testNotification(kind: NotificationKind) {
   await saveReminderSnapshot()
   const reg = await navigator.serviceWorker.ready
   reg.active?.postMessage({ type: 'test-reminder', kind })
+}
+
+/**
+ * Whether Paucho should ask "¿Te aviso?" (his pop-up, before the phone's own): the phone can
+ * take notifications, they aren't on or refused, and he asked at most twice before, the
+ * last time two days ago or more.
+ */
+export function shouldAskPush(s: GameState) {
+  if (!pushSupported() || (isIOS() && !isStandalone())) return false
+  if (s.pushSubscription || Notification.permission === 'denied') return false
+  const { times, last } = s.pushAsk
+  if (times >= 3) return false
+  if (!last) return true
+  const days = (Date.parse(todayKey(s)) - Date.parse(last)) / 86_400_000
+  return days >= 2
 }

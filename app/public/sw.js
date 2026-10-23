@@ -3,7 +3,8 @@
 // and "night" at 21:00. The push from GitHub only says which one it is; the text is
 // written here, on the phone. Morning and night are plain greetings. The reminder reads
 // the snapshot the app keeps in IndexedDB (src/game/reminderSnapshot.ts): what is done
-// today, what is missing, and where Gauchito is.
+// today, what is missing, and what Paucho is building. This is Gauchito 2's (branch
+// "areas"): its snapshot is the "gauchito-v2" database, with the obras (v: 3).
 self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()))
 
@@ -12,7 +13,7 @@ self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim(
 function readSnapshot() {
   return new Promise((resolve) => {
     try {
-      const req = indexedDB.open('guachito', 1)
+      const req = indexedDB.open('gauchito-v2', 1)
       req.onupgradeneeded = () => req.result.createObjectStore('kv')
       req.onerror = () => resolve(null)
       req.onsuccess = () => {
@@ -53,18 +54,17 @@ const FALLBACK = { title: 'Gauchito 🧉', body: '¿Cómo vienen los hábitos de
 function today(s, now) {
   const name = s.name || 'Gauchito'
   const you = (s.playerName || '').trim()
-  const a = s.adventure || {}
   const completions = s.completions || {}
   const doneIds = completions[dayKey(now)] || []
+  const work = s.work || {}
   return {
     name,
     you,
     toYou: you ? `, ${you}` : '', // "¡Vas 1/3, Nacho!"
     hey: you ? `${you}, ` : '', // "Nacho, solo falta…"
-    a,
-    back: a.status === 'returned' || (a.status === 'running' && a.returnAt && now.getTime() >= a.returnAt),
-    where: a.episode ? ` de “${a.episode}”` : '',
-    gift: s.rewardItem ? ` y un regalo para el rancho: ${s.rewardItem}` : '',
+    work,
+    job: work.job || 'la próxima obra',
+    finished: work.status === 'done' || (work.status === 'working' && work.doneAt && now.getTime() >= work.doneAt),
     completions,
     done: s.habits.filter((h) => doneIds.includes(h.id)),
     missing: s.habits.filter((h) => !doneIds.includes(h.id)),
@@ -87,18 +87,19 @@ function greet(kind, s, now = new Date()) {
 
 function composeReminder(s, now = new Date()) {
   if (!s || !Array.isArray(s.habits)) return FALLBACK
-  const { name, toYou, hey, a, back, where, gift, completions, done, missing } = today(s, now)
+  const { name, toYou, hey, work, job, finished, completions, done, missing } = today(s, now)
   const title = `${name} 🧉`
 
-  // Where Gauchito is comes first: it's the most interesting news.
-  if (back) {
-    return { title: `¡${name} volvió!`, body: cap(`${hey}volvió${where} con una historia para contarte${gift}.`) }
+  // What Paucho is up to comes first: it's the most interesting news.
+  if (finished) {
+    return { title: `¡${name} terminó ${job}!`, body: cap(`${hey}entrá a ver cómo quedó 🔨✨`) }
   }
-  if (a.status === 'running') {
-    return { title, body: `${name} anda por las pampas${a.episode ? ` (“${a.episode}”)` : ''}. Vuelve a las ${hhmm(a.returnAt)}.` }
+  if (work.status === 'ready') {
+    return { title: `¡${name} está listo!`, body: `Juntó toda la energía${toYou}. Entrá a mandarlo a construir ${job} 🔨` }
   }
-  if (a.status === 'ready') {
-    return { title: `¡${name} está listo!`, body: `Juntó toda la energía${toYou}. Entrá a mandarlo de aventura 🐴` }
+  if (work.status === 'working') {
+    const extra = missing.length ? ` Mientras, ${label(missing[0])} te da herraduras para la casita.` : ''
+    return { title, body: `${name} está construyendo ${job}. Termina a las ${hhmm(work.doneAt)}.${extra}` }
   }
 
   if (s.habits.length > 0 && missing.length === 0) {
@@ -107,7 +108,7 @@ function composeReminder(s, now = new Date()) {
       body: pick(
         [
           `Cumpliste todo. ${name} toma unos mates en el rancho, orgulloso de vos.`,
-          `Hoy no faltó nada. ${name} ya está pensando en la aventura de mañana.`,
+          `Hoy no faltó nada. ${name} ya está pensando en ${job}.`,
           `${list(done)}: todo hecho. ¡Qué día!`,
         ],
         now,
@@ -129,27 +130,30 @@ function composeReminder(s, now = new Date()) {
         [
           `${hey}${name} ya ensilló el caballo. Hoy te esperan ${list(missing)}.`,
           `¿Arrancamos${toYou}? Con ${label(missing[0])} ${name} empieza a juntar energía.`,
-          `El perro y ${name} te esperan en el rancho${toYou}. Hoy toca ${list(missing)}.`,
+          `${name} te espera en el rancho${toYou}. Hoy toca ${list(missing)}.`,
         ],
         now,
       ),
     }
   }
 
-  // Three habits fill the bar (s.toGo); older snapshots don't say, so count what's missing.
+  // Today's bar is already full: what's left gives herraduras for the casita.
+  if (s.resting) {
+    return { title, body: `¡Vas ${done.length}/${s.habits.length}${toYou}! Cada hábito que sumes ahora son herraduras para la casita de ${name}.` }
+  }
   const toGo = typeof s.toGo === 'number' ? s.toGo : missing.length
   if (toGo === 1) {
     return {
       title,
       body: pick(
-        [cap(`${hey}con un hábito más ${name} sale de aventura. ¿${label(missing[0])}?`), `¡Casi${toYou}! Te falta uno para que ${name} salga de aventura.`],
+        [cap(`${hey}con un hábito más ${name} arranca ${job}. ¿${label(missing[0])}?`), `¡Casi${toYou}! Te falta uno para que ${name} se ponga a construir.`],
         now,
       ),
     }
   }
   return {
     title,
-    body: `¡Vas ${done.length}/${s.habits.length}${toYou}! Ya hiciste ${list(done)}. Con ${toGo} más ${name} sale de aventura.`,
+    body: `¡Vas ${done.length}/${s.habits.length}${toYou}! Ya hiciste ${list(done)}. Con ${toGo} más ${name} arranca ${job}.`,
   }
 }
 function compose(kind, s, now = new Date()) {
@@ -165,7 +169,7 @@ async function showReminder(kind = 'reminder', fallback = {}) {
     icon: 'icon-192.png',
     badge: 'icon-192.png',
     // One tag per kind, so a new one never silently replaces an earlier one.
-    tag: kind === 'reminder' ? 'guachito-daily' : `guachito-${kind}`,
+    tag: kind === 'reminder' ? 'gauchito2-daily' : `gauchito2-${kind}`,
   })
 }
 

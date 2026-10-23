@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Button } from '../components/ui'
-import { isIOS, isStandalone } from '../game/push'
+import { enableReminders, isIOS, isStandalone, NOTIFICATIONS, pushSupported, testNotification } from '../game/push'
 import { setSoundSettings, sfx, useSoundSettings } from '../game/sound'
 import { actions, useGame } from '../game/store'
 
@@ -59,13 +59,32 @@ function SoundBlock() {
 }
 
 export function Settings({ onClose, onTestMenu }: { onClose: () => void; onTestMenu: () => void }) {
+  const subscription = useGame((s) => s.pushSubscription)
   const savedName = useGame((s) => s.name)
   const savedPlayer = useGame((s) => s.playerName)
   const [companion, setCompanion] = useState(savedName)
   const [player, setPlayer] = useState(savedPlayer)
   const [msg, setMsg] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
   const file = useRef<HTMLInputElement>(null)
   const needsInstall = isIOS() && !isStandalone()
+
+  const turnOn = async () => {
+    setMsg(null)
+    const r = await enableReminders()
+    if (r.ok) actions.setPushSubscription(r.subscription)
+    else setMsg(r.reason)
+  }
+
+  const copy = async () => {
+    if (!subscription) return
+    try {
+      await navigator.clipboard.writeText(subscription)
+      setCopied(true)
+    } catch {
+      setMsg('No pude copiar. Mantené apretado el código para copiarlo.')
+    }
+  }
 
   const exportBackup = () => {
     const blob = new Blob([actions.exportData()], { type: 'application/json' })
@@ -123,7 +142,42 @@ export function Settings({ onClose, onTestMenu }: { onClose: () => void; onTestM
 
         <section className="settings__block">
           <h3>Notificaciones</h3>
-          <p>Esta versión de prueba todavía no manda notificaciones: siguen llegando desde la app de siempre.</p>
+          {!pushSupported() && <p>Este navegador no admite notificaciones.</p>}
+          {pushSupported() && !subscription && (
+            <>
+              <p>
+                Te escribo tres veces por día: buen día a las 9, un recordatorio a las 16 según lo que tengas hecho y lo que te falte, y
+                buenas noches a las 21.
+              </p>
+              <Button onClick={turnOn} disabled={needsInstall}>
+                Activar notificaciones
+              </Button>
+            </>
+          )}
+          {subscription && (
+            <>
+              <p>✅ Activadas en este teléfono: buen día a las 9, un recordatorio a las 16 y buenas noches a las 21.</p>
+              <p>Ver cómo quedan hoy:</p>
+              <div className="settings__row">
+                {NOTIFICATIONS.map((n) => (
+                  <Button key={n.kind} variant="light" onClick={() => testNotification(n.kind)}>
+                    {n.emoji} {n.time}
+                  </Button>
+                ))}
+              </div>
+              <details className="settings__details">
+                <summary>Código del teléfono</summary>
+                <p>
+                  Para que te lleguen, este código tiene que estar en GitHub (el secreto <code>PUSH_SUBSCRIPTION</code>). Copialo y en la Mac
+                  corré el comando que te pasó Claude.
+                </p>
+                <textarea className="settings__code" readOnly value={subscription} rows={3} onFocus={(e) => e.target.select()} />
+                <Button variant="light" onClick={copy}>
+                  {copied ? '¡Copiado!' : 'Copiar código'}
+                </Button>
+              </details>
+            </>
+          )}
         </section>
 
         <section className="settings__block">
