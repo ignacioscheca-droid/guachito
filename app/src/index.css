@@ -4305,6 +4305,8 @@ img.apiece[style*='bottom'] {
   justify-content: space-between;
   align-items: center;
 }
+/* the progress bar, after Finch's: a cream track with a wooden rim, the fill inside it with
+   a gloss on top, a dark number on the track, the obra as a sticker at its end */
 .pbar {
   position: absolute;
   z-index: 12;
@@ -4318,46 +4320,123 @@ img.apiece[style*='bottom'] {
 .pbar__track {
   position: absolute;
   left: 22px;
-  right: 34px;
-  top: 14px;
-  height: 34px;
+  right: 40px;
+  top: 12px;
+  height: 38px;
+  padding: 4px;
+  box-sizing: border-box;
   border-radius: 999px;
-  background: rgba(91, 58, 36, 0.55);
-  border: 3px solid #fff8ec;
-  box-shadow: 0 4px 10px rgba(60, 35, 15, 0.25);
-  overflow: hidden;
+  background: linear-gradient(#fffdf7, #f3e9d6);
+  box-shadow:
+    0 0 0 3px #8a5a36,
+    0 4px 0 3px #6e452a,
+    0 8px 14px rgba(40, 24, 10, 0.32),
+    inset 0 3px 4px rgba(120, 80, 40, 0.18);
 }
-.pbar__track i {
-  position: absolute;
-  inset: 0 auto 0 0;
-  background: linear-gradient(180deg, #ffbe62, #f28c38);
-  transition: width 0.4s;
-}
-.pbar__track span {
+.pbar__fill {
   position: relative;
   display: block;
-  text-align: center;
-  line-height: 28px;
+  height: 100%;
+  border-radius: 999px;
+  overflow: hidden;
+  background: linear-gradient(#ffc45c, #f59a2c 55%, #e8801c);
+  box-shadow:
+    inset 0 -3px 0 rgba(160, 70, 10, 0.35),
+    0 0 0 1px rgba(200, 100, 20, 0.35);
+  /* grows in one go with a small bounce at the end */
+  transition: width 0.7s cubic-bezier(0.22, 1.25, 0.36, 1);
+}
+/* never quite empty: a bit shows at 0, so it reads as something to fill */
+.pbar--charging .pbar__fill {
+  min-width: 26px;
+}
+.pbar__fill::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 4px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+}
+.pbar__shine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -40px;
+  width: 40px;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+  animation: pbar-shine 0.75s ease-out 0.25s both;
+}
+@keyframes pbar-shine {
+  to {
+    left: 100%;
+  }
+}
+.pbar__label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
   font-size: 17px;
   font-weight: 900;
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(60, 35, 15, 0.6);
+  color: #5b3a1c;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+  letter-spacing: 0.02em;
 }
+/* the start: small and quiet, so the obra at the end leads */
 .pbar__start {
   position: absolute;
   left: 0;
-  top: 8px;
-  width: 46px;
-  height: 46px;
+  top: 11px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: #fff8ec;
-  box-shadow: 0 4px 10px rgba(60, 35, 15, 0.25);
-  font-size: 24px;
+  background: #fffaf0;
+  box-shadow:
+    0 0 0 3px #8a5a36,
+    0 4px 8px rgba(40, 24, 10, 0.3);
+  font-size: 20px;
 }
 .pbar__start img {
-  width: 30px;
+  width: 24px;
+}
+.pbar__start--bump {
+  animation: pbar-bump 0.45s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+@keyframes pbar-bump {
+  40% {
+    transform: scale(1.3) rotate(-12deg);
+  }
+}
+.pbar__plus {
+  position: absolute;
+  left: 44px;
+  top: -10px;
+  font-size: 17px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow:
+    0 2px 0 #c46a12,
+    0 0 6px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  animation: pbar-plus 0.95s ease-out both;
+}
+@keyframes pbar-plus {
+  from {
+    opacity: 1;
+    transform: translateY(6px) scale(0.7);
+  }
+  25% {
+    transform: translateY(0) scale(1.1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-22px);
+  }
 }
 .pbar__end {
   position: absolute;
@@ -4368,22 +4447,77 @@ img.apiece[style*='bottom'] {
   width: 62px;
   height: 62px;
   border-radius: 50%;
-  border: 3px solid #f2b33d;
-  background: #fff8ec;
-  box-shadow: 0 4px 10px rgba(60, 35, 15, 0.25);
+  background: #fff;
+  box-shadow:
+    0 0 0 4px #fff,
+    0 0 0 7px #8a5a36,
+    0 6px 10px rgba(40, 24, 10, 0.35);
 }
 .pbar__end .jobthumb img {
   object-fit: cover;
 }
-.pbar--go .pbar__track i {
-  background: linear-gradient(180deg, #f9c955, #efa52b);
+/* full: gold, with sparkles, and the obra at the end beats */
+.pbar--full .pbar__fill {
+  background: linear-gradient(#ffe07a, #f7b733 55%, #eb9a1c);
 }
-.pbar--go {
-  animation: pbar-go 1.4s ease-in-out infinite;
+.pbar--full .pbar__track {
+  animation: pbar-glow 1.6s ease-in-out infinite;
 }
-@keyframes pbar-go {
+@keyframes pbar-glow {
   50% {
-    transform: scale(1.04);
+    filter: drop-shadow(0 0 10px rgba(255, 214, 90, 0.95));
+  }
+}
+.pbar--full .pbar__end {
+  animation: pbar-beat 1.4s ease-in-out infinite;
+}
+@keyframes pbar-beat {
+  50% {
+    transform: scale(1.08);
+  }
+}
+.pbar__sparks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.pbar__sparks i {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #fff6c0;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  filter: drop-shadow(0 0 4px rgba(255, 220, 80, 1));
+  animation: pbar-spark 1.6s ease-in-out infinite;
+}
+.pbar__sparks i:nth-child(1) {
+  left: 22%;
+  top: 4px;
+}
+.pbar__sparks i:nth-child(2) {
+  left: 48%;
+  top: 46px;
+  animation-delay: 0.4s;
+}
+.pbar__sparks i:nth-child(3) {
+  left: 66%;
+  top: 2px;
+  animation-delay: 0.8s;
+}
+.pbar__sparks i:nth-child(4) {
+  left: 84%;
+  top: 44px;
+  animation-delay: 1.2s;
+}
+@keyframes pbar-spark {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
   }
 }
 .home3__chips {

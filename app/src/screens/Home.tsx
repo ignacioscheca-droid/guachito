@@ -37,14 +37,24 @@ type Props = {
 const CARD_STEP = 78
 const CARDS_IN_VIEW = 3.5
 
-/** Moves the shown number towards `value` one unit at a time, like Finch's energy counter. */
-function useCountTo(value: number, msPerStep = 45) {
+/** The shown number glides to `value` (ease-out, `ms`), in step with the bar's width. */
+function useTween(value: number, ms = 700) {
   const [shown, setShown] = useState(value)
+  const from = useRef(value)
   useEffect(() => {
-    if (shown === value) return
-    const t = window.setTimeout(() => setShown((v) => v + Math.sign(value - v)), msPerStep)
-    return () => clearTimeout(t)
-  }, [shown, value, msPerStep])
+    const start = performance.now()
+    const v0 = from.current
+    let raf = 0
+    const step = (now: number) => {
+      const k = Math.min(1, (now - start) / ms)
+      const v = v0 + (value - v0) * (1 - (1 - k) ** 3)
+      from.current = v
+      setShown(v)
+      if (k < 1) raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [value, ms])
   return shown
 }
 
@@ -100,7 +110,7 @@ function ProgressBar({ p, barRef }: { p: Props; barRef: RefObject<HTMLButtonElem
   const s = useGame((g) => g)
   const job = nextJob(s)
   const goal = goalOf(s)
-  const energy = useCountTo(s.energy)
+  const energy = Math.round(useTween(s.energy))
   const pending = p.fullPending
   const { status } = s.work
   // the bar ticks up as it fills: a rising blip and a haptic every other step
@@ -112,23 +122,38 @@ function ProgressBar({ p, barRef }: { p: Props; barRef: RefObject<HTMLButtonElem
     }
     last.current = energy
   }, [energy, goal])
+  // a gain landing: the start icon jumps, a "+N" pops up and a shine runs along the fill
+  const [gain, setGain] = useState<{ n: number; key: number } | null>(null)
+  const lastEnergy = useRef(s.energy)
+  useEffect(() => {
+    const n = s.energy - lastEnergy.current
+    if (n > 0) setGain((g) => ({ n, key: (g?.key ?? 0) + 1 }))
+    lastEnergy.current = s.energy
+  }, [s.energy])
+
   let fill = 0
   let label = ''
   let start: ReactNode = <img src={art('ui_energia')} alt="" />
   let action: (() => void) | undefined
   let go = false
+  let full = false
+  let charging = false
   if (!job) {
     fill = 1
     label = '¡Todo listo!'
     start = '🎉'
   } else if (pending) {
-    fill = energy / goal
-    label = `${energy}/${goal}`
+    // the fill follows the store (the width glides by itself); the number glides with it
+    fill = s.energy / goal
+    label = `${energy} / ${goal}`
+    full = energy >= goal
+    charging = true
   } else if (status === 'ready') {
     fill = 1
     label = job.kind === 'trip' ? '¡A viajar!' : '¡A construir!'
     action = p.onStartJob
     go = true
+    full = true
   } else if (status === 'working') {
     fill = 1 - p.remainingMs / WORK_MS
     label = formatClock(p.remainingMs)
@@ -139,20 +164,39 @@ function ProgressBar({ p, barRef }: { p: Props; barRef: RefObject<HTMLButtonElem
     label = job.kind === 'trip' ? '¡Volvió!' : '¡Terminó!'
     action = p.onReveal
     go = true
+    full = true
   } else if (restingToday(s)) {
     label = 'Sigue mañana'
     start = '🌙'
   } else {
-    fill = energy / goal
-    label = `${energy}/${goal}`
+    fill = s.energy / goal
+    label = `${energy} / ${goal}`
+    charging = true
   }
   return (
-    <button ref={barRef} className={`pbar${go ? ' pbar--go' : ''}`} onClick={action} disabled={!action}>
+    <button ref={barRef} className={`pbar${go ? ' pbar--go' : ''}${full ? ' pbar--full' : ''}${charging ? ' pbar--charging' : ''}`} onClick={action} disabled={!action}>
       <span className="pbar__track">
-        <i style={{ width: `${Math.max(0, Math.min(1, fill)) * 100}%` }} />
-        <span>{label}</span>
+        <i className="pbar__fill" style={{ width: `${Math.max(0, Math.min(1, fill)) * 100}%` }}>
+          {gain && <b key={gain.key} className="pbar__shine" />}
+        </i>
+        <span className="pbar__label">{label}</span>
       </span>
-      <span className="pbar__start">{start}</span>
+      <span key={gain?.key ?? 0} className={`pbar__start${gain ? ' pbar__start--bump' : ''}`}>
+        {start}
+      </span>
+      {gain && charging && (
+        <span key={`plus${gain.key}`} className="pbar__plus">
+          +{gain.n}
+        </span>
+      )}
+      {full && (
+        <span className="pbar__sparks" aria-hidden>
+          <i />
+          <i />
+          <i />
+          <i />
+        </span>
+      )}
       <span className="pbar__end">{job ? <JobThumb job={job} /> : <span className="jobthumb jobthumb--emoji">🏡</span>}</span>
     </button>
   )
@@ -207,7 +251,7 @@ export function Home(p: Props) {
     setLeaving({ id, folding: false })
     window.setTimeout(() => setLeaving({ id, folding: true }), 380)
     // its energy (or herraduras) flies off and counts when it lands (fly: 650 ms)
-    fly(card.querySelector('.hcard__reward') ?? card, charging ? bar.current : coinsRef.current, charging ? 'ui_energia' : 'ui_herradura')
+    fly(card.querySelector('.hcard__reward') ?? card, charging ? (bar.current?.querySelector('.pbar__start') ?? bar.current) : coinsRef.current, charging ? 'ui_energia' : 'ui_herradura')
     if (!charging) sfx('coin', 0, 620)
     window.setTimeout(() => {
       setLeaving(null)
