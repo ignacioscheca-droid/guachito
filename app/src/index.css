@@ -4306,22 +4306,38 @@ img.apiece[style*='bottom'] {
 .atile--now {
   box-shadow: 0 0 0 4px var(--gold), var(--shadow);
 }
+/* still to come: grey like Royal Match's locked rooms, with its name and a padlock over it */
 .atile--locked {
-  opacity: 0.8;
+  background: #c9ccd3;
 }
-.atile__blur {
+.atile--locked header small {
+  color: #6a7180;
+}
+.atile--locked header strong {
+  color: #4a5160;
+}
+.atile__empty {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: blur(8px) grayscale(0.5) brightness(1.1);
-  transform: scale(1.12);
+  filter: grayscale(1) brightness(0.92) contrast(0.85) sepia(0.12) hue-rotate(190deg);
+}
+.atile--locked .atile__img::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(70, 82, 104, 0.12), rgba(70, 82, 104, 0.32));
+  box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.35);
+  border-radius: inherit;
 }
 .atile__lock {
   position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-size: 40px;
+  z-index: 2;
+  left: 50%;
+  top: 56%;
+  width: 46%;
+  translate: -50% -50%;
+  filter: grayscale(0.85) brightness(1.08) drop-shadow(0 8px 10px rgba(30, 36, 50, 0.45));
 }
 .atile__foot {
   position: absolute;
@@ -4779,9 +4795,37 @@ img.apiece[style*='bottom'] {
   box-shadow: 0 3px 0 #3f7a33;
   color: #fff;
 }
-.hcard--leaving {
+/* ticked: the card pops with its tick lit, then folds away so the next ones slide up */
+.hcard--ticked {
+  animation: hcard-tick 0.38s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.hcard--ticked .hcard__tick {
+  animation: hcard-tickpop 0.38s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+@keyframes hcard-tick {
+  40% {
+    transform: scale(1.03);
+  }
+}
+@keyframes hcard-tickpop {
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.25);
+  }
+}
+.hcard--folding {
+  height: 0;
+  margin-bottom: 0;
   opacity: 0;
-  transform: translateX(24px) scale(0.96);
+  transform: translateX(30px) scale(0.96);
+  transition:
+    height 0.26s ease-in,
+    margin 0.26s ease-in,
+    opacity 0.2s,
+    transform 0.26s ease-in;
+  overflow: hidden;
 }
 .hcard--all {
   justify-content: flex-start;

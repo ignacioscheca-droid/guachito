@@ -91,6 +91,12 @@ function composeReminder(s, now = new Date()) {
   const title = `${name} 🧉`
 
   // What Paucho is up to comes first: it's the most interesting news.
+  // the trip to the south is a job too, but he travels instead of building
+  if (work.trip) {
+    if (finished) return { title: `¡${name} volvió del sur!`, body: cap(`${hey}entrá, que tiene una historia para contarte 🧉`) }
+    if (work.status === 'ready') return { title: `¡${name} está listo!`, body: `Juntó toda la energía${toYou}. Entrá a mandarlo de viaje al sur 🐴` }
+    if (work.status === 'working') return { title, body: `${name} anda de viaje por el sur. Vuelve a las ${hhmm(work.doneAt)}.` }
+  }
   if (finished) {
     return { title: `¡${name} terminó ${job}!`, body: cap(`${hey}entrá a ver cómo quedó 🔨✨`) }
   }

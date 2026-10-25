@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { HabitToast } from './components/DayLoop'
 import { PauchoFace, preloadPaucho } from './components/Paucho'
 import { BottomNav, Button } from './components/ui'
-import { actions, getState, goalOf, nextJob, useGame, workRemainingMs, type TabId } from './game/store'
+import { actions, canBuySomething, getState, goalOf, nextJob, useGame, workRemainingMs, type TabId } from './game/store'
 import { FIRST_BED } from './game/room'
 import { feel, sfx } from './game/sound'
 import { AreasTab } from './screens/AreasTab'
@@ -60,6 +60,7 @@ export default function App() {
   const [arriving, setArriving] = useState(false)
   const [lockedTap, setLockedTap] = useState(false)
   const [askPush, setAskPush] = useState(false)
+  const [fullPending, setFullPending] = useState(false)
   const remaining = useWorkClock()
   const testMode = new URLSearchParams(location.search).has('test')
 
@@ -104,21 +105,22 @@ export default function App() {
 
   // Like Finch: a toast for each habit, and when the bar fills, the full-energy sequence.
   const completeHabit = (id: string) => {
-    const before = getState().energy
     const r = actions.completeHabit(id)
-    feel('check', 'success')
     setCelebrateKey((k) => k + 1)
     setToast({
       key: Date.now(),
-      title: PRAISE[Math.floor(Math.random() * PRAISE.length)],
-      sub: r.firstTime ? '¡Primera vez que lo completás!' : r.coins > 0 ? `+${r.coins} herraduras` : `+${r.energy} de energía`,
+      title: r.full ? '¡Energía al máximo!' : PRAISE[Math.floor(Math.random() * PRAISE.length)],
+      sub: r.firstTime ? '¡Primera vez que lo completás!' : r.full ? `${s.name} ya puede arrancar` : r.coins > 0 ? `+${r.coins} herraduras` : `+${r.energy} de energía`,
     })
     if (r.full) {
+      // Home keeps counting the bar up to the top, then the sequence takes over from there
+      setFullPending(true)
       window.setTimeout(() => {
         setToast(null)
-        setFill({ from: before, start: 'max' })
+        setFullPending(false)
+        setFill({ from: goalOf(getState()), start: 'max' })
         setView('full')
-      }, 900)
+      }, 1300)
     }
   }
 
@@ -168,6 +170,7 @@ export default function App() {
               celebrateKey={celebrateKey}
               remainingMs={remaining}
               onCompleteHabit={completeHabit}
+              fullPending={fullPending}
               onStartJob={startJob}
               onReveal={reveal}
               onWatchTrip={() => setView('trip')}
@@ -192,7 +195,7 @@ export default function App() {
           face={<PauchoFace outfit={s.outfit} className="nav5__face" />}
           badges={{
             inicio: tab !== 'inicio' && (status === 'ready' || status === 'done'),
-            casita: s.unlocked.includes('casita') && !s.room.includes(FIRST_BED),
+            casita: tab !== 'casita' && (s.unlocked.includes('casita') && !s.room.includes(FIRST_BED) || canBuySomething(s)),
           }}
           onTab={setTab}
           onLocked={() => {

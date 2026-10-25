@@ -12,7 +12,7 @@ import {
   TRIP_JOB,
   WORK_MS,
 } from './journey'
-import { friendDays, LEGACY_ROOM, priceOf, roomOption, type RoomOption } from './room'
+import { friendDays, LEGACY_ROOM, priceOf, ROOM_SLOTS, roomOption, type RoomOption } from './room'
 import { CLOTHES, clothesById, type Slot } from './shop'
 
 /**
@@ -190,6 +190,18 @@ export const nextJob = (s: GameState) => JOURNEY[s.jobsDone] ?? null
 /** Clothes from the south are sold once Paucho is back from the trip. */
 export const southOpen = (s: GameState) => s.jobsDone > TRIP_JOB
 
+/**
+ * Something in the casita's shop can be had now: a room option or clothes you don't own,
+ * not locked, that the herraduras cover (or that is given, once its trip or friendship
+ * came). It puts the red dot on the Casita tab.
+ */
+export function canBuySomething(s: GameState) {
+  if (!s.unlocked.includes('casita')) return false
+  const room = ROOM_SLOTS.flatMap((sl) => sl.options).some((o) => !s.room.includes(o.id) && !roomLock(s, o) && priceOf(o) <= s.coins)
+  const clothes = CLOTHES.some((c) => !s.clothes.includes(c.id) && !(c.south && !southOpen(s)) && c.price <= s.coins)
+  return room || clothes
+}
+
 /** Why a room option can't be had yet, or null when it can (bought or, if given, received). */
 export function roomLock(s: GameState, o: RoomOption): 'premium' | 'south' | 'friend' | 'dog' | null {
   if (o.slot === 'plato' && !s.dog.arrived) return 'dog'
@@ -270,8 +282,10 @@ export const actions = {
       work: full ? { status: 'ready', startedAt: null } : state.work,
     }
     if (done.length === 0 && daysTogether(next.completions) >= PAUCHO_TAB_DAYS) next = unlock(next, 'paucho')
+    // (read before set(): afterwards `state` is already the new one)
+    const gained = energy - state.energy
     set(next)
-    return { energy: energy - state.energy, coins, full, firstTime }
+    return { energy: gained, coins, full, firstTime }
   },
 
   /** Unticks a habit; its energy comes back out unless the job already started. */

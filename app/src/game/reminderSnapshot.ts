@@ -28,7 +28,7 @@ export type ReminderSnapshot = {
   /** Completed habit ids per local day (last 14 days). */
   completions: Record<string, string[]>
   /** The job under way or next, as said in a sentence ("la casa"), and when it ends. */
-  work: { status: GameState['work']['status']; doneAt: number | null; job: string | null }
+  work: { status: GameState['work']['status']; doneAt: number | null; job: string | null; trip: boolean }
   /** Today's bar is already full (one a day): habits now give herraduras. */
   resting: boolean
   /** Habits still needed today for the day's job (0 once the bar is full). */
@@ -47,7 +47,7 @@ function build(s: GameState): ReminderSnapshot {
       return { id, name: h.name, emoji: h.emoji ?? CATALOG_EMOJI[id] ?? '⭐' }
     }),
     completions: Object.fromEntries(days.map((d) => [d, s.completions[d]])),
-    work: { status: s.work.status, doneAt: s.work.startedAt != null ? s.work.startedAt + WORK_MS : null, job: job ? jobInfo(job).the : null },
+    work: { status: s.work.status, doneAt: s.work.startedAt != null ? s.work.startedAt + WORK_MS : null, job: job ? jobInfo(job).the : null, trip: job?.kind === 'trip' },
     resting: restingToday(s),
     toGo: s.work.status === 'charging' ? Math.ceil((goalOf(s) - s.energy) / ENERGY_PER_HABIT) : 0,
   }
