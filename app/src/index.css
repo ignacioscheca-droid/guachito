@@ -2565,195 +2565,784 @@ img {
   width: 96px;
   flex: none;
 }
-/* ---- "1 día de racha", timed like Finch's (seconds from the screen showing up) ----
-   0     grey screen, a dim "0" fades in
-   0.62  "0" -> "1", the label turns white; 0.65 the grey fades to blue
-   1.03  Gauchito pops up and rises with the number (StreakDay animates the group)
-   1.57  sunburst · 1.65 week · 1.7 today fills · 2.2 sparkles · 2.3 text · 2.5 button */
-.d1--streak .d1-week,
-.d1--streak .d1-text,
-.d1--streak .d1-foot {
-  position: relative;
-  z-index: 1;
+/* ---- "1 día de racha", Duolingo-style (ms after the swipe) ----
+   0     the dark flame collapses into its heart · 180 a streak of light shoots up
+   520   burst of light and sparks · 650 the light floods the screen, the night is gone
+   1000  a grey 0 · 1080 petals fly in · 1500 the flame lands · 1560 0 rolls to 1, embers
+   2200  puff of smoke, Gauchito pops out beside the flame · 2450 his bubble types out
+   3000  everything rises · 3350 the week · 3800 today fills, 4150 its check
+   4300  he gives a thumbs up · 4450 the button */
+.sk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100dvh;
+  padding: calc(var(--safe-top) + 24px) 22px 0;
+  background: var(--paper);
+  text-align: center;
+  isolation: isolate;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
-.d1-dark {
+.sk-night {
   position: absolute;
   inset: 0;
   z-index: -2;
-  background: #434c56;
-  animation: d1-out 0.28s 0.65s ease-in both;
+  background: radial-gradient(ellipse 90% 60% at 50% 46%, #2c3652, #151b2c 72%);
 }
-.d1-group {
+.sk-night i {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #fff;
+  animation: sk-twinkle 3s ease-in-out infinite;
+}
+.sk-bloom {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 46%, #fffbef 0, #ffe7a8 30%, #f9bf5a 75%);
+}
+.sk--lit .sk-night {
+  animation: sk-fade 0.15s 0.85s ease-in forwards;
+}
+.sk--lit .sk-bloom {
+  animation: sk-bloom 1.1s 0.62s both;
+}
+
+/* the group: bubble, flame + him, number. Waits centred (--drop), rises at 3.0 s */
+.sk-group {
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
+  margin-top: auto;
+  translate: 0 var(--drop, 0px);
 }
-.d1-hero {
+.sk--lit .sk-group {
+  animation: sk-rise 0.65s 3s cubic-bezier(0.3, 0.9, 0.3, 1) both;
+}
+.sk-bubble {
   position: relative;
-  margin-top: 26px;
-  visibility: hidden;
-  animation: d1-appear 0s 1.03s forwards;
+  max-width: 300px;
+  margin: 0 0 18px;
+  padding: 12px 16px;
+  border: 2px solid #eadfcb;
+  border-radius: 16px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: left;
+  opacity: 0;
+  transform-origin: 62% 100%;
 }
-.d1-guy--big {
-  position: relative;
-  width: 190px;
-  aspect-ratio: 906 / 990;
-  animation:
-    d1-leap 3.4s 1.03s both,
-    d1-flap 0.2s 1.03s 4 ease-in-out,
-    d1-breathe 2.6s 4.5s ease-in-out infinite;
-  transform-origin: 50% 100%;
-}
-/* his shadow stays on the ground and shrinks while he is up */
-.d1-hero::after {
+.sk-bubble::after {
   content: '';
   position: absolute;
-  left: 50%;
-  bottom: -4px;
-  width: 120px;
-  height: 18px;
-  translate: -50% 0;
-  border-radius: 50%;
-  background: rgba(10, 50, 100, 0.22);
-  z-index: -1;
-  animation: d1-shadow 3.4s 1.03s both;
+  left: 62%;
+  bottom: -9px;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border: solid #eadfcb;
+  border-width: 0 2px 2px 0;
+  rotate: 45deg;
 }
-.d1-burst {
+.sk-bubble__rest {
+  visibility: hidden;
+}
+.sk--lit .sk-bubble {
+  animation: sk-bubble 0.4s 2.45s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+
+.sk-hero {
+  position: relative;
+  width: 300px;
+  height: 190px;
+}
+.sk-slot {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 150px;
+  height: 170px;
+  margin-left: -75px;
+}
+.sk--lit .sk-slot {
+  animation: sk-aside 0.5s 2.2s cubic-bezier(0.3, 0.9, 0.3, 1) both;
+}
+
+/* before: the dark flame, its heart glowing; pulling it up lifts it and stokes the glow */
+.sk-ember {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 860px;
-  aspect-ratio: 1;
-  translate: -50% -50%;
-  z-index: -1;
-  border-radius: 50%;
-  background:
-    radial-gradient(closest-side, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 34%),
-    repeating-conic-gradient(rgba(255, 255, 255, 0.09) 0deg 16deg, rgba(255, 255, 255, 0) 16deg 36deg);
-  -webkit-mask-image: radial-gradient(closest-side, #000 25%, rgba(0, 0, 0, 0.6) 62%, transparent 100%);
-  mask-image: radial-gradient(closest-side, #000 25%, rgba(0, 0, 0, 0.6) 62%, transparent 100%);
-  animation:
-    d1-in 0.35s 1.57s ease-out both,
-    d1-spin 45s linear infinite;
+  width: 116px;
+  height: 140px;
+  translate: -50% calc(-50% - var(--pull, 0) * 70px);
+  transition: translate 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+  animation: sk-bob 2.4s 1.2s ease-in-out infinite;
 }
-.d1-count {
-  animation: d1-in 0.25s ease-out both;
+.sk--held .sk-ember {
+  transition: none;
+  animation: none;
 }
-.d1-big {
-  position: relative;
-  margin: 4px 0 0;
-  font-size: 104px;
-  font-weight: 900;
-  line-height: 1;
-}
-.d1-big__zero {
+.sk-ember svg {
   position: absolute;
   inset: 0;
-  color: #323b42;
-  animation: d1-out 0s 0.62s forwards;
+  fill: #3b4762;
+  filter: drop-shadow(0 0 1px rgba(255, 200, 90, 0.35));
 }
-.d1-big__one {
+.sk-ember__glow {
+  position: absolute;
+  left: 50%;
+  top: 62%;
+  width: 230px;
+  height: 230px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 190, 80, 0.5), rgba(255, 150, 40, 0.12) 55%, transparent);
+  scale: calc(1 + var(--pull, 0) * 0.9);
+  animation: sk-glow 2.4s ease-in-out infinite;
+}
+.sk-ember__heart {
+  position: absolute;
+  left: 50%;
+  top: 66%;
+  width: 34px;
+  height: 34px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 22%, #ffe27a 45%, #ffad2e 80%);
+  box-shadow:
+    0 0 14px 4px rgba(255, 196, 70, 0.7),
+    0 0 0 6px rgba(255, 186, 60, 0.18);
+  scale: calc(1 + var(--pull, 0) * 0.6);
+  animation: sk-heart 1.2s ease-in-out infinite;
+}
+.sk-hint {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 34px);
+  width: 290px;
+  translate: -50% 0;
   color: #fff;
-  text-shadow:
-    3px 0 0 #1f6fb0,
-    -3px 0 0 #1f6fb0,
-    0 3px 0 #1f6fb0,
-    0 -3px 0 #1f6fb0,
-    2px 2px 0 #1f6fb0,
-    -2px 2px 0 #1f6fb0,
-    2px -2px 0 #1f6fb0,
-    -2px -2px 0 #1f6fb0,
-    0 7px 0 rgba(20, 70, 120, 0.3);
-  animation: d1-in 0s 0.62s both;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.3;
+  opacity: calc(1 - var(--pull, 0));
 }
-.d1-big-label {
-  margin: 2px 0 0;
-  font-size: 26px;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  animation: d1-whiten 0s 0.62s both;
-}
-.d1-week {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  margin-top: auto;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: rgba(10, 60, 110, 0.22);
-}
-.d1--streak .d1-week {
-  animation: d1-rise 0.45s 1.65s ease-out both;
-}
-.d1-week__day {
+.sk-hint__arrows {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  height: 26px;
+  margin-bottom: 10px;
+}
+.sk-hint__arrows i {
+  width: 12px;
+  height: 12px;
+  margin-top: -2px;
+  border: solid rgba(255, 255, 255, 0.85);
+  border-width: 3px 0 0 3px;
+  border-radius: 2px;
+  rotate: 45deg;
+  animation: sk-chevron 1.4s ease-in-out infinite;
+}
+.sk-hint__arrows i:last-child {
+  animation-delay: 0.15s;
+}
+.sk--lit .sk-ember {
+  animation: sk-collapse 0.24s cubic-bezier(0.5, 0, 0.9, 0.5) forwards;
+  translate: -50% -50%;
+  transition: none;
+}
+.sk--lit .sk-hint {
+  animation: sk-fade 0.2s forwards;
+}
+
+/* the ignition */
+.sk-streak,
+.sk-flash {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  pointer-events: none;
+  opacity: 0;
+}
+.sk-streak {
+  width: 12px;
+  height: 160px;
+  margin: -100px 0 0 -6px;
+  border-radius: 999px;
+  background: linear-gradient(to top, #ffd56a, #fff 70%);
+  box-shadow: 0 0 18px 6px rgba(255, 210, 110, 0.6);
+}
+.sk--lit .sk-streak {
+  animation: sk-streak 0.38s 0.18s cubic-bezier(0.3, 0.8, 0.4, 1) both;
+}
+.sk-flash {
+  width: 80px;
+  height: 80px;
+  margin: -60px 0 0 -40px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #fff 30%, #ffe9a3 60%, rgba(255, 210, 120, 0));
+}
+.sk--lit .sk-flash {
+  animation: sk-flash 0.9s 0.5s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+.sk-fx {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  pointer-events: none;
+}
+.sk-spark,
+.sk-petal,
+.sk-bit {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+}
+.sk-spark {
+  width: calc(var(--s) * 1px);
+  height: calc(var(--s) * 1px);
+  margin: calc(var(--s) * -0.5px - 20px) 0 0 calc(var(--s) * -0.5px);
+  fill: #ff9a26;
+}
+.sk-spark--star {
+  fill: #fff;
+  filter: drop-shadow(0 0 3px #ffd56a);
+}
+.sk--lit .sk-spark {
+  animation: sk-spark 0.8s cubic-bezier(0.15, 0.8, 0.3, 1) both;
+}
+.sk-petal {
+  width: 46px;
+  height: 46px;
+  margin: -23px 0 0 -23px;
+  fill: #ff8a1d;
+}
+.sk-petal--gold {
+  fill: #ffc43a;
+}
+.sk--lit .sk-petal {
+  animation: sk-petal 0.44s cubic-bezier(0.55, 0, 0.8, 0.45) both;
+}
+.sk-bit {
+  margin: -4px 0 0 -4px;
+  border-radius: 2px;
+  background: #ff9326;
+  rotate: 45deg;
+}
+.sk--lit .sk-bit {
+  animation: sk-bit 1.3s cubic-bezier(0.2, 0.8, 0.4, 1) both;
+}
+
+/* after: the flame lands with a squash and keeps swaying */
+.sk-flame {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 132px;
+  margin-left: -66px;
+  visibility: hidden;
+  transform-origin: 50% 92%;
+}
+.sk-flame::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 110px;
+  height: 20px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: rgba(255, 196, 90, 0.4);
+  z-index: -1;
+}
+.sk-flame img {
+  display: block;
+  width: 100%;
+  transform-origin: 50% 95%;
+  animation: sk-sway 1.6s ease-in-out infinite;
+}
+.sk--lit .sk-flame {
+  animation: sk-land 0.7s 1.5s both;
+}
+
+/* Gauchito, out of a puff of smoke */
+.sk-guy {
+  position: absolute;
+  left: 142px;
+  bottom: -4px;
+  width: 146px;
+}
+.sk-guy__body {
+  position: relative;
+  aspect-ratio: 906 / 990;
+  visibility: hidden;
+  transform-origin: 50% 100%;
+}
+.sk-guy__pose {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+}
+.sk-guy__pose--thumbs {
+  opacity: 0;
+}
+.sk--lit .sk-guy__body {
+  animation:
+    sk-pop 0.55s 2.32s cubic-bezier(0.3, 1.5, 0.5, 1) both,
+    sk-hop 0.5s 4.3s ease-out,
+    sk-breathe 2.6s 4.8s ease-in-out infinite;
+}
+.sk--lit .sk-guy__pose--cheer {
+  animation: sk-fade 0s 4.36s forwards;
+}
+.sk--lit .sk-guy__pose--thumbs {
+  animation: sk-show 0s 4.36s forwards;
+}
+.sk-puff {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  z-index: 1;
+  pointer-events: none;
+}
+.sk-puff i {
+  position: absolute;
+  translate: calc(-50% + var(--x)) calc(-50% + var(--y));
+  border: 3px solid #cfe7f3;
+  border-radius: 50%;
+  background: #fff;
+  scale: 0;
+}
+.sk--lit .sk-puff i {
+  animation: sk-puff 0.75s cubic-bezier(0.3, 1.3, 0.5, 1) both;
+}
+
+/* the number: a grey 0 that rolls down to an orange 1 */
+.sk-count {
+  opacity: 0;
+}
+.sk--lit .sk-count {
+  animation: sk-show-soft 0.25s 1s both;
+}
+.sk-num {
+  margin: 18px 0 0;
+  height: 1em;
+  overflow: hidden;
+  font-size: 118px;
+  font-weight: 900;
+  line-height: 1;
+}
+.sk-num__roll {
+  display: flex;
+  flex-direction: column;
+  translate: 0 -1em;
+}
+.sk-num__one {
+  color: #ff9619;
+  filter: drop-shadow(0 4px 0 #e26f0c);
+}
+.sk-num__zero {
+  color: #e6dece;
+}
+.sk--lit .sk-num__roll {
+  animation: sk-roll 0.55s 1.56s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+}
+.sk-label {
+  margin: 4px 0 0;
+  color: #ff9619;
+  font-size: 26px;
+  font-weight: 900;
+  opacity: 0;
+}
+.sk--lit .sk-label {
+  animation: sk-up 0.4s 3.1s ease-out both;
+}
+
+/* the week; today fills in orange, shows a flame, then its check */
+.sk-week {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 340px;
+  margin-top: 30px;
+}
+.sk-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
   font-size: 13px;
   font-weight: 800;
+  opacity: 0;
 }
-.d1-week__day i {
+.sk--lit .sk-day {
+  animation: sk-up 0.35s ease-out both;
+}
+.sk-day--today {
+  color: #ff9619;
+}
+.sk-day i {
   position: relative;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
   display: grid;
   place-items: center;
-  background: rgba(10, 60, 110, 0.3);
-  font-style: normal;
-  font-size: 17px;
-  font-weight: 900;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ece3d2;
 }
-.d1-week__day--done i {
-  background: #fff;
-  color: #3a93d2;
-  animation: d1-fill 0.7s 1.7s ease-out both;
-}
-/* tomorrow: a smaller dot with a gap, inside a wavy ring */
-.d1-week__day--next i {
-  background: none;
-}
-.d1-ring {
+.sk-day--today i::before {
+  content: '';
   position: absolute;
-  inset: -7px;
-  width: 44px;
-  height: 44px;
+  inset: 0;
+  border-radius: 50%;
+  background: #ff9619;
+  box-shadow: 0 3px 0 #e26f0c;
+  scale: 0;
+}
+.sk--lit .sk-day--today i::before {
+  animation: sk-pop 0.4s 3.8s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+.sk-day__flame,
+.sk-day__check {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  scale: 0;
+}
+.sk-day__flame {
+  width: 15px;
+  filter: brightness(1.6) saturate(0.4);
+}
+.sk--lit .sk-day__flame {
+  animation: sk-blip 0.55s 3.85s both;
+}
+.sk-day__check {
+  width: 22px;
   fill: none;
-  stroke: rgba(255, 255, 255, 0.55);
-  stroke-width: 2.4;
+  stroke: #fff;
+  stroke-width: 3.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
-.d1-ring__dot {
-  fill: rgba(10, 60, 110, 0.3);
-  stroke: none;
+.sk--lit .sk-day__check {
+  animation: sk-pop 0.4s 4.15s cubic-bezier(0.3, 1.8, 0.5, 1) both;
 }
-.d1-spark {
-  position: absolute;
-  fill: #fff;
-  animation: d1-in 0.25s 2.2s ease-out both;
+
+.sk-foot {
+  width: 100%;
+  margin-top: auto;
+  padding: 22px 0 calc(var(--safe-bottom) + 18px);
+  opacity: 0;
 }
-.d1-spark--big {
-  top: -12px;
-  right: -12px;
-  width: 13px;
-  height: 13px;
+.sk--lit .sk-foot {
+  animation: sk-up 0.4s 4.45s ease-out both;
 }
-.d1-spark--small {
-  bottom: -9px;
-  left: -10px;
-  width: 9px;
-  height: 9px;
-  animation-delay: 2.3s;
+
+@media (prefers-reduced-motion: reduce) {
+  .sk--lit *,
+  .sk--lit *::before,
+  .sk--lit .sk-group {
+    animation-delay: 0s !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
-.d1-week + .d1-text {
-  margin-top: 18px;
+
+@keyframes sk-twinkle {
+  50% {
+    opacity: 0.25;
+  }
 }
-.d1--streak .d1-text {
-  animation: d1-in 0.3s 2.3s ease-out both;
+@keyframes sk-fade {
+  to {
+    opacity: 0;
+  }
 }
-.d1--streak .d1-foot {
-  animation: d1-in 0.7s 2.5s ease-out both;
+@keyframes sk-show {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes sk-show-soft {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes sk-up {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes sk-bloom {
+  0% {
+    opacity: 0;
+  }
+  28% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes sk-rise {
+  from {
+    translate: 0 var(--drop, 0px);
+  }
+  to {
+    translate: 0 0;
+  }
+}
+@keyframes sk-bubble {
+  from {
+    opacity: 0;
+    scale: 0.5;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes sk-aside {
+  to {
+    translate: -46px 0;
+  }
+}
+@keyframes sk-bob {
+  0%,
+  60%,
+  100% {
+    transform: none;
+  }
+  25% {
+    transform: translateY(-12px);
+  }
+  40% {
+    transform: translateY(2px);
+  }
+}
+@keyframes sk-glow {
+  50% {
+    opacity: 0.65;
+  }
+}
+@keyframes sk-heart {
+  50% {
+    transform: scale(1.12);
+  }
+}
+@keyframes sk-chevron {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+@keyframes sk-collapse {
+  to {
+    scale: 0.12;
+    opacity: 0;
+  }
+}
+@keyframes sk-streak {
+  0% {
+    opacity: 1;
+    transform: scale(0.6, 0.05);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1, 1) translateY(-14px);
+  }
+  100% {
+    opacity: 0.9;
+    transform: scale(0.2, 0.05) translateY(-30px);
+  }
+}
+@keyframes sk-flash {
+  0% {
+    opacity: 1;
+    transform: scale(0.2);
+  }
+  45% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(9);
+  }
+}
+@keyframes sk-spark {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(0.2) rotate(0);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--x), var(--y)) scale(1) rotate(var(--spin));
+  }
+}
+@keyframes sk-petal {
+  0% {
+    opacity: 0;
+    transform: translate(var(--x), var(--y)) rotate(var(--rot)) scale(var(--s));
+  }
+  15% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, -10px) rotate(0) scale(0.4);
+  }
+}
+@keyframes sk-bit {
+  0% {
+    opacity: 1;
+    transform: translate(0, -40px) scale(0);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(var(--x), var(--y)) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--x), calc(var(--y) - var(--drift))) scale(0.5);
+  }
+}
+@keyframes sk-land {
+  0% {
+    visibility: hidden;
+    scale: 0.3 0.3;
+  }
+  28% {
+    scale: 1.22 0.72;
+  }
+  52% {
+    scale: 0.86 1.18;
+  }
+  74% {
+    scale: 1.05 0.96;
+  }
+  100% {
+    visibility: visible;
+    scale: 1 1;
+  }
+}
+@keyframes sk-sway {
+  0%,
+  100% {
+    transform: skewX(0) scale(1, 1);
+  }
+  30% {
+    transform: skewX(-2.5deg) scale(1.02, 0.98);
+  }
+  70% {
+    transform: skewX(2deg) scale(0.98, 1.03);
+  }
+}
+@keyframes sk-pop {
+  0% {
+    visibility: hidden;
+    scale: 0.3;
+  }
+  100% {
+    visibility: visible;
+    scale: 1;
+  }
+}
+@keyframes sk-hop {
+  0% {
+    transform: none;
+  }
+  25% {
+    transform: scale(1.06, 0.92);
+  }
+  55% {
+    transform: translateY(-16px) scale(0.96, 1.05);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes sk-breathe {
+  50% {
+    transform: scale(1.01, 1.025);
+  }
+}
+@keyframes sk-puff {
+  0% {
+    scale: 0;
+    opacity: 1;
+  }
+  40% {
+    scale: 1.1;
+    opacity: 1;
+  }
+  70% {
+    scale: 0.95;
+    opacity: 1;
+  }
+  100% {
+    scale: 0.2;
+    opacity: 0;
+  }
+}
+@keyframes sk-roll {
+  from {
+    translate: 0 -1em;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+@keyframes sk-blip {
+  0% {
+    scale: 0;
+  }
+  50% {
+    scale: 1.3;
+  }
+  80% {
+    scale: 1;
+  }
+  100% {
+    scale: 0;
+  }
 }
 
 .d1-title {
@@ -2867,108 +3456,6 @@ img {
     transform: none;
   }
 }
-@keyframes d1-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-@keyframes d1-out {
-  to {
-    opacity: 0;
-  }
-}
-@keyframes d1-appear {
-  to {
-    visibility: visible;
-  }
-}
-@keyframes d1-whiten {
-  from {
-    color: #323b42;
-  }
-  to {
-    color: #fff;
-  }
-}
-@keyframes d1-rise {
-  from {
-    opacity: 0;
-    translate: 0 12px;
-  }
-  to {
-    opacity: 1;
-    translate: 0 0;
-  }
-}
-@keyframes d1-fill {
-  from {
-    background: rgba(255, 255, 255, 0.35);
-  }
-  to {
-    background: #fff;
-  }
-}
-/* up with the number (0.8 s), then a slow float down onto his shadow */
-@keyframes d1-leap {
-  0% {
-    translate: 0 0;
-    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
-  }
-  24% {
-    translate: 0 -40px;
-    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
-  }
-  100% {
-    translate: 0 0;
-  }
-}
-@keyframes d1-shadow {
-  0% {
-    scale: 1;
-    opacity: 1;
-    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
-  }
-  24% {
-    scale: 0.72;
-    opacity: 0.55;
-    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
-  }
-  100% {
-    scale: 1;
-    opacity: 1;
-  }
-}
-/* Finch flaps his wings on the way up; Gauchito wiggles */
-@keyframes d1-flap {
-  0%,
-  100% {
-    rotate: 0deg;
-  }
-  25% {
-    rotate: -3deg;
-  }
-  75% {
-    rotate: 3deg;
-  }
-}
-@keyframes d1-breathe {
-  0%,
-  100% {
-    scale: 1 1;
-  }
-  50% {
-    scale: 1.01 1.025;
-  }
-}
-@keyframes d1-spin {
-  to {
-    rotate: 360deg;
-  }
-}
-
 /* ---------- from the onboarding into Home ---------- */
 
 /* the last onboarding screen's blue, fading away over Home */

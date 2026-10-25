@@ -12,6 +12,7 @@ import { Onboarding } from './screens/Onboarding'
 import { Ranch } from './screens/Ranch'
 import { StoryReward } from './screens/StoryReward'
 import { Settings } from './screens/Settings'
+import { StreakDay } from './screens/DayOne'
 import { TestMenu } from './screens/TestMenu'
 
 type View = 'tabs' | 'ready' | 'run' | 'story'
@@ -63,6 +64,7 @@ export default function App() {
   const [testMenu, setTestMenu] = useState(false)
   const [settings, setSettings] = useState(false)
   const [replayOnboarding, setReplayOnboarding] = useState(false)
+  const [replayStreak, setReplayStreak] = useState(false)
   const [arriving, setArriving] = useState(false)
   const remaining = useAdventureClock()
   const testMode = new URLSearchParams(location.search).has('test')
@@ -140,6 +142,8 @@ export default function App() {
         }}
       />
     )
+  } else if (replayStreak) {
+    content = <StreakDay onNext={() => setReplayStreak(false)} />
   } else if (view === 'ready') {
     content = (
       <EnergyFull
@@ -203,8 +207,8 @@ export default function App() {
           }}
         />
       )}
-      {testMenu && <TestMenu onClose={() => setTestMenu(false)} onOnboarding={() => setReplayOnboarding(true)} />}
-      {testMode && onboarded && !testMenu && !replayOnboarding && view === 'tabs' && (
+      {testMenu && <TestMenu onClose={() => setTestMenu(false)} onOnboarding={() => setReplayOnboarding(true)} onStreak={() => setReplayStreak(true)} />}
+      {testMode && onboarded && !testMenu && !replayOnboarding && !replayStreak && view === 'tabs' && (
         <button className="testfab" onClick={() => setTestMenu(true)} aria-label="Menú de prueba">
           🛠
         </button>

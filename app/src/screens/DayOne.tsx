@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { Button } from '../components/ui'
 import { art } from '../game/content'
 
@@ -42,94 +42,248 @@ export function DayOneCard({ companion, onNext }: { companion: string; onNext: (
   )
 }
 
-/** Tomorrow's wavy ring (Finch's streak screen): a circle with 12 soft waves. */
-const WAVY_RING = (() => {
-  const pts: string[] = []
-  for (let k = 0; k <= 96; k++) {
-    const a = (k / 96) * Math.PI * 2
-    const r = 15 + 1.3 * Math.cos(12 * a)
-    pts.push(`${(20 + r * Math.cos(a)).toFixed(2)},${(20 + r * Math.sin(a)).toFixed(2)}`)
-  }
-  return `M${pts.join('L')}Z`
-})()
+/** Four-point sparkle, in a 24×24 box. */
 const SPARKLE = 'M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z'
+/** The unlit flame waiting in the dark, in a 100×120 box. */
+const EMBER = 'M50 4C60 24 86 40 86 74C86 100 70 117 50 117C30 117 14 100 14 74C14 55 25 42 32 29C37 41 41 47 47 49C45 33 45 19 50 4Z'
+/** One flame petal, centred on 0,0. */
+const PETAL = 'M0-22C11-9 11 9 0 22C-11 9-11-9 0-22Z'
 
-/** When he shows up, and when he and the number reach the top (ms from the screen showing up). */
-const HERO_AT = 1030
-const RISEN_AT = 1850
+/** Seeded scatter, so every viewing throws the same sparks (and React renders stay pure). */
+function scatter<T>(n: number, seed: number, make: (r: () => number, i: number) => T): T[] {
+  let x = seed
+  const r = () => {
+    x = (x * 16807) % 2147483647
+    return (x - 1) / 2147483646
+  }
+  return Array.from({ length: n }, (_, i) => make(r, i))
+}
+const polar = (deg: number, dist: number) => [Math.cos((deg * Math.PI) / 180) * dist, Math.sin((deg * Math.PI) / 180) * dist]
+
+/** The ignition burst: sparkles and embers thrown out of the light. */
+const BURST = scatter(22, 7, (r, i) => {
+  const [x, y] = polar((360 / 22) * i + r() * 14, 70 + r() * 110)
+  return { x, y, star: i % 3 === 0, size: 8 + r() * 12, delay: r() * 90, spin: r() * 360 - 180 }
+})
+/** Petals flying in from all around to build the flame. */
+const PETALS = scatter(7, 3, (r, i) => {
+  const [x, y] = polar((360 / 7) * i + r() * 30 - 90, 150 + r() * 70)
+  return { x, y, rot: r() * 540 - 270, scale: 0.7 + r() * 0.8, gold: i % 3 === 0, delay: r() * 140 }
+})
+/** Little embers that pop off the flame when it lands and hang in the air. */
+const EMBERS = scatter(9, 11, (r, i) => {
+  const [x, y] = polar((360 / 9) * i + r() * 20, 85 + r() * 45)
+  return { x, y: y - 20, size: 6 + r() * 6, delay: r() * 120, drift: 10 + r() * 14 }
+})
+/** The puff of smoke he appears from. */
+const PUFF = [
+  [0, 0, 64],
+  [-38, -26, 46],
+  [36, -30, 50],
+  [-44, 22, 44],
+  [42, 24, 46],
+  [0, -50, 40],
+  [4, 46, 42],
+  [-66, -4, 30],
+  [68, -2, 32],
+]
+
+/** ms after the swipe; the CSS delays in the "sk" block follow the same beats. */
+const TYPE_AT = 2550
+const TYPE_STEP = 24
+const READY_AT = 4500
+const LINE = '¡Prendimos el fogón de tu racha! Volvé cada día para que no se apague.'
 
 /**
- * "1 día de racha", timed like Finch's: a grey "0" alone in the middle, it turns into
- * "1" and the screen turns blue, he pops up and rises with the number to the top while
- * the sunburst, the week, the text and the button come in.
+ * "1 día de racha", Duolingo-style: a dark flame waits in the night until you swipe it
+ * up; it streaks up and bursts into light, petals fly in and build the fogón's flame
+ * while the grey 0 rolls to an orange 1, Gauchito pops out of a puff of smoke beside it
+ * and says his line, then the week comes in and today's day gets its check.
  */
-export function StreakDay({ companion, onNext }: { companion: string; onNext: () => void }) {
+export function StreakDay({ onNext }: { onNext: () => void }) {
   const today = new Date().getDay()
   const screen = useRef<HTMLDivElement>(null)
   const group = useRef<HTMLDivElement>(null)
-  const count = useRef<HTMLDivElement>(null)
+  const slot = useRef<HTMLDivElement>(null)
+  const drag = useRef<{ y: number; pull: number } | null>(null)
+  const [lit, setLit] = useState(false)
+  const [typed, setTyped] = useState(0)
+  const [ready, setReady] = useState(false)
 
+  // Until it's lit, the flame waits in the middle of the screen; when it's lit the group
+  // rises from there to its place (the CSS reads --drop).
   useLayoutEffect(() => {
     const sc = screen.current
     const g = group.current
-    const c = count.current
-    if (!sc || !g || !c) return
-    const mid = sc.getBoundingClientRect().top + sc.clientHeight / 2
-    const centre = (el: Element) => {
-      const r = el.getBoundingClientRect()
-      return r.top + r.height / 2
-    }
-    // First the number alone sits in the middle; when he pops up, the two of them do,
-    // and then they rise together. One timeline from the screen showing up, like the CSS.
-    const alone = `translateY(${mid - centre(c)}px)`
-    const together = `translateY(${mid - centre(g)}px)`
-    const pop = HERO_AT / RISEN_AT
-    const rise = g.animate(
-      [
-        { transform: alone, offset: 0 },
-        { transform: alone, offset: pop },
-        { transform: together, offset: pop + 0.0005, easing: 'cubic-bezier(0.25, 0.8, 0.3, 1)' },
-        { transform: 'none', offset: 1 },
-      ],
-      { duration: RISEN_AT, fill: 'both' },
-    )
-    return () => rise.cancel()
+    const f = slot.current
+    if (!sc || !g || !f) return
+    const s = sc.getBoundingClientRect()
+    const r = f.getBoundingClientRect()
+    g.style.setProperty('--drop', `${s.top + s.height * 0.46 - (r.top + r.height / 2)}px`)
   }, [])
 
+  useEffect(() => {
+    if (!lit) return
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    let tick = 0
+    const start = window.setTimeout(
+      () => {
+        if (calm) return setTyped(LINE.length)
+        tick = window.setInterval(() => setTyped((n) => (n >= LINE.length ? (clearInterval(tick), n) : n + 1)), TYPE_STEP)
+      },
+      calm ? 0 : TYPE_AT,
+    )
+    const done = window.setTimeout(() => setReady(true), calm ? 0 : READY_AT)
+    return () => {
+      clearTimeout(start)
+      clearTimeout(done)
+      clearInterval(tick)
+    }
+  }, [lit])
+
+  const setPull = (pull: number) => screen.current?.style.setProperty('--pull', pull.toFixed(3))
+  const ignite = () => {
+    drag.current = null
+    setPull(0)
+    setLit(true)
+  }
+
   return (
-    <div className="screen d1 d1--streak" ref={screen}>
-      <div className="d1-dark" aria-hidden />
-      <div className="d1-group" ref={group}>
-        <div className="d1-hero">
-          {/* Finch's sunburst: light rays turning slowly behind him */}
-          <div className="d1-burst" aria-hidden />
-          <img className="d1-guy d1-guy--big" src={art('g_celebrate')} alt="" />
+    <div
+      className={`screen sk${lit ? ' sk--lit' : ''}`}
+      ref={screen}
+      onPointerDown={(e) => {
+        if (lit) return
+        drag.current = { y: e.clientY, pull: 0 }
+        screen.current?.classList.add('sk--held')
+      }}
+      onPointerMove={(e) => {
+        const d = drag.current
+        if (!d) return
+        d.pull = Math.max(0, Math.min(1, (d.y - e.clientY) / 140))
+        setPull(d.pull)
+      }}
+      onPointerUp={(e) => {
+        const d = drag.current
+        screen.current?.classList.remove('sk--held')
+        if (!d) return
+        // a swipe up, or a plain tap on the flame itself
+        if (d.pull > 0.4 || (d.pull < 0.03 && (e.target as Element).closest('.sk-ember'))) ignite()
+        else {
+          drag.current = null
+          setPull(0)
+        }
+      }}
+      onPointerCancel={() => {
+        drag.current = null
+        screen.current?.classList.remove('sk--held')
+        setPull(0)
+      }}
+    >
+      {/* the night, with its stars, that the light washes away */}
+      <div className="sk-night" aria-hidden>
+        {scatter(26, 5, (r, i) => (
+          <i key={i} style={{ left: `${r() * 100}%`, top: `${r() * 70}%`, animationDelay: `${r() * -3}s`, scale: `${0.5 + r()}` }} />
+        ))}
+      </div>
+      <div className="sk-bloom" aria-hidden />
+
+      <div className="sk-group" ref={group}>
+        <p className="sk-bubble" aria-live="polite">
+          <span>{LINE.slice(0, typed)}</span>
+          <span className="sk-bubble__rest">{LINE.slice(typed)}</span>
+        </p>
+        <div className="sk-hero">
+          <div className="sk-slot" ref={slot}>
+            {/* before: the dark flame and its glowing heart */}
+            <button className="sk-ember" aria-label="Prender la racha" disabled={lit}>
+              <span className="sk-ember__glow" />
+              <svg viewBox="0 0 100 120">
+                <path d={EMBER} />
+              </svg>
+              <span className="sk-ember__heart" />
+            </button>
+            <p className="sk-hint">
+              <span className="sk-hint__arrows" aria-hidden>
+                <i />
+                <i />
+              </span>
+              Deslizá para arriba para prender tu racha
+            </p>
+
+            {/* the ignition: a streak of light shooting up, then a burst */}
+            <span className="sk-streak" aria-hidden />
+            <span className="sk-flash" aria-hidden />
+            <div className="sk-fx" aria-hidden>
+              {BURST.map((b, i) => (
+                <svg
+                  key={i}
+                  className={`sk-spark${b.star ? ' sk-spark--star' : ''}`}
+                  viewBox="0 0 24 24"
+                  style={{ '--x': `${b.x}px`, '--y': `${b.y}px`, '--s': b.size, '--spin': `${b.spin}deg`, animationDelay: `${520 + b.delay}ms` } as CSSProperties}
+                >
+                  {b.star ? <path d={SPARKLE} /> : <rect x="6" y="6" width="12" height="12" rx="3" />}
+                </svg>
+              ))}
+              {PETALS.map((p, i) => (
+                <svg
+                  key={i}
+                  className={`sk-petal${p.gold ? ' sk-petal--gold' : ''}`}
+                  viewBox="-24 -24 48 48"
+                  style={{ '--x': `${p.x}px`, '--y': `${p.y}px`, '--rot': `${p.rot}deg`, '--s': p.scale, animationDelay: `${1080 + p.delay}ms` } as CSSProperties}
+                >
+                  <path d={PETAL} />
+                </svg>
+              ))}
+              {EMBERS.map((m, i) => (
+                <i
+                  key={i}
+                  className="sk-bit"
+                  style={{ '--x': `${m.x}px`, '--y': `${m.y}px`, '--drift': `${m.drift}px`, width: m.size, height: m.size, animationDelay: `${1560 + m.delay}ms` } as CSSProperties}
+                />
+              ))}
+            </div>
+
+            {/* after: the fogón's flame, built from the petals */}
+            <div className="sk-flame" aria-hidden>
+              <img src={art('item_fogon_flame_1')} alt="" />
+            </div>
+          </div>
+
+          <div className="sk-guy" aria-hidden>
+            <div className="sk-puff">
+              {PUFF.map(([x, y, d], i) => (
+                <i key={i} style={{ '--x': `${x}px`, '--y': `${y}px`, width: d, height: d, animationDelay: `${2200 + i * 25}ms` } as CSSProperties} />
+              ))}
+            </div>
+            <div className="sk-guy__body">
+              <img className="sk-guy__pose sk-guy__pose--cheer" src={art('g_celebrate')} alt="" />
+              <img className="sk-guy__pose sk-guy__pose--thumbs" src={art('g_thumbs')} alt="" />
+            </div>
+          </div>
         </div>
-        <div className="d1-count" ref={count}>
-          <p className="d1-big">
-            <span className="d1-big__zero">0</span>
-            <span className="d1-big__one">1</span>
+
+        <div className="sk-count">
+          <p className="sk-num" aria-label="1">
+            <span className="sk-num__roll">
+              <span className="sk-num__one">1</span>
+              <span className="sk-num__zero">0</span>
+            </span>
           </p>
-          <p className="d1-big-label">Día de racha</p>
+          <p className="sk-label">día de racha</p>
         </div>
       </div>
-      <div className="d1-week" aria-hidden>
+
+      <div className="sk-week" aria-hidden>
         {[0, 1, 2, 3, 4, 5, 6].map((k) => (
-          <div key={k} className={`d1-week__day${k === 0 ? ' d1-week__day--done' : k === 1 ? ' d1-week__day--next' : ''}`}>
+          <div key={k} className={`sk-day${k === 0 ? ' sk-day--today' : ''}`} style={{ animationDelay: `${3350 + k * 45}ms` }}>
             <span>{DAY_INITIALS[(today + k) % 7]}</span>
             <i>
-              {k === 0 && '✓'}
-              {k === 1 && (
+              {k === 0 && (
                 <>
-                  <svg className="d1-ring" viewBox="0 0 40 40">
-                    <circle className="d1-ring__dot" cx="20" cy="20" r="10" />
-                    <path d={WAVY_RING} />
-                  </svg>
-                  <svg className="d1-spark d1-spark--big" viewBox="0 0 24 24">
-                    <path d={SPARKLE} />
-                  </svg>
-                  <svg className="d1-spark d1-spark--small" viewBox="0 0 24 24">
-                    <path d={SPARKLE} />
+                  <img className="sk-day__flame" src={art('item_fogon_flame_3')} alt="" />
+                  <svg className="sk-day__check" viewBox="0 0 24 24">
+                    <path d="M6 12.5l4 4 8-9" />
                   </svg>
                 </>
               )}
@@ -137,9 +291,9 @@ export function StreakDay({ companion, onNext }: { companion: string; onNext: ()
           </div>
         ))}
       </div>
-      <p className="d1-text">¡Muy bien! Entrá todos los días para mantener tu racha de autocuidado con {companion}.</p>
-      <div className="d1-foot">
-        <Button variant="light" onClick={onNext}>
+
+      <div className="sk-foot">
+        <Button variant="gold" onClick={onNext} disabled={!ready} tabIndex={ready ? 0 : -1}>
           ¡Dale!
         </Button>
       </div>
