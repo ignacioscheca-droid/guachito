@@ -3262,264 +3262,6 @@ img {
   opacity: 0.85;
 }
 
-/* the energy-full sequence */
-.ef {
-  display: flex;
-  flex-direction: column;
-  height: 100dvh;
-  background: linear-gradient(180deg, #e9ac68, #dd9a58);
-}
-.ef__top {
-  position: relative;
-  flex: none;
-  overflow: hidden;
-}
-.ef__top .scene {
-  position: absolute;
-  inset: 0;
-}
-.ef__top::after {
-  content: '';
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 60px;
-  background: linear-gradient(180deg, rgba(233, 172, 104, 0), #e9ac68);
-  z-index: 8;
-}
-.ef--leave {
-  background: linear-gradient(180deg, #b9d48a, #a8c777);
-}
-.ef--leave .ef__top::after {
-  background: linear-gradient(180deg, rgba(185, 212, 138, 0), #b9d48a);
-}
-.ef__coins {
-  position: absolute;
-  z-index: 9;
-  top: calc(var(--safe-top) + 14px);
-  right: 14px;
-}
-.ef__ground {
-  position: relative;
-  z-index: 10;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 0 22px calc(var(--safe-bottom) + 18px);
-  color: var(--earth);
-  text-align: center;
-}
-.ef__step {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-.ef__step h2 {
-  margin: 4px 0 0;
-  font-size: 28px;
-  font-weight: 900;
-  color: var(--ink);
-}
-.ef__step h2.ef__small {
-  font-size: 21px;
-}
-.ef__step p {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 800;
-  line-height: 1.35;
-}
-.ef__bar {
-  position: relative;
-  width: 100%;
-  height: 30px;
-  margin-top: 6px;
-  border-radius: 999px;
-  background: rgba(91, 58, 36, 0.18);
-  box-shadow: inset 0 2px 0 rgba(91, 58, 36, 0.15);
-}
-.ef__bar i {
-  position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: inherit;
-  background: linear-gradient(180deg, #ffab52, #f28c38);
-  transition: width 0.14s linear;
-}
-.ef__bar span {
-  position: relative;
-  display: block;
-  font-size: 15px;
-  font-weight: 900;
-  line-height: 30px;
-  color: #fff;
-  text-shadow: 0 1px 0 rgba(120, 60, 10, 0.4);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.ef__food {
-  position: absolute;
-  right: -10px;
-  top: 50%;
-  width: 54px;
-  height: 54px;
-  padding: 6px;
-  border-radius: 50%;
-  background: var(--card);
-  border: 3px solid #f28c38;
-  translate: 0 -50%;
-  animation: ef-pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) both;
-}
-.ef__pill {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 18px 8px 10px;
-  border-radius: 999px;
-  background: rgba(255, 253, 248, 0.6);
-  font-size: 16px;
-  font-weight: 900;
-  color: var(--ink);
-  text-align: left;
-}
-.ef__pill img {
-  width: 34px;
-  height: 34px;
-}
-.ef__pill small {
-  display: block;
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--muted);
-}
-.ef__card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 18px;
-  background: var(--card);
-  box-shadow: var(--shadow);
-  text-align: left;
-}
-.ef__card-icon {
-  flex: none;
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  overflow: hidden;
-  background: var(--sand-soft);
-}
-.ef__card-icon img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 50% 10%;
-}
-.ef__card-icon--ranch {
-  display: grid;
-  place-items: center;
-}
-.ef__card-icon--ranch img {
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
-}
-.ef__card > div {
-  flex: 1;
-}
-.ef__card strong {
-  display: block;
-  font-size: 16px;
-  font-weight: 900;
-  color: var(--ink);
-}
-.ef__card small {
-  display: block;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--muted);
-}
-.ef__progress {
-  position: relative;
-  height: 16px;
-  margin-top: 6px;
-  border-radius: 999px;
-  background: var(--line);
-  overflow: hidden;
-}
-.ef__progress i {
-  position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: inherit;
-  background: var(--gold);
-}
-.ef__progress span {
-  position: relative;
-  display: block;
-  text-align: center;
-  font-size: 11px;
-  font-weight: 900;
-  line-height: 16px;
-  color: var(--ink);
-}
-.ef__track {
-  width: 100%;
-  margin: 6px 0 2px;
-}
-.ef__note {
-  font-size: 14px !important;
-}
-.ef__ready {
-  margin-top: auto !important;
-}
-.ef__foot {
-  width: 100%;
-  margin-top: auto;
-}
-.ef__ready + .ef__foot {
-  margin-top: 6px;
-}
-.ef__foot .btn {
-  background: #fff;
-  color: var(--ink);
-  box-shadow: 0 4px 0 rgba(91, 58, 36, 0.25);
-}
-.ef__in {
-  animation: ef-in 0.45s ease-out both;
-}
-.ef__in--2 {
-  animation-delay: 0.3s;
-}
-.ef__in--3 {
-  animation-delay: 0.6s;
-}
-.ef__in--4 {
-  animation-delay: 0.9s;
-}
-.ef__in--5 {
-  animation-delay: 1.2s;
-}
-.ef__rain {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  overflow: hidden;
-  pointer-events: none;
-}
-.ef__rain i {
-  position: absolute;
-  top: -20px;
-  width: 7px;
-  height: 13px;
-  border-radius: 2px;
-  animation: ef-fall linear infinite;
-}
-.ef__ride .run__riders {
-  animation: ef-ride-in 1.4s cubic-bezier(0.2, 0.7, 0.3, 1) both;
-}
-
 @keyframes toast-in {
   from {
     opacity: 0;
@@ -3536,38 +3278,6 @@ img {
     transform: translateY(20px);
   }
 }
-@keyframes ef-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes ef-pop {
-  from {
-    scale: 0;
-  }
-  to {
-    scale: 1;
-  }
-}
-@keyframes ef-fall {
-  to {
-    transform: translateY(110vh) rotate(540deg);
-  }
-}
-@keyframes ef-ride-in {
-  from {
-    translate: -160% 0;
-  }
-  to {
-    translate: 0 0;
-  }
-}
-
 /* =====================================================================
    Areas build (branch "areas"): Royal Match areas + Finch's day loop
    ===================================================================== */
@@ -3827,20 +3537,6 @@ img.apiece[style*='bottom'] {
   background: var(--sand-soft);
   box-shadow: 0 2px 0 #e2c08a;
   font-size: 17px;
-}
-
-/* ---------- energy full: the area instead of the patio ---------- */
-
-.ef__top--area {
-  height: min(470px, 112vw);
-}
-.ef__top--area .ascene {
-  position: absolute;
-  inset: 0;
-}
-.ef__card .jobthumb {
-  width: 52px;
-  height: 52px;
 }
 
 /* ---------- the morning after: an obra finished ---------- */
@@ -5908,4 +5604,227 @@ img.apiece[style*='bottom'] {
 }
 .toggle--on i {
   transform: translateX(22px);
+}
+
+/* ---------- Paucho talks: in the field (a bubble) and up close (PauchoTalk) ---------- */
+
+.ascene__say {
+  position: absolute;
+  z-index: 90;
+  translate: -50% 0;
+  max-width: 62cqw;
+  padding: 2.4cqw 3.6cqw;
+  border-radius: 5cqw;
+  background: #fffaf2;
+  box-shadow: 0 1cqw 3cqw rgba(60, 35, 15, 0.3);
+  font-size: 4.2cqw;
+  line-height: 1.2;
+  font-weight: 900;
+  color: var(--ink);
+  text-align: center;
+  pointer-events: none;
+  animation: say-in 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+  transform-origin: 50% 100%;
+}
+.ascene__say::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -2.2cqw;
+  margin-left: -2.2cqw;
+  border: 2.2cqw solid transparent;
+  border-top-color: #fffaf2;
+  border-bottom: 0;
+}
+@keyframes say-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+/* the next obra's materials: glowing (and, when it's done, a chip to tap) */
+.amark__glow {
+  position: absolute;
+  z-index: 39;
+  margin: -6% -8%;
+  padding: 6% 8%;
+  box-sizing: content-box;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 250, 215, 0.95), rgba(255, 220, 110, 0.6) 50%, rgba(255, 214, 90, 0.15) 80%, transparent);
+  pointer-events: none;
+  animation: amark-glow 1.8s ease-in-out infinite;
+}
+.amark__glow--next {
+  animation: amark-glow 1.8s ease-in-out 4 both;
+}
+@keyframes amark-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+.amark__hit {
+  position: absolute;
+  z-index: 85;
+  background: none;
+  padding: 0;
+}
+.amark__chip {
+  position: absolute;
+  left: 50%;
+  top: 72%;
+  translate: -50% -50%;
+  padding: 1.6cqw 3.4cqw;
+  border-radius: 999px;
+  background: linear-gradient(#ffd75e, #f2b33d);
+  box-shadow:
+    0 1cqw 0 #c98a1c,
+    0 0 0 1cqw rgba(255, 255, 255, 0.85),
+    0 0 6cqw 2cqw rgba(255, 214, 90, 0.75);
+  font-size: 4.4cqw;
+  font-weight: 900;
+  color: #5b3a12;
+  white-space: nowrap;
+  animation: amark-bob 1.2s ease-in-out infinite;
+}
+@keyframes amark-bob {
+  50% {
+    transform: translateY(-1.6cqw);
+  }
+}
+.amark__hand {
+  position: absolute;
+  right: 6%;
+  bottom: 0;
+  font-size: 9cqw;
+  filter: drop-shadow(0 1cqw 0.6cqw rgba(0, 0, 0, 0.3));
+  animation: amark-hand 1.2s ease-in-out infinite;
+}
+@keyframes amark-hand {
+  50% {
+    transform: translate(-1.5cqw, -1.5cqw) scale(0.92);
+  }
+}
+/* while a finished obra waits, the habit cards step back */
+.home3--waiting .home3__cards,
+.home3--waiting .home3__chips {
+  opacity: 0.45;
+  filter: saturate(0.6);
+  transition: opacity 0.3s;
+}
+.ptalk {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0 calc(var(--safe-bottom) + 28px);
+  background: linear-gradient(rgba(40, 26, 14, 0.12), rgba(40, 26, 14, 0.5) 45%, rgba(40, 26, 14, 0.72));
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: fade 0.3s both;
+}
+.ptalk__guy {
+  width: min(86%, 380px);
+}
+.ptalk__bubble {
+  width: min(calc(100% - 32px), 420px);
+  margin-top: -40px;
+  font-size: 20px;
+  font-weight: 900;
+  text-align: center;
+  animation: say-in 0.4s cubic-bezier(0.3, 1.6, 0.5, 1) 0.15s both;
+}
+.ptalk__rest {
+  visibility: hidden;
+}
+.ptalk__actions {
+  width: min(calc(100% - 48px), 400px);
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+  transition:
+    opacity 0.3s,
+    transform 0.3s;
+}
+.ptalk__actions--on {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+.ptalk__hint {
+  margin-top: 16px;
+  font-size: 15px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.ptalk__hint--on {
+  opacity: 1;
+  animation: hint-pulse 1.6s ease-in-out infinite;
+}
+@keyframes hint-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+/* compact: low on the screen, the scene above stays clear */
+.ptalk--compact {
+  background: linear-gradient(transparent 45%, rgba(40, 26, 14, 0.55) 70%, rgba(40, 26, 14, 0.75));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.ptalk--compact .ptalk__guy {
+  width: min(56%, 250px);
+}
+.ptalk--compact .ptalk__bubble {
+  margin-top: -28px;
+  font-size: 18px;
+}
+/* the area's progress, while a finished obra is shown: one dot per obra */
+.home3__area {
+  position: absolute;
+  z-index: 30;
+  left: 50%;
+  top: calc(var(--safe-top) + 112px);
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #fffaf2;
+  box-shadow: 0 3px 10px rgba(60, 35, 15, 0.22);
+  font-size: 14px;
+  font-weight: 900;
+  animation: say-in 0.4s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+.home3__area i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #e3d6c2;
+}
+.home3__area i.on {
+  background: linear-gradient(#ffd75e, #f2b33d);
+  box-shadow: 0 0 0 2px #fff, 0 0 8px rgba(255, 214, 90, 0.9);
+  animation: dot-pop 0.5s cubic-bezier(0.3, 1.8, 0.5, 1) both;
+}
+@keyframes dot-pop {
+  from {
+    transform: scale(0.2);
+  }
 }

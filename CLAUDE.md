@@ -32,6 +32,9 @@ and only "¡Sí, avisame!" opens the phone's dialog. Its design is the owner's, 
   - The area fills the screen. Above it sit the herraduras, the gear and a progress bar: the day's energy, then the 8-hour countdown, with the obra at its end; it becomes a button when ready or done.
   - Habits are Finch-sized cards (3½ in view, the last cut by the tab bar). "✓ N" and ✏️ chips sit above them. No text floats over the scene.
   - The tab bar is Royal Match's: icons only, and the chosen tab is wider, lit, with its icon raised over its name.
+- **Paucho talks to you (the owner's rule, for everything):** up close, like the onboarding's mate (`PauchoTalk`, with the `mate_b*` close-ups, mouth moving while the line types out), or in a bubble over his head in the field (`AreaScene` `say`). When he is up close, the Paucho in the field steps out.
+  - **The bar fills** (`FullTalk`): Home counts to the top while he says "¡Yujuuu!" in the field. Then he comes up close to thank you, and the day's herraduras fly from his hand to the counter. Next he tells you what he'll build and until when; "¡Dale, Paucho!" sets him off and he says "¡Toc, toc! Te aviso cuando esté". Each line has three variants.
+  - **Back with an obra finished,** all in Home: its materials glow with a "✓ ¡Listo!" chip and Paucho greets you. Tapping the obra (or the bar) builds it in place; a dot fills on the area's progress (●●○), and he shows it to you up close. Then the next obra's materials glow and he invites you to it. Its icon is at the end of the bar. The last obra of an area goes on to `Reveal`'s area celebration.
 - **Área 1:** ChatGPT's art in `arte_build/` (area1_etapa0..3 and area1_assets/), imported by `design/tools/import_area1.py`.
   - **One scene per stage:** each obra not built yet shows as a pile of its materials.
   - **Layers, so things move:** the cloudless sky, three clouds crossing it, the stage (no sky, no trees, fire out), and two tree sprites swaying.

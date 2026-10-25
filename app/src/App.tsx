@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { HabitToast } from './components/DayLoop'
 import { PauchoFace, preloadPaucho } from './components/Paucho'
 import { BottomNav, Button } from './components/ui'
-import { actions, canBuySomething, getState, goalOf, nextJob, useGame, workRemainingMs, type TabId } from './game/store'
+import { actions, canBuySomething, getState, nextJob, useGame, workRemainingMs, type TabId } from './game/store'
 import { FIRST_BED } from './game/room'
 import { feel, sfx } from './game/sound'
 import { AreasTab } from './screens/AreasTab'
 import { AventurasTab } from './screens/AventurasTab'
 import { Casita } from './screens/Casita'
-import { EnergyFull, type FillStep } from './screens/EnergyFull'
+import { FullTalk } from './screens/FullTalk'
 import { Home } from './screens/Home'
 import { Onboarding } from './screens/Onboarding'
 import { PauchoTab } from './screens/PauchoTab'
@@ -20,7 +20,7 @@ import { TripStory } from './screens/TripStory'
 import { DogName, NotifAsk, UnlockWelcome } from './screens/Welcomes'
 import { shouldAskPush } from './game/push'
 
-type View = 'tabs' | 'full' | 'reveal' | 'story' | 'trip'
+type View = 'tabs' | 'reveal' | 'story' | 'trip'
 
 /** Finch's toasts after ticking a habit. */
 const PRAISE = ['¡Sos un genio!', '¡Bien ahí!', '¡Qué crack!', '¡Increíble!', '¡Bravo!', '¡Así se hace!']
@@ -52,7 +52,12 @@ export default function App() {
   const [tab, setTab] = useState<TabId>('inicio')
   const [view, setView] = useState<View>('tabs')
   const [toast, setToast] = useState<{ key: number; title: string; sub: string } | null>(null)
-  const [fill, setFill] = useState<{ from: number; start: FillStep }>({ from: 0, start: 'job' })
+  // Paucho up close when the bar is full: thanks (and the herraduras), then what he'll build
+  const [talk, setTalk] = useState<'thanks' | 'work' | null>(null)
+  // what Paucho says in the field for a moment
+  const [fieldSay, setFieldSay] = useState<string | null>(null)
+  // a finished obra seen from Home that also closed its area: the area's celebration
+  const [revealAt, setRevealAt] = useState<'obra' | 'area'>('obra')
   const [celebrateKey, setCelebrateKey] = useState(0)
   const [testMenu, setTestMenu] = useState(false)
   const [settings, setSettings] = useState(false)
@@ -97,31 +102,42 @@ export default function App() {
     if (s.work.status === 'done' && view === 'trip') setView('story')
   }, [s.work.status, view])
 
-  const startJob = () => {
-    setFill({ from: goalOf(getState()), start: 'job' })
-    setView('full')
+  const startJob = () => setTalk('work')
+  const reveal = () => {
+    setRevealAt('obra')
+    setView(nextJob(getState())?.kind === 'trip' ? 'story' : 'reveal')
   }
-  const reveal = () => setView(nextJob(getState())?.kind === 'trip' ? 'story' : 'reveal')
+  const say = (line: string, ms = 5000) => {
+    setFieldSay(line)
+    window.setTimeout(() => setFieldSay((l) => (l === line ? null : l)), ms)
+  }
+  const talkDone = (started: boolean) => {
+    setTalk(null)
+    setFullPending(false)
+    setTab('inicio')
+    if (!started) return
+    if (nextJob(getState())?.kind !== 'trip') say('¡Toc, toc! Te aviso cuando esté 🔨')
+    // he just set off for eight hours: the moment to offer to let you know
+    if (shouldAskPush(getState())) window.setTimeout(() => setAskPush(true), 5200)
+  }
 
   // Like Finch: a toast for each habit, and when the bar fills, the full-energy sequence.
   const completeHabit = (id: string) => {
     const r = actions.completeHabit(id)
     setCelebrateKey((k) => k + 1)
+    if (r.full) {
+      // Home counts the bar up to the top (the herraduras held back), Paucho cheers in the
+      // field, then he comes up close to thank you and hand them over
+      setFullPending(true)
+      say('¡Yujuuu! ⚡', 1300)
+      window.setTimeout(() => setTalk('thanks'), 1400)
+      return
+    }
     setToast({
       key: Date.now(),
-      title: r.full ? '¡Energía al máximo!' : PRAISE[Math.floor(Math.random() * PRAISE.length)],
-      sub: r.firstTime ? '¡Primera vez que lo completás!' : r.full ? `${s.name} ya puede arrancar` : r.coins > 0 ? `+${r.coins} herraduras` : `+${r.energy} de energía`,
+      title: PRAISE[Math.floor(Math.random() * PRAISE.length)],
+      sub: r.firstTime ? '¡Primera vez que lo completás!' : r.coins > 0 ? `+${r.coins} herraduras` : `+${r.energy} de energía`,
     })
-    if (r.full) {
-      // Home keeps counting the bar up to the top, then the sequence takes over from there
-      setFullPending(true)
-      window.setTimeout(() => {
-        setToast(null)
-        setFullPending(false)
-        setFill({ from: goalOf(getState()), start: 'max' })
-        setView('full')
-      }, 1300)
-    }
   }
 
   const backHome = () => {
@@ -141,21 +157,8 @@ export default function App() {
         }}
       />
     )
-  } else if (view === 'full') {
-    content = (
-      <EnergyFull
-        from={fill.from}
-        start={fill.start}
-        remainingMs={remaining}
-        onDone={() => {
-          backHome()
-          // he just set off for eight hours: the moment to offer to let you know
-          if (shouldAskPush(getState())) setAskPush(true)
-        }}
-      />
-    )
   } else if (view === 'reveal') {
-    content = <Reveal onDone={backHome} />
+    content = <Reveal startAt={revealAt} onDone={backHome} />
   } else if (view === 'story') {
     content = <TripStory onDone={backHome} />
   } else if (view === 'trip') {
@@ -171,6 +174,12 @@ export default function App() {
               remainingMs={remaining}
               onCompleteHabit={completeHabit}
               fullPending={fullPending}
+              hidePaucho={talk != null}
+              say={fieldSay}
+              onAreaDone={() => {
+                setRevealAt('area')
+                setView('reveal')
+              }}
               onStartJob={startJob}
               onReveal={reveal}
               onWatchTrip={() => setView('trip')}
@@ -213,6 +222,7 @@ export default function App() {
       {content}
       {arriving && <div className="arrive-veil" aria-hidden />}
       {toast && view === 'tabs' && <HabitToast key={toast.key} title={toast.title} sub={toast.sub} />}
+      {talk && <FullTalk start={talk} onCoinsLanded={() => setFullPending(false)} onDone={talkDone} />}
       {welcome && s.dog.arrived && !s.dog.name && <DogName />}
       {welcome && !(s.dog.arrived && !s.dog.name) && s.unlockQueue.length > 0 && <UnlockWelcome tab={s.unlockQueue[0]} onGo={setTab} />}
       {welcome && askPush && !(s.dog.arrived && !s.dog.name) && s.unlockQueue.length === 0 && <NotifAsk onClose={() => setAskPush(false)} />}

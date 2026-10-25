@@ -6,8 +6,9 @@ import { RideWorld } from '../components/RideWorld'
 import { Button, CoinPill, HabitIcon } from '../components/ui'
 import { art } from '../game/content'
 import { AREAS, areaView, ENERGY_PER_HABIT, EXTRA_HABIT_COINS, FULL_ENERGY_COINS, jobInfo, WORK_MS, type Job } from '../game/journey'
-import { actions, doneToday, findHabit, goalOf, nextJob, restingToday, useGame } from '../game/store'
+import { actions, doneToday, findHabit, getState, goalOf, nextJob, restingToday, useGame } from '../game/store'
 import { haptic, sfx } from '../game/sound'
+import { PauchoTalk } from '../components/PauchoTalk'
 import { formatClock } from './TripRun'
 
 type Props = {
@@ -17,6 +18,12 @@ type Props = {
   /** The habit just done filled the bar: Home keeps showing the bar counting up (not "¡A
    * construir!") and the herraduras of before, until the full-energy sequence takes over. */
   fullPending: boolean
+  /** Paucho is up close (talking): the one in the field steps out. */
+  hidePaucho?: boolean
+  /** What Paucho says in the field for a moment. */
+  say?: string | null
+  /** A finished obra seen here closed its area: on to the area's celebration. */
+  onAreaDone: () => void
   /** Full bar: on to "Paucho va a construir…". */
   onStartJob: () => void
   /** The job is finished: see it. */
@@ -217,10 +224,47 @@ export function Home(p: Props) {
     else if (status === 'working') look = { mode: 'working', progress: 1 - p.remainingMs / WORK_MS }
     else look = { mode: 'working', progress: 1 }
   }
-  const pose = status === 'working' ? 'build' : status === 'done' ? 'wave' : 'idle'
+  // Back with an obra finished: it waits in the field, you tap it, it rises where it is and
+  // Paucho tells you about it; then what comes next glows (Home's own little sequence).
+  const [phase, setPhase] = useState<'reveal' | 'tell' | 'next' | null>(null)
+  const [nextSay, setNextSay] = useState<string | null>(null)
+  const area = AREAS[view.area]
+  const doneObra = status === 'done' && job?.kind === 'build' && view.area === job.area ? area.obras[view.built] : null
+  const waiting = !!doneObra && phase == null
+  const openObra = () => {
+    if (!doneObra || phase) return
+    setPhase('reveal')
+    sfx('rumble')
+    ;[0, 120, 240, 360, 480, 600].forEach((ms) => haptic('tick', ms))
+    sfx('build', 0, 1350)
+    haptic('heavy', 1350)
+    haptic('success', 1700)
+    window.setTimeout(() => {
+      const r = root.current?.getBoundingClientRect()
+      setBurst((b) => ({ key: b.key + 1, x: (r?.width ?? 390) / 2, y: (r?.height ?? 844) * 0.38 }))
+    }, 1400)
+    window.setTimeout(() => setPhase('tell'), 2300)
+  }
+  const finishObra = () => {
+    if (!doneObra || !job || job.kind !== 'build') return
+    if (job.obra === area.obras.length - 1) {
+      setPhase(null)
+      return p.onAreaDone()
+    }
+    actions.completeJob()
+    const next = area.obras[job.obra + 1]
+    setNextSay(restingToday(getState()) ? `Mañana arrancamos ${next.the}, ¿me ayudás?` : `¡Ahora vamos con ${next.the}! ¿Me ayudás con tus hábitos?`)
+    setPhase('next')
+    window.setTimeout(() => setPhase((ph) => (ph === 'next' ? null : ph)), 6500)
+  }
+  if (phase === 'reveal' || phase === 'tell') look = { mode: 'reveal' }
+  const greet = s.playerName ? `¡Volviste, ${s.playerName}! Mirá lo que armé 🧉` : '¡Volviste! Mirá lo que armé 🧉'
+  const fieldSay = p.say ?? (waiting ? greet : phase === 'next' ? nextSay : null)
+  const pose = p.hidePaucho || phase === 'tell' ? null : phase === 'reveal' ? 'celebrate' : status === 'working' ? 'build' : status === 'done' ? 'wave' : 'idle'
+  const dots = area.obras.map((_, i) => i < view.built + (phase === 'tell' ? 1 : 0))
 
   return (
-    <div className="home3" ref={root}>
+    <div className={`home3${waiting ? ' home3--waiting' : ''}`} ref={root}>
       {traveling ? (
         <div className="scene scene--away home3__scene">
           <RideWorld dog={s.dog.arrived} className="run__world--home" />
@@ -237,6 +281,9 @@ export function Home(p: Props) {
           dog={s.dog.arrived}
           cardsTop={cardsTop}
           onTapPaucho={p.onTapPaucho}
+          say={phase === 'reveal' || phase === 'tell' ? null : fieldSay}
+          mark={waiting ? 'ready' : phase === 'next' ? 'next' : null}
+          onTapObra={openObra}
         />
       )}
 
@@ -248,7 +295,16 @@ export function Home(p: Props) {
           ⚙️
         </button>
       </div>
-      <ProgressBar p={p} barRef={bar} />
+      <ProgressBar p={{ ...p, onReveal: doneObra ? openObra : p.onReveal }} barRef={bar} />
+      {phase && (
+        <div className="home3__area" aria-label="Progreso del área">
+          Área {view.area + 1} ·{' '}
+          {dots.map((on, i) => (
+            <i key={i} className={on ? 'on' : ''} />
+          ))}
+        </div>
+      )}
+      {phase === 'tell' && doneObra && <PauchoTalk compact pose="b4_contento" text={`¡Mirá cómo quedó ${doneObra.the}! ${doneObra.done}`} onNext={finishObra} />}
 
       <div className="home3__chips" style={{ top: cardsTop - 46 }}>
         {doneIds.length > 0 && (

@@ -46,7 +46,7 @@ function preload() {
 }
 
 /** Types `text` out after `delayMs`; `talking` is true while letters are appearing. */
-function useTalk(text: string, delayMs = 0) {
+export function useTalk(text: string, delayMs = 0) {
   // The count belongs to one text: a new line starts from zero on its very first render.
   const [typed, setTyped] = useState({ text, count: 0 })
   useEffect(() => {

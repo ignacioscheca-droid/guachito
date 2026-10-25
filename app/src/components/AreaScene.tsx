@@ -30,6 +30,12 @@ type Props = {
   whole?: boolean
   className?: string
   onTapPaucho?: () => void
+  /** What Paucho says in the field: a speech bubble over his head. */
+  say?: string | null
+  /** The next obra's materials, marked: `ready` = finished, waiting for your tap (glow and a
+   * "¡Listo!" chip); `next` = what comes next (a soft glow). */
+  mark?: 'ready' | 'next' | null
+  onTapObra?: () => void
   children?: ReactNode
 }
 
@@ -277,6 +283,26 @@ function GalponLife({ built }: { built: number }) {
   )
 }
 
+/** The next obra's materials, marked in the field: glowing, and (ready) a chip you tap. */
+function ObraMark({ area: b, kind, heroX, onTap }: { area: { left: number; top: number; width: number; height: number }; kind: 'ready' | 'next'; heroX: number; onTap?: () => void }) {
+  // the chip sits on the materials, on the side away from Paucho (he stands in front of them)
+  const mid = b.left + b.width / 2
+  const chipLeft = Math.abs(mid - heroX) > 14 ? 50 : heroX > mid ? 22 : 78
+  return (
+    <>
+      <i className={`amark__glow amark__glow--${kind}`} style={{ left: `${b.left}%`, top: `${b.top}%`, width: `${b.width}%`, height: `${b.height}%` }} />
+      {kind === 'ready' && (
+        <button className="amark__hit" style={{ left: `${b.left}%`, top: `${b.top}%`, width: `${b.width}%`, height: `${b.height}%` }} onClick={onTap} aria-label="Ver la obra terminada">
+          <span className="amark__chip" style={{ left: `${chipLeft}%` }}>
+            ✓ ¡Listo!
+          </span>
+          <span className="amark__hand">👆</span>
+        </button>
+      )}
+    </>
+  )
+}
+
 /** True for a moment after `key` changes (Paucho jumps up to celebrate, then sits again). */
 function useCheer(key: number | undefined) {
   const [on, setOn] = useState(false)
@@ -315,8 +341,22 @@ function Layers({ a, built }: { a: Area; built: number }) {
   )
 }
 
+/** Where an obra's pile (or sign) stands, in % of the art: left, top, width, height. */
+function obraArea(o: Obra, aspect: number): { left: number; top: number; width: number; height: number } {
+  const p = o.piece
+  // a staged obra's box holds the whole building; its pile of materials is the bottom of it
+  if ('obra' in p) {
+    const h = p.box.height ?? p.box.width / aspect
+    return { left: p.box.left, top: p.box.top + h * 0.58, width: p.box.width, height: h * 0.42 }
+  }
+  const s = 'sign' in p ? p.sign : 'spot' in p ? p.spot : null
+  if (s) return { left: s.x - s.h / aspect / 2, top: s.y - s.h, width: s.h / aspect, height: s.h }
+  const b = (p as { box: Box }).box
+  return { left: b.left, top: b.top, width: b.width, height: b.width / aspect }
+}
+
 /** One of the areas: its art (in layers if it has them), the obras, Paucho and the dog. */
-export function AreaScene({ area, built, current, pose = 'idle', outfit, celebrateKey, dog, cardsTop, whole, className = '', onTapPaucho, children }: Props) {
+export function AreaScene({ area, built, current, pose = 'idle', outfit, celebrateKey, dog, cardsTop, whole, className = '', onTapPaucho, say, mark, onTapObra, children }: Props) {
   const a = AREAS[area]
   const box = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ w: 390, h: 340 })
@@ -361,6 +401,14 @@ export function AreaScene({ area, built, current, pose = 'idle', outfit, celebra
         )}
         {pose && acting && a.act?.kind === 'mate' && <PauchoMate spot={a.act.spot} onTap={onTapPaucho} />}
         {pose && acting && a.act?.kind === 'maiz' && <PauchoMaiz spot={a.act.spot} onTap={onTapPaucho} />}
+        {mark && a.obras[built] && (
+          <ObraMark area={obraArea(a.obras[built], a.aspect)} kind={mark} heroX={hero.x} onTap={onTapObra} />
+        )}
+        {say && (
+          <span key={say} className="ascene__say" style={{ left: `${hero.x}%`, bottom: `${100 - hero.y + hero.h + 1}%` }}>
+            {say}
+          </span>
+        )}
         {pose && !acting && (
           <Paucho
             pose={cheering && a.act ? 'celebrate' : pose}

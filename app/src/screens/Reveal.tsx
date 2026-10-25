@@ -12,11 +12,12 @@ import { actions, useGame } from '../game/store'
  * it closed an area, the area's celebration and what comes next. Seeing it is what makes
  * it count (actions.completeJob), and what it unlocks shows up back home.
  */
-export function Reveal({ onDone }: { onDone: () => void }) {
+export function Reveal({ onDone, startAt = 'obra' }: { onDone: () => void; startAt?: 'obra' | 'area' }) {
   const s = useGame((g) => g)
   // read once: completeJob moves the store on
   const [at] = useState(s.jobsDone)
-  const [step, setStep] = useState<'obra' | 'area'>('obra')
+  // Home shows the obra itself now; it comes here only for the area's celebration
+  const [step, setStep] = useState<'obra' | 'area'>(startAt)
   const [shown, setShown] = useState(false)
   useEffect(() => {
     const t = window.setTimeout(() => {
