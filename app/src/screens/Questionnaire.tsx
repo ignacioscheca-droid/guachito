@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Medio } from '../components/Medio'
+import { Libreta, type Reaction } from '../components/Libreta'
 import { Button } from '../components/ui'
 import { QUESTIONS, SECTIONS, type AboutYou, type Option } from '../game/aboutYou'
 
@@ -12,10 +12,22 @@ type Props = {
   onBack: () => void
 }
 
-/** "Contame un poco de vos": one question per screen. A tap answers, or pick several and "Siguiente". */
+/** What he does when you answer: never the same twice in a row, and "none of these" gets a curious look. */
+const REACTIONS: Reaction[] = ['asiente', 'contento', 'anotado', 'sorprendido']
+function reactTo(o: Option, last: Reaction | undefined): Reaction {
+  if (o.none) return 'curioso'
+  const choices = REACTIONS.filter((r) => r !== last)
+  return choices[Math.floor(Math.random() * choices.length)]
+}
+
+/**
+ * "Contame un poco de vos": one question per screen. A tap answers, or pick several and
+ * "Siguiente". Gauchito stays put taking notes, like Duo, while the questions change below him.
+ */
 export function Questionnaire({ player, answers, onChange, onDone, onBack }: Props) {
   const [i, setI] = useState(0)
   const [asking, setAsking] = useState(true)
+  const [reaction, setReaction] = useState<{ key: number; pose: Reaction } | null>(null)
   const moving = useRef(false)
   const q = QUESTIONS[i]
   const picked = answers[q.id] ?? []
@@ -36,8 +48,11 @@ export function Questionnaire({ player, answers, onChange, onDone, onBack }: Pro
     else setI(k)
   }
 
+  const react = (o: Option) => setReaction((r) => ({ key: (r?.key ?? 0) + 1, pose: reactTo(o, r?.pose) }))
+
   const choose = (o: Option) => {
     if (moving.current) return
+    if (!q.multi || !picked.includes(o.id)) react(o)
     if (!q.multi) {
       const next = { ...answers, [q.id]: [o.id] }
       onChange(next)
@@ -61,35 +76,37 @@ export function Questionnaire({ player, answers, onChange, onDone, onBack }: Pro
         <Progress at={i} />
       </header>
 
-      <div className="mq-body" key={q.id}>
+      <div className="mq-body">
         <p className="mq-section">{SECTIONS[q.section]}</p>
         <div className="mq-guy">
-          <Medio pose={q.pose} talking={asking} />
+          <Libreta talking={asking} reaction={reaction} />
           <span className="mq-ask" aria-hidden>
             ?
           </span>
         </div>
-        <h2 className="mq-title">{q.title(player.trim())}</h2>
-        {q.subtitle && <p className="mq-sub">{q.subtitle}</p>}
-        <div className="mq-options">
-          {q.options.map((o) => {
-            const on = picked.includes(o.id)
-            return (
-              <button
-                key={o.id}
-                className={`mq-opt${on ? ' mq-opt--on' : ''}${o.emoji ? '' : ' mq-opt--plain'}`}
-                onClick={() => choose(o)}
-                aria-pressed={on}
-              >
-                {o.emoji && <span className="mq-opt__emoji">{o.emoji}</span>}
-                <span className="mq-opt__text">
-                  {o.label}
-                  {o.hint && <small>{o.hint}</small>}
-                </span>
-                {q.multi && <span className="mq-opt__mark">{on ? '✓' : '+'}</span>}
-              </button>
-            )
-          })}
+        <div className="mq-q" key={q.id}>
+          <h2 className="mq-title">{q.title(player.trim())}</h2>
+          {q.subtitle && <p className="mq-sub">{q.subtitle}</p>}
+          <div className="mq-options">
+            {q.options.map((o) => {
+              const on = picked.includes(o.id)
+              return (
+                <button
+                  key={o.id}
+                  className={`mq-opt${on ? ' mq-opt--on' : ''}${o.emoji ? '' : ' mq-opt--plain'}`}
+                  onClick={() => choose(o)}
+                  aria-pressed={on}
+                >
+                  {o.emoji && <span className="mq-opt__emoji">{o.emoji}</span>}
+                  <span className="mq-opt__text">
+                    {o.label}
+                    {o.hint && <small>{o.hint}</small>}
+                  </span>
+                  {q.multi && <span className="mq-opt__mark">{on ? '✓' : '+'}</span>}
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
 

@@ -147,7 +147,11 @@ and the `guachito_assets/` folder. Everything people read says Gauchito.
   {nombre}! ¿Querés un mate?" Sí → "¡Tomá, está muy rico!" / No → "¡Más para mí!" ·
   5) "Bueno, y ahora contame un poco de vos." → questionnaire (`src/screens/Questionnaire.tsx`,
   questions in `src/game/aboutYou.ts`): Finch's 12–24 except "have you used Finch before?";
-  "¿Qué te trae por acá, {nombre}?" titles its areas question. Answers are saved as
+  "¿Qué te trae por acá, {nombre}?" titles its areas question. Gauchito sits above each question taking notes in a libreta,
+  like Duo (`components/Libreta.tsx`: 13 pixel-aligned poses from ChatGPT, brief in the Claude Doc
+  "Gauchito — Anotando en la libreta", https://claude.ai/code/artifact/5807fe3f-04b8-4d94-9e80-43c50d447058;
+  originals in `escena_libreta/`, local only, imported by `design/tools/import_libreta.py`): he writes,
+  looks and blinks on his own and reacts to each answer. Answers are saved as
   `aboutYou` · 6) pick up to 3 habits from the grid · 7) "Armando tus metas…" (Finch 25,
   with placeholder 5-star reviews instead of "45 million people") · 8) "El plan de
   {nombre}" (Finch 26, `src/screens/PlanScreens.tsx`): 7 goals like Finch's — the picked

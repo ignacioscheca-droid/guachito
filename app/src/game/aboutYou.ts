@@ -23,8 +23,6 @@ export type Question = {
   subtitle?: string
   /** Several answers, with a "Siguiente" button; otherwise a tap answers and moves on. */
   multi?: boolean
-  /** Plano medio pose Gauchito asks with. */
-  pose: string
   options: Option[]
   skip?: (answers: AboutYou) => boolean
 }
@@ -39,7 +37,6 @@ export const QUESTIONS: Question[] = [
     section: 0,
     title: () => '¿Cuántos años tenés?',
     subtitle: 'Así puedo acompañarte mejor.',
-    pose: 'b3_escucha',
     options: [
       { id: 'menos-18', label: 'Menos de 18' },
       { id: '18-24', label: '18 a 24' },
@@ -54,7 +51,6 @@ export const QUESTIONS: Question[] = [
     id: 'sueno',
     section: 1,
     title: () => '¿Cuántas horas solés dormir por noche?',
-    pose: 'b8_curioso',
     options: [
       { id: 'menos-5', emoji: '😴', label: 'Menos de 5 horas' },
       { id: '5-7', emoji: '🛏️', label: 'Entre 5 y 7 horas' },
@@ -66,7 +62,6 @@ export const QUESTIONS: Question[] = [
     id: 'levantarse',
     section: 1,
     title: () => '¿Qué tan fácil te resulta levantarte de la cama?',
-    pose: 'b3_escucha',
     options: [
       { id: 'facil', emoji: '🐬', label: 'Muy fácil, me levanto enseguida' },
       { id: 'depende', emoji: '🌱', label: 'Depende, hay días que cuesta' },
@@ -77,7 +72,6 @@ export const QUESTIONS: Question[] = [
     id: 'actividad',
     section: 1,
     title: () => '¿Cuánto te movés durante el día?',
-    pose: 'b8_curioso',
     options: [
       { id: 'mucho', emoji: '🏃', label: 'Estoy en movimiento casi todo el día' },
       { id: 'mezcla', emoji: '🚶', label: 'Combino ratos sin moverme con algo de movimiento' },
@@ -89,7 +83,6 @@ export const QUESTIONS: Question[] = [
     id: 'agobio',
     section: 2,
     title: () => '¿Qué tan seguido sentís que todo te supera?',
-    pose: 'b3_escucha',
     options: [
       { id: 'semanal', emoji: '😫', label: 'Varias veces por semana' },
       { id: 'mensual', emoji: '😕', label: 'Algunos días al mes' },
@@ -100,7 +93,6 @@ export const QUESTIONS: Question[] = [
     id: 'apoyo',
     section: 2,
     title: () => '¿Con cuántas personas contás cuando las cosas se ponen difíciles?',
-    pose: 'b8_curioso',
     options: [
       { id: '3-mas', emoji: '🌳', label: '3 o más' },
       { id: '2', emoji: '🌿', label: '2' },
@@ -112,7 +104,6 @@ export const QUESTIONS: Question[] = [
     id: 'rutina',
     section: 2,
     title: () => '¿Qué tan conforme estás con tu rutina?',
-    pose: 'b3_escucha',
     options: [
       { id: 'mucho', emoji: '🥳', label: 'Mucho, me cuido bien' },
       { id: 'algo', emoji: '😊', label: 'Más o menos, quiero mejorar algunas cosas' },
@@ -125,7 +116,6 @@ export const QUESTIONS: Question[] = [
     title: () => '¿Lidiás con alguno de estos temas de salud mental?',
     subtitle: 'Elegí los que quieras. Queda solo en tu teléfono.',
     multi: true,
-    pose: 'b3_escucha',
     options: [
       { id: 'ansiedad', label: 'Ansiedad' },
       { id: 'depresion', label: 'Depresión' },
@@ -143,7 +133,6 @@ export const QUESTIONS: Question[] = [
     title: (name) => `¿Qué te trae por acá${you(name)}?`,
     subtitle: 'Elegí todo lo que quieras.',
     multi: true,
-    pose: 'b8_curioso',
     options: [
       { id: 'familia', emoji: '🏡', label: 'Pasar más tiempo con los míos' },
       { id: 'vinculos', emoji: '🤝', label: 'Conectar más con la gente' },
@@ -161,7 +150,6 @@ export const QUESTIONS: Question[] = [
     title: () => '¿Qué cosas solés postergar?',
     subtitle: 'Elegí todas las que te pasen.',
     multi: true,
-    pose: 'b8_curioso',
     options: [
       { id: 'decisiones', emoji: '🛤️', label: 'Decisiones importantes' },
       { id: 'mensajes', emoji: '💬', label: 'Responder mensajes' },
@@ -177,7 +165,6 @@ export const QUESTIONS: Question[] = [
     title: () => '¿Por qué creés que lo postergás?',
     subtitle: 'Elegí todas las que te pasen.',
     multi: true,
-    pose: 'b3_escucha',
     options: [
       { id: 'abruma', emoji: '🏔️', label: 'Me abruma' },
       { id: 'confianza', emoji: '🌼', label: 'No confío en mí' },

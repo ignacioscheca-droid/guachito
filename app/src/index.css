@@ -2069,6 +2069,9 @@ img {
   overflow-y: auto;
   padding: 4px 20px 20px;
   text-align: center;
+}
+/* the question and its options slide in; Gauchito stays where he is */
+.mq-q {
   animation: mq-in 0.3s ease-out;
 }
 .mq-section {
@@ -2084,13 +2087,12 @@ img {
   width: 132px;
   margin: 6px auto 4px;
 }
-.mq-guy .mi-medio {
+.libreta {
   position: relative;
   width: 100%;
-  margin: 0;
-  aspect-ratio: 760 / 751;
+  aspect-ratio: 600 / 612;
 }
-.mq-guy .mi-medio img {
+.libreta img {
   position: absolute;
   inset: 0;
   width: 100%;
