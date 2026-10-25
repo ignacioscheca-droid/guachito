@@ -2565,56 +2565,130 @@ img {
   width: 96px;
   flex: none;
 }
-/* ---- "1 día de racha", Duolingo-style (ms after the swipe) ----
-   0     the dark flame collapses into its heart · 180 a streak of light shoots up
-   520   burst of light and sparks · 650 the light floods the screen, the night is gone
-   1000  a grey 0 · 1080 petals fly in · 1500 the flame lands · 1560 0 rolls to 1, embers
-   2200  puff of smoke, Gauchito pops out beside the flame · 2450 his bubble types out
-   3000  everything rises · 3350 the week · 3800 today fills, 4150 its check
-   4300  he gives a thumbs up · 4450 the button */
+/* ---- "1 día de racha", Duolingo's streak screen as a morning on the campo ----
+   ms after the swipe:
+   0     the yerba finishes pouring · 450 the mate hops · 650 the bombilla drops, lands at 880
+   950   the sun comes up, leaves and sparkles fly, steam starts · 1150 a grey 0 · 1550 it rolls to 1
+   2300  puff of steam, Gauchito pops out sipping the mate · 2650 his bubble types out
+   3100  the group and the campo rise · 3450 the week · 3900 today fills, 4250 its check
+   4500  the button */
 .sk {
+  --horizon: 41%;
   display: flex;
   flex-direction: column;
   align-items: center;
   height: 100dvh;
   padding: calc(var(--safe-top) + 24px) 22px 0;
-  background: var(--paper);
+  background: linear-gradient(180deg, #ffd99a 0%, #ffe8bd 30%, #fff1d6 55%);
   text-align: center;
   isolation: isolate;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
 }
-.sk-night {
+/* dawn: a rosier sky over the morning one, gone when the sun is up */
+.sk-sky--dawn {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  background: linear-gradient(180deg, #e7a58f 0%, #f4b98c 30%, #ffd3a0 55%);
+  opacity: calc(1 - var(--pull, 0) * 0.35);
+}
+.sk--lit .sk-sky--dawn {
+  animation: sk-fade 1s 0.95s ease-in-out forwards;
+}
+.sk-land {
   position: absolute;
   inset: 0;
   z-index: -2;
-  background: radial-gradient(ellipse 90% 60% at 50% 46%, #2c3652, #151b2c 72%);
+  pointer-events: none;
+  translate: 0 var(--drop, 0px);
 }
-.sk-night i {
+.sk--lit .sk-land {
+  animation: sk-rise 0.65s 3.1s cubic-bezier(0.3, 0.9, 0.3, 1) both;
+}
+.sk-sun {
   position: absolute;
-  width: 3px;
-  height: 3px;
+  left: 66%;
+  top: var(--horizon);
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
-  background: #fff;
-  animation: sk-twinkle 3s ease-in-out infinite;
+  background: radial-gradient(circle, #fffbe8 0 45%, #ffe38a 75%, #ffcf63);
+  box-shadow:
+    0 0 40px 18px rgba(255, 214, 120, 0.65),
+    0 0 120px 60px rgba(255, 220, 150, 0.4);
+  translate: -50% calc(-30% - var(--pull, 0) * 25%);
+  transition: translate 0.5s cubic-bezier(0.3, 1.4, 0.5, 1);
 }
-.sk-bloom {
+.sk--held .sk-sun {
+  transition: none;
+}
+.sk--lit .sk-sun {
+  animation: sk-sunrise 1.3s 0.95s cubic-bezier(0.25, 0.8, 0.3, 1) both;
+}
+.sk-cloud {
+  position: absolute;
+  height: 26px;
+  border-radius: 999px;
+  background: rgba(255, 252, 244, 0.85);
+  animation: sk-drift 60s ease-in-out infinite alternate;
+}
+.sk-cloud::before,
+.sk-cloud::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  border-radius: 50%;
+  background: inherit;
+}
+.sk-cloud::before {
+  left: 18%;
+  width: 38%;
+  aspect-ratio: 1;
+}
+.sk-cloud::after {
+  left: 46%;
+  width: 28%;
+  aspect-ratio: 1;
+}
+/* the ride's mountains and fields, lined up as in the ride: horizon at 477/809 of the strip */
+.sk-strip {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--horizon) - 61.4vw);
+  width: 250vw;
+  aspect-ratio: 1942 / 809;
+  translate: -50% 0;
+}
+.sk-strip img {
   position: absolute;
   inset: 0;
-  z-index: -1;
-  opacity: 0;
-  pointer-events: none;
-  background: radial-gradient(circle at 50% 46%, #fffbef 0, #ffe7a8 30%, #f9bf5a 75%);
+  width: 100%;
+  height: 100%;
 }
-.sk--lit .sk-night {
-  animation: sk-fade 0.15s 0.85s ease-in forwards;
+/* the fields fade into the page, which goes on below */
+.sk-strip::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 68%;
+  height: 200vh;
+  background: linear-gradient(180deg, rgba(251, 243, 228, 0), var(--paper) 26vw);
 }
-.sk--lit .sk-bloom {
-  animation: sk-bloom 1.1s 0.62s both;
+/* dawn light on the campo: a little dim and rosy until the sun is up */
+.sk-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(150, 80, 90, 0) 30%, rgba(120, 70, 80, 0.22) 50%, rgba(120, 70, 80, 0) 80%);
+  opacity: calc(1 - var(--pull, 0) * 0.4);
+}
+.sk--lit .sk-shade {
+  animation: sk-fade 1s 0.95s forwards;
 }
 
-/* the group: bubble, flame + him, number. Waits centred (--drop), rises at 3.0 s */
+/* the group: bubble, mate / Gauchito, number. Waits centred (--drop), rises at 3.1 s */
 .sk-group {
   display: flex;
   flex-direction: column;
@@ -2624,12 +2698,12 @@ img {
   translate: 0 var(--drop, 0px);
 }
 .sk--lit .sk-group {
-  animation: sk-rise 0.65s 3s cubic-bezier(0.3, 0.9, 0.3, 1) both;
+  animation: sk-rise 0.65s 3.1s cubic-bezier(0.3, 0.9, 0.3, 1) both;
 }
 .sk-bubble {
   position: relative;
   max-width: 300px;
-  margin: 0 0 18px;
+  margin: 0 0 14px;
   padding: 12px 16px;
   border: 2px solid #eadfcb;
   border-radius: 16px;
@@ -2640,15 +2714,16 @@ img {
   line-height: 1.35;
   text-align: left;
   opacity: 0;
-  transform-origin: 62% 100%;
+  transform-origin: 50% 100%;
 }
 .sk-bubble::after {
   content: '';
   position: absolute;
-  left: 62%;
+  left: 50%;
   bottom: -9px;
   width: 14px;
   height: 14px;
+  margin-left: -7px;
   background: #fff;
   border: solid #eadfcb;
   border-width: 0 2px 2px 0;
@@ -2658,98 +2733,49 @@ img {
   visibility: hidden;
 }
 .sk--lit .sk-bubble {
-  animation: sk-bubble 0.4s 2.45s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+  animation: sk-bubble 0.4s 2.55s cubic-bezier(0.3, 1.5, 0.5, 1) both;
 }
 
 .sk-hero {
   position: relative;
   width: 300px;
-  height: 190px;
+  height: 236px;
 }
 .sk-slot {
   position: absolute;
   left: 50%;
   bottom: 0;
   width: 150px;
-  height: 170px;
+  height: 150px;
   margin-left: -75px;
-}
-.sk--lit .sk-slot {
-  animation: sk-aside 0.5s 2.2s cubic-bezier(0.3, 0.9, 0.3, 1) both;
-}
-
-/* before: the dark flame, its heart glowing; pulling it up lifts it and stokes the glow */
-.sk-ember {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 116px;
-  height: 140px;
-  translate: -50% calc(-50% - var(--pull, 0) * 70px);
-  transition: translate 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
-  animation: sk-bob 2.4s 1.2s ease-in-out infinite;
-}
-.sk--held .sk-ember {
-  transition: none;
-  animation: none;
-}
-.sk-ember svg {
-  position: absolute;
-  inset: 0;
-  fill: #3b4762;
-  filter: drop-shadow(0 0 1px rgba(255, 200, 90, 0.35));
-}
-.sk-ember__glow {
-  position: absolute;
-  left: 50%;
-  top: 62%;
-  width: 230px;
-  height: 230px;
-  translate: -50% -50%;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(255, 190, 80, 0.5), rgba(255, 150, 40, 0.12) 55%, transparent);
-  scale: calc(1 + var(--pull, 0) * 0.9);
-  animation: sk-glow 2.4s ease-in-out infinite;
-}
-.sk-ember__heart {
-  position: absolute;
-  left: 50%;
-  top: 66%;
-  width: 34px;
-  height: 34px;
-  translate: -50% -50%;
-  border-radius: 50%;
-  background: radial-gradient(circle, #fff 0 22%, #ffe27a 45%, #ffad2e 80%);
-  box-shadow:
-    0 0 14px 4px rgba(255, 196, 70, 0.7),
-    0 0 0 6px rgba(255, 186, 60, 0.18);
-  scale: calc(1 + var(--pull, 0) * 0.6);
-  animation: sk-heart 1.2s ease-in-out infinite;
 }
 .sk-hint {
   position: absolute;
   left: 50%;
-  top: calc(100% + 34px);
+  top: calc(100% + 26px);
   width: 290px;
   translate: -50% 0;
-  color: #fff;
+  color: var(--earth);
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 900;
   line-height: 1.3;
-  opacity: calc(1 - var(--pull, 0));
+  text-shadow:
+    0 0 8px var(--paper),
+    0 0 3px var(--paper);
+  opacity: calc(1 - var(--pull, 0) * 1.6);
 }
 .sk-hint__arrows {
   display: flex;
   flex-direction: column;
   align-items: center;
   height: 26px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 .sk-hint__arrows i {
   width: 12px;
   height: 12px;
   margin-top: -2px;
-  border: solid rgba(255, 255, 255, 0.85);
+  border: solid var(--brown);
   border-width: 3px 0 0 3px;
   border-radius: 2px;
   rotate: 45deg;
@@ -2758,136 +2784,183 @@ img {
 .sk-hint__arrows i:last-child {
   animation-delay: 0.15s;
 }
-.sk--lit .sk-ember {
-  animation: sk-collapse 0.24s cubic-bezier(0.5, 0, 0.9, 0.5) forwards;
-  translate: -50% -50%;
-  transition: none;
-}
 .sk--lit .sk-hint {
   animation: sk-fade 0.2s forwards;
 }
 
-/* the ignition */
-.sk-streak,
-.sk-flash {
+/* the mate: 140 px over the 256 px icon. Its mouth is at 117,112 of the icon */
+.sk-mate {
+  position: absolute;
+  left: 5px;
+  top: 5px;
+  width: 140px;
+  height: 140px;
+  animation: sk-bob 2.4s 1.2s ease-in-out infinite;
+}
+.sk--held .sk-mate {
+  animation: none;
+}
+.sk-mate__glow {
   position: absolute;
   left: 50%;
-  top: 50%;
-  pointer-events: none;
+  top: 55%;
+  width: 260px;
+  height: 260px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 236, 180, 0.8), rgba(255, 220, 150, 0.25) 55%, transparent);
+  scale: calc(0.8 + var(--pull, 0) * 0.5);
+}
+.sk-mate__body {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 95%;
+}
+.sk-mate__body > * {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+/* the gourd without the bombilla (cut at the rim), and the bombilla on its own */
+.sk-mate__gourd {
+  clip-path: inset(37% 0 0 0);
+}
+.sk-mate__bombilla {
+  clip-path: polygon(0 0, 100% 0, 100% 37%, 64.5% 37%, 64.5% 43.7%, 53.9% 43.7%, 53.9% 37%, 0 37%);
   opacity: 0;
 }
-.sk-streak {
-  width: 12px;
-  height: 160px;
-  margin: -100px 0 0 -6px;
-  border-radius: 999px;
-  background: linear-gradient(to top, #ffd56a, #fff 70%);
-  box-shadow: 0 0 18px 6px rgba(255, 210, 110, 0.6);
+.sk-mate__yerba {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transform: scale(var(--pull, 0));
+  transition: transform 0.4s ease-out;
 }
-.sk--lit .sk-streak {
-  animation: sk-streak 0.38s 0.18s cubic-bezier(0.3, 0.8, 0.4, 1) both;
+.sk--held .sk-mate__yerba {
+  transition: none;
 }
+.sk--lit .sk-mate__yerba {
+  animation: sk-yerba 0.45s ease-out both;
+}
+.sk--lit .sk-mate__body {
+  animation:
+    sk-hop 0.35s 0.45s ease-out,
+    sk-clink 0.4s 0.88s ease-out;
+}
+.sk--lit .sk-mate__bombilla {
+  animation: sk-drop 0.25s 0.63s cubic-bezier(0.5, 0, 1, 0.6) both;
+}
+.sk--lit .sk-mate__mouth {
+  animation: sk-fade 0.2s 0.9s forwards;
+}
+.sk--lit .sk-mate {
+  animation: sk-fade 0.1s 2.38s forwards;
+}
+.sk-steam {
+  position: absolute;
+  left: 44px;
+  top: 4px;
+  width: 50px;
+  height: 54px;
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.9);
+  stroke-width: 3;
+  stroke-linecap: round;
+  overflow: visible;
+  opacity: 0;
+}
+.sk-steam path {
+  animation: sk-wisp 2.2s ease-out infinite;
+}
+.sk-steam path:nth-child(2) {
+  animation-delay: 0.7s;
+}
+.sk-steam path:nth-child(3) {
+  animation-delay: 1.4s;
+}
+.sk--lit .sk-steam {
+  animation: sk-show 0.3s 1s forwards;
+}
+
+/* yerba pouring in from above while you swipe */
+.sk-pour {
+  position: absolute;
+  left: 69px;
+  top: 66px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.sk--held .sk-pour {
+  opacity: calc(var(--pull, 0) * 6);
+}
+.sk--lit .sk-pour {
+  opacity: 1;
+  animation: sk-fade 0.15s 0.4s forwards;
+}
+.sk-pour i {
+  position: absolute;
+  top: 0;
+  border-radius: 1px;
+  background: #8a9a2c;
+  animation: sk-fall 0.6s cubic-bezier(0.5, 0, 1, 1) infinite;
+}
+.sk-pour i:nth-child(3n) {
+  background: #c2b04f;
+}
+
+/* the moment it's ready */
 .sk-flash {
+  position: absolute;
+  left: 69px;
+  top: 66px;
   width: 80px;
   height: 80px;
-  margin: -60px 0 0 -40px;
+  margin: -40px 0 0 -40px;
   border-radius: 50%;
-  background: radial-gradient(closest-side, #fff 30%, #ffe9a3 60%, rgba(255, 210, 120, 0));
+  background: radial-gradient(closest-side, #fffdf2 30%, #ffeab0 60%, rgba(255, 220, 140, 0));
+  opacity: 0;
+  pointer-events: none;
 }
 .sk--lit .sk-flash {
-  animation: sk-flash 0.9s 0.5s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  animation: sk-flash 0.9s 0.9s cubic-bezier(0.2, 0.8, 0.3, 1) both;
 }
 .sk-fx {
   position: absolute;
-  left: 50%;
-  top: 50%;
+  left: 69px;
+  top: 66px;
   pointer-events: none;
 }
-.sk-spark,
-.sk-petal,
-.sk-bit {
+.sk-spark {
   position: absolute;
   left: 0;
   top: 0;
-  opacity: 0;
-}
-.sk-spark {
   width: calc(var(--s) * 1px);
   height: calc(var(--s) * 1px);
-  margin: calc(var(--s) * -0.5px - 20px) 0 0 calc(var(--s) * -0.5px);
-  fill: #ff9a26;
+  margin: calc(var(--s) * -0.5px) 0 0 calc(var(--s) * -0.5px);
+  fill: #ffd25a;
+  opacity: 0;
 }
-.sk-spark--star {
-  fill: #fff;
-  filter: drop-shadow(0 0 3px #ffd56a);
+.sk-spark--leaf {
+  fill: #7f9a2e;
+}
+.sk-spark--leaf:nth-child(4n) {
+  fill: #a8bb46;
 }
 .sk--lit .sk-spark {
-  animation: sk-spark 0.8s cubic-bezier(0.15, 0.8, 0.3, 1) both;
-}
-.sk-petal {
-  width: 46px;
-  height: 46px;
-  margin: -23px 0 0 -23px;
-  fill: #ff8a1d;
-}
-.sk-petal--gold {
-  fill: #ffc43a;
-}
-.sk--lit .sk-petal {
-  animation: sk-petal 0.44s cubic-bezier(0.55, 0, 0.8, 0.45) both;
-}
-.sk-bit {
-  margin: -4px 0 0 -4px;
-  border-radius: 2px;
-  background: #ff9326;
-  rotate: 45deg;
-}
-.sk--lit .sk-bit {
-  animation: sk-bit 1.3s cubic-bezier(0.2, 0.8, 0.4, 1) both;
+  animation: sk-spark 0.9s cubic-bezier(0.15, 0.8, 0.3, 1) both;
 }
 
-/* after: the flame lands with a squash and keeps swaying */
-.sk-flame {
-  position: absolute;
-  left: 50%;
-  bottom: 6px;
-  width: 132px;
-  margin-left: -66px;
-  visibility: hidden;
-  transform-origin: 50% 92%;
-}
-.sk-flame::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: -6px;
-  width: 110px;
-  height: 20px;
-  translate: -50% 0;
-  border-radius: 50%;
-  background: rgba(255, 196, 90, 0.4);
-  z-index: -1;
-}
-.sk-flame img {
-  display: block;
-  width: 100%;
-  transform-origin: 50% 95%;
-  animation: sk-sway 1.6s ease-in-out infinite;
-}
-.sk--lit .sk-flame {
-  animation: sk-land 0.7s 1.5s both;
-}
-
-/* Gauchito, out of a puff of smoke */
+/* Gauchito, out of a puff of steam, with the mate in his hand */
 .sk-guy {
   position: absolute;
-  left: 142px;
-  bottom: -4px;
-  width: 146px;
+  left: 50%;
+  bottom: 0;
+  width: 152px;
+  margin-left: -76px;
 }
 .sk-guy__body {
   position: relative;
-  aspect-ratio: 906 / 990;
+  aspect-ratio: 640 / 990;
   visibility: hidden;
   transform-origin: 50% 100%;
 }
@@ -2896,52 +2969,56 @@ img {
   inset: 0;
   width: 100%;
 }
-.sk-guy__pose--thumbs {
+.sk-guy__pose--ahh,
+.sk-guy__pose--look {
   opacity: 0;
 }
 .sk--lit .sk-guy__body {
   animation:
-    sk-pop 0.55s 2.32s cubic-bezier(0.3, 1.5, 0.5, 1) both,
-    sk-hop 0.5s 4.3s ease-out,
-    sk-breathe 2.6s 4.8s ease-in-out infinite;
+    sk-pop 0.55s 2.42s cubic-bezier(0.3, 1.5, 0.5, 1) both,
+    sk-breathe 2.6s 3s ease-in-out infinite;
 }
-.sk--lit .sk-guy__pose--cheer {
-  animation: sk-fade 0s 4.36s forwards;
+/* sip (1.8 s), "ahh" (1 s), look at you (2.2 s), and again */
+.sk--lit .sk-guy__pose--sip {
+  animation: sk-pose-sip 5s 2.42s infinite;
 }
-.sk--lit .sk-guy__pose--thumbs {
-  animation: sk-show 0s 4.36s forwards;
+.sk--lit .sk-guy__pose--ahh {
+  animation: sk-pose-ahh 5s 2.42s infinite;
+}
+.sk--lit .sk-guy__pose--look {
+  animation: sk-pose-look 5s 2.42s infinite;
 }
 .sk-puff {
   position: absolute;
   left: 50%;
-  top: 52%;
+  bottom: 60px;
   z-index: 1;
   pointer-events: none;
 }
 .sk-puff i {
   position: absolute;
   translate: calc(-50% + var(--x)) calc(-50% + var(--y));
-  border: 3px solid #cfe7f3;
+  border: 3px solid #f1e3cc;
   border-radius: 50%;
-  background: #fff;
+  background: #fffdf8;
   scale: 0;
 }
 .sk--lit .sk-puff i {
   animation: sk-puff 0.75s cubic-bezier(0.3, 1.3, 0.5, 1) both;
 }
 
-/* the number: a grey 0 that rolls down to an orange 1 */
+/* the number: a grey 0 that rolls down to a 1 */
 .sk-count {
   opacity: 0;
 }
 .sk--lit .sk-count {
-  animation: sk-show-soft 0.25s 1s both;
+  animation: sk-show 0.25s 1.15s both;
 }
 .sk-num {
-  margin: 18px 0 0;
+  margin: 14px 0 0;
   height: 1em;
   overflow: hidden;
-  font-size: 118px;
+  font-size: 112px;
   font-weight: 900;
   line-height: 1;
 }
@@ -2951,33 +3028,33 @@ img {
   translate: 0 -1em;
 }
 .sk-num__one {
-  color: #ff9619;
-  filter: drop-shadow(0 4px 0 #e26f0c);
+  color: #f39a1e;
+  filter: drop-shadow(0 4px 0 #d9730d);
 }
 .sk-num__zero {
   color: #e6dece;
 }
 .sk--lit .sk-num__roll {
-  animation: sk-roll 0.55s 1.56s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+  animation: sk-roll 0.55s 1.55s cubic-bezier(0.3, 1.4, 0.5, 1) both;
 }
 .sk-label {
   margin: 4px 0 0;
-  color: #ff9619;
+  color: #f39a1e;
   font-size: 26px;
   font-weight: 900;
   opacity: 0;
 }
 .sk--lit .sk-label {
-  animation: sk-up 0.4s 3.1s ease-out both;
+  animation: sk-up 0.4s 3.2s ease-out both;
 }
 
-/* the week; today fills in orange, shows a flame, then its check */
+/* the week; today fills in, shows a little mate, then its check */
 .sk-week {
   display: flex;
   justify-content: space-between;
   width: 100%;
   max-width: 340px;
-  margin-top: 30px;
+  margin-top: 26px;
 }
 .sk-day {
   display: flex;
@@ -2993,7 +3070,7 @@ img {
   animation: sk-up 0.35s ease-out both;
 }
 .sk-day--today {
-  color: #ff9619;
+  color: #f39a1e;
 }
 .sk-day i {
   position: relative;
@@ -3009,26 +3086,25 @@ img {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: #ff9619;
-  box-shadow: 0 3px 0 #e26f0c;
+  background: #f39a1e;
+  box-shadow: 0 3px 0 #d9730d;
   scale: 0;
 }
 .sk--lit .sk-day--today i::before {
-  animation: sk-pop 0.4s 3.8s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+  animation: sk-pop 0.4s 3.9s cubic-bezier(0.3, 1.6, 0.5, 1) both;
 }
-.sk-day__flame,
+.sk-day__mate,
 .sk-day__check {
   position: absolute;
   inset: 0;
   margin: auto;
   scale: 0;
 }
-.sk-day__flame {
-  width: 15px;
-  filter: brightness(1.6) saturate(0.4);
+.sk-day__mate {
+  width: 24px;
 }
-.sk--lit .sk-day__flame {
-  animation: sk-blip 0.55s 3.85s both;
+.sk--lit .sk-day__mate {
+  animation: sk-blip 0.55s 3.95s both;
 }
 .sk-day__check {
   width: 22px;
@@ -3039,7 +3115,7 @@ img {
   stroke-linejoin: round;
 }
 .sk--lit .sk-day__check {
-  animation: sk-pop 0.4s 4.15s cubic-bezier(0.3, 1.8, 0.5, 1) both;
+  animation: sk-pop 0.4s 4.25s cubic-bezier(0.3, 1.8, 0.5, 1) both;
 }
 
 .sk-foot {
@@ -3049,7 +3125,7 @@ img {
   opacity: 0;
 }
 .sk--lit .sk-foot {
-  animation: sk-up 0.4s 4.45s ease-out both;
+  animation: sk-up 0.4s 4.5s ease-out both;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3062,22 +3138,12 @@ img {
   }
 }
 
-@keyframes sk-twinkle {
-  50% {
-    opacity: 0.25;
-  }
-}
 @keyframes sk-fade {
   to {
     opacity: 0;
   }
 }
 @keyframes sk-show {
-  to {
-    opacity: 1;
-  }
-}
-@keyframes sk-show-soft {
   from {
     opacity: 0;
   }
@@ -3095,26 +3161,22 @@ img {
     translate: 0 0;
   }
 }
-@keyframes sk-bloom {
-  0% {
-    opacity: 0;
-  }
-  28% {
-    opacity: 1;
-  }
-  45% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
 @keyframes sk-rise {
   from {
     translate: 0 var(--drop, 0px);
   }
   to {
     translate: 0 0;
+  }
+}
+@keyframes sk-sunrise {
+  to {
+    translate: -50% -190%;
+  }
+}
+@keyframes sk-drift {
+  to {
+    translate: 40px 0;
   }
 }
 @keyframes sk-bubble {
@@ -3127,11 +3189,6 @@ img {
     scale: 1;
   }
 }
-@keyframes sk-aside {
-  to {
-    translate: -46px 0;
-  }
-}
 @keyframes sk-bob {
   0%,
   60%,
@@ -3139,20 +3196,10 @@ img {
     transform: none;
   }
   25% {
-    transform: translateY(-12px);
+    transform: translateY(-10px);
   }
   40% {
     transform: translateY(2px);
-  }
-}
-@keyframes sk-glow {
-  50% {
-    opacity: 0.65;
-  }
-}
-@keyframes sk-heart {
-  50% {
-    transform: scale(1.12);
   }
 }
 @keyframes sk-chevron {
@@ -3168,24 +3215,64 @@ img {
     transform: translateY(-8px);
   }
 }
-@keyframes sk-collapse {
-  to {
-    scale: 0.12;
-    opacity: 0;
-  }
-}
-@keyframes sk-streak {
+@keyframes sk-fall {
   0% {
-    opacity: 1;
-    transform: scale(0.6, 0.05);
+    opacity: 0;
+    transform: translateY(-230px);
   }
-  55% {
+  20% {
     opacity: 1;
-    transform: scale(1, 1) translateY(-14px);
   }
   100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes sk-yerba {
+  from {
+    transform: scale(var(--pull, 0));
+  }
+  to {
+    transform: scale(1);
+  }
+}
+@keyframes sk-hop {
+  40% {
+    transform: translateY(-10px) scale(0.96, 1.05);
+  }
+}
+@keyframes sk-clink {
+  30% {
+    transform: scale(1.1, 0.88);
+  }
+  65% {
+    transform: scale(0.96, 1.04);
+  }
+}
+@keyframes sk-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-120px);
+  }
+  20% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes sk-wisp {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scaleY(0.6);
+  }
+  30% {
     opacity: 0.9;
-    transform: scale(0.2, 0.05) translateY(-30px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-26px) scaleY(1.1);
   }
 }
 @keyframes sk-flash {
@@ -3194,11 +3281,11 @@ img {
     transform: scale(0.2);
   }
   45% {
-    opacity: 1;
+    opacity: 0.9;
   }
   100% {
     opacity: 0;
-    transform: scale(9);
+    transform: scale(7);
   }
 }
 @keyframes sk-spark {
@@ -3214,67 +3301,6 @@ img {
     transform: translate(var(--x), var(--y)) scale(1) rotate(var(--spin));
   }
 }
-@keyframes sk-petal {
-  0% {
-    opacity: 0;
-    transform: translate(var(--x), var(--y)) rotate(var(--rot)) scale(var(--s));
-  }
-  15% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translate(0, -10px) rotate(0) scale(0.4);
-  }
-}
-@keyframes sk-bit {
-  0% {
-    opacity: 1;
-    transform: translate(0, -40px) scale(0);
-  }
-  25% {
-    opacity: 1;
-    transform: translate(var(--x), var(--y)) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--x), calc(var(--y) - var(--drift))) scale(0.5);
-  }
-}
-@keyframes sk-land {
-  0% {
-    visibility: hidden;
-    scale: 0.3 0.3;
-  }
-  28% {
-    scale: 1.22 0.72;
-  }
-  52% {
-    scale: 0.86 1.18;
-  }
-  74% {
-    scale: 1.05 0.96;
-  }
-  100% {
-    visibility: visible;
-    scale: 1 1;
-  }
-}
-@keyframes sk-sway {
-  0%,
-  100% {
-    transform: skewX(0) scale(1, 1);
-  }
-  30% {
-    transform: skewX(-2.5deg) scale(1.02, 0.98);
-  }
-  70% {
-    transform: skewX(2deg) scale(0.98, 1.03);
-  }
-}
 @keyframes sk-pop {
   0% {
     visibility: hidden;
@@ -3285,23 +3311,43 @@ img {
     scale: 1;
   }
 }
-@keyframes sk-hop {
-  0% {
-    transform: none;
-  }
-  25% {
-    transform: scale(1.06, 0.92);
-  }
-  55% {
-    transform: translateY(-16px) scale(0.96, 1.05);
-  }
-  100% {
-    transform: none;
-  }
-}
 @keyframes sk-breathe {
   50% {
-    transform: scale(1.01, 1.025);
+    transform: scale(1.01, 1.02);
+  }
+}
+@keyframes sk-pose-sip {
+  0%,
+  35.9% {
+    opacity: 1;
+  }
+  36%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes sk-pose-ahh {
+  0%,
+  35.9% {
+    opacity: 0;
+  }
+  36%,
+  55.9% {
+    opacity: 1;
+  }
+  56%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes sk-pose-look {
+  0%,
+  55.9% {
+    opacity: 0;
+  }
+  56%,
+  100% {
+    opacity: 1;
   }
 }
 @keyframes sk-puff {

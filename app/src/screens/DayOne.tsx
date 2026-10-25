@@ -44,12 +44,12 @@ export function DayOneCard({ companion, onNext }: { companion: string; onNext: (
 
 /** Four-point sparkle, in a 24×24 box. */
 const SPARKLE = 'M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z'
-/** The unlit flame waiting in the dark, in a 100×120 box. */
-const EMBER = 'M50 4C60 24 86 40 86 74C86 100 70 117 50 117C30 117 14 100 14 74C14 55 25 42 32 29C37 41 41 47 47 49C45 33 45 19 50 4Z'
-/** One flame petal, centred on 0,0. */
-const PETAL = 'M0-22C11-9 11 9 0 22C-11 9-11-9 0-22Z'
+/** A yerba leaf, centred on 0,0. */
+const LEAF = 'M0-20C10-8 9 8 0 20C-9 8-10-8 0-20Z'
+/** A wisp of steam, rising from 0,0. */
+const WISP = 'M0 0C-9-10 9-18 0-28C-9-38 7-46 0-56'
 
-/** Seeded scatter, so every viewing throws the same sparks (and React renders stay pure). */
+/** Seeded scatter, so every viewing throws the same leaves (and React renders stay pure). */
 function scatter<T>(n: number, seed: number, make: (r: () => number, i: number) => T): T[] {
   let x = seed
   const r = () => {
@@ -60,66 +60,62 @@ function scatter<T>(n: number, seed: number, make: (r: () => number, i: number) 
 }
 const polar = (deg: number, dist: number) => [Math.cos((deg * Math.PI) / 180) * dist, Math.sin((deg * Math.PI) / 180) * dist]
 
-/** The ignition burst: sparkles and embers thrown out of the light. */
-const BURST = scatter(22, 7, (r, i) => {
-  const [x, y] = polar((360 / 22) * i + r() * 14, 70 + r() * 110)
-  return { x, y, star: i % 3 === 0, size: 8 + r() * 12, delay: r() * 90, spin: r() * 360 - 180 }
+/** Yerba falling into the mate while you pour. */
+const POUR = scatter(14, 5, (r) => ({ x: r() * 26 - 13, size: 4 + r() * 4, delay: r() * -0.7, spin: r() * 360 }))
+/** The burst once it's ready: yerba leaves and sparkles thrown out of the mate. */
+const BURST = scatter(20, 7, (r, i) => {
+  const [x, y] = polar((360 / 20) * i + r() * 14, 80 + r() * 110)
+  return { x, y: y - 30, leaf: i % 3 !== 0, size: 10 + r() * 12, delay: r() * 100, spin: r() * 540 - 270 }
 })
-/** Petals flying in from all around to build the flame. */
-const PETALS = scatter(7, 3, (r, i) => {
-  const [x, y] = polar((360 / 7) * i + r() * 30 - 90, 150 + r() * 70)
-  return { x, y, rot: r() * 540 - 270, scale: 0.7 + r() * 0.8, gold: i % 3 === 0, delay: r() * 140 }
-})
-/** Little embers that pop off the flame when it lands and hang in the air. */
-const EMBERS = scatter(9, 11, (r, i) => {
-  const [x, y] = polar((360 / 9) * i + r() * 20, 85 + r() * 45)
-  return { x, y: y - 20, size: 6 + r() * 6, delay: r() * 120, drift: 10 + r() * 14 }
-})
-/** The puff of smoke he appears from. */
+/** The puff of steam he appears from. */
 const PUFF = [
-  [0, 0, 64],
-  [-38, -26, 46],
-  [36, -30, 50],
-  [-44, 22, 44],
-  [42, 24, 46],
-  [0, -50, 40],
-  [4, 46, 42],
-  [-66, -4, 30],
-  [68, -2, 32],
+  [0, 0, 70],
+  [-40, -30, 50],
+  [38, -34, 54],
+  [-48, 24, 48],
+  [46, 26, 50],
+  [0, -60, 46],
+  [4, 52, 46],
+  [-74, -4, 34],
+  [76, -2, 36],
+]
+/** Soft clouds drifting over the morning sky: left, top, width, seconds. */
+const CLOUDS = [
+  [8, 14, 120, 70],
+  [62, 8, 150, 90],
+  [40, 26, 90, 60],
 ]
 
 /** ms after the swipe; the CSS delays in the "sk" block follow the same beats. */
-const TYPE_AT = 2550
-const TYPE_STEP = 24
-const READY_AT = 4500
-const LINE = '¡Prendimos el fogón de tu racha! Volvé cada día para que no se apague.'
+const TYPE_AT = 2650
+const TYPE_STEP = 26
+const READY_AT = 4600
+const LINE = '¡Primer mate de la racha! Volvé mañana y nos cebamos otro.'
 
 /**
- * "1 día de racha", Duolingo-style: a dark flame waits in the night until you swipe it
- * up; it streaks up and bursts into light, petals fly in and build the fogón's flame
- * while the grey 0 rolls to an orange 1, Gauchito pops out of a puff of smoke beside it
- * and says his line, then the week comes in and today's day gets its check.
+ * "1 día de racha", Duolingo's streak screen as a morning on the campo: an empty mate
+ * waits at dawn until you swipe it up and the yerba pours in; the bombilla drops, the sun
+ * comes up, leaves fly, the grey 0 rolls to a 1, and Gauchito pops out of the steam with
+ * the mate in his hand, sipping, while the week comes in and today gets its check.
  */
 export function StreakDay({ onNext }: { onNext: () => void }) {
   const today = new Date().getDay()
   const screen = useRef<HTMLDivElement>(null)
-  const group = useRef<HTMLDivElement>(null)
   const slot = useRef<HTMLDivElement>(null)
   const drag = useRef<{ y: number; pull: number } | null>(null)
   const [lit, setLit] = useState(false)
   const [typed, setTyped] = useState(0)
   const [ready, setReady] = useState(false)
 
-  // Until it's lit, the flame waits in the middle of the screen; when it's lit the group
-  // rises from there to its place (the CSS reads --drop).
+  // Until it's full, the mate waits in the middle of the screen; then the group and the
+  // campo behind it rise from there to their place (the CSS reads --drop).
   useLayoutEffect(() => {
     const sc = screen.current
-    const g = group.current
     const f = slot.current
-    if (!sc || !g || !f) return
+    if (!sc || !f) return
     const s = sc.getBoundingClientRect()
     const r = f.getBoundingClientRect()
-    g.style.setProperty('--drop', `${s.top + s.height * 0.46 - (r.top + r.height / 2)}px`)
+    sc.style.setProperty('--drop', `${s.top + s.height * 0.5 - (r.top + r.height / 2)}px`)
   }, [])
 
   useEffect(() => {
@@ -142,9 +138,9 @@ export function StreakDay({ onNext }: { onNext: () => void }) {
   }, [lit])
 
   const setPull = (pull: number) => screen.current?.style.setProperty('--pull', pull.toFixed(3))
-  const ignite = () => {
+  const fill = () => {
     drag.current = null
-    setPull(0)
+    screen.current?.classList.remove('sk--held')
     setLit(true)
   }
 
@@ -160,17 +156,17 @@ export function StreakDay({ onNext }: { onNext: () => void }) {
       onPointerMove={(e) => {
         const d = drag.current
         if (!d) return
-        d.pull = Math.max(0, Math.min(1, (d.y - e.clientY) / 140))
+        d.pull = Math.max(0, Math.min(1, (d.y - e.clientY) / 160))
         setPull(d.pull)
       }}
       onPointerUp={(e) => {
         const d = drag.current
-        screen.current?.classList.remove('sk--held')
         if (!d) return
-        // a swipe up, or a plain tap on the flame itself
-        if (d.pull > 0.4 || (d.pull < 0.03 && (e.target as Element).closest('.sk-ember'))) ignite()
+        // a swipe up past halfway, or a plain tap on the mate itself
+        if (d.pull > 0.45 || (d.pull < 0.03 && (e.target as Element).closest('.sk-mate'))) fill()
         else {
           drag.current = null
+          screen.current?.classList.remove('sk--held')
           setPull(0)
         }
       }}
@@ -180,85 +176,96 @@ export function StreakDay({ onNext }: { onNext: () => void }) {
         setPull(0)
       }}
     >
-      {/* the night, with its stars, that the light washes away */}
-      <div className="sk-night" aria-hidden>
-        {scatter(26, 5, (r, i) => (
-          <i key={i} style={{ left: `${r() * 100}%`, top: `${r() * 70}%`, animationDelay: `${r() * -3}s`, scale: `${0.5 + r()}` }} />
+      {/* the campo at dawn; the sun comes up when the mate is ready */}
+      <div className="sk-land" aria-hidden>
+        <div className="sk-sky sk-sky--dawn" />
+        <div className="sk-sun" />
+        {CLOUDS.map(([left, top, width, secs], i) => (
+          <i key={i} className="sk-cloud" style={{ left: `${left}%`, top: `${top}%`, width, animationDuration: `${secs}s` }} />
         ))}
+        <div className="sk-strip">
+          <img src={art('ride_bg_mountains')} alt="" />
+          <img src={art('ride_bg_fields')} alt="" />
+        </div>
+        <div className="sk-shade" />
       </div>
-      <div className="sk-bloom" aria-hidden />
 
-      <div className="sk-group" ref={group}>
+      <div className="sk-group">
         <p className="sk-bubble" aria-live="polite">
           <span>{LINE.slice(0, typed)}</span>
           <span className="sk-bubble__rest">{LINE.slice(typed)}</span>
         </p>
         <div className="sk-hero">
           <div className="sk-slot" ref={slot}>
-            {/* before: the dark flame and its glowing heart */}
-            <button className="sk-ember" aria-label="Prender la racha" disabled={lit}>
-              <span className="sk-ember__glow" />
-              <svg viewBox="0 0 100 120">
-                <path d={EMBER} />
-              </svg>
-              <span className="sk-ember__heart" />
-            </button>
             <p className="sk-hint">
               <span className="sk-hint__arrows" aria-hidden>
                 <i />
                 <i />
               </span>
-              Deslizá para arriba para prender tu racha
+              Deslizá para arriba para cebar tu primer mate
             </p>
 
-            {/* the ignition: a streak of light shooting up, then a burst */}
-            <span className="sk-streak" aria-hidden />
+            <div className="sk-pour" aria-hidden>
+              {POUR.map((p, i) => (
+                <i key={i} style={{ left: p.x, width: p.size, height: p.size, rotate: `${p.spin}deg`, animationDelay: `${p.delay}s` }} />
+              ))}
+            </div>
+
             <span className="sk-flash" aria-hidden />
+            <button className="sk-mate" aria-label="Cebar el mate" disabled={lit}>
+              <span className="sk-mate__glow" />
+              <span className="sk-mate__body">
+                <img className="sk-mate__gourd" src={art('habit_mate')} alt="" />
+                {/* the mouth: dark while empty, yerba rising as you pour */}
+                <svg className="sk-mate__mouth" viewBox="0 0 256 256">
+                  <defs>
+                    <clipPath id="sk-mouth">
+                      <ellipse cx="117" cy="112.5" rx="46" ry="14" />
+                    </clipPath>
+                    <pattern id="sk-yerba" width="9" height="7" patternUnits="userSpaceOnUse">
+                      <rect width="9" height="7" fill="#8a7426" />
+                      <rect x="1" y="1" width="3" height="2" fill="#b9a14a" />
+                      <rect x="5" y="4" width="3" height="2" fill="#5f4b0e" />
+                    </pattern>
+                  </defs>
+                  <g clipPath="url(#sk-mouth)">
+                    <rect x="60" y="90" width="120" height="40" fill="#3a1f10" />
+                    <ellipse className="sk-mate__yerba" cx="117" cy="114" rx="48" ry="16" fill="url(#sk-yerba)" />
+                  </g>
+                </svg>
+                <img className="sk-mate__bombilla" src={art('habit_mate')} alt="" />
+              </span>
+              <svg className="sk-steam" viewBox="-20 -60 60 64">
+                <path d={WISP} />
+                <path d={WISP} transform="translate(16 4)" />
+                <path d={WISP} transform="translate(-14 6)" />
+              </svg>
+            </button>
+
             <div className="sk-fx" aria-hidden>
               {BURST.map((b, i) => (
                 <svg
                   key={i}
-                  className={`sk-spark${b.star ? ' sk-spark--star' : ''}`}
-                  viewBox="0 0 24 24"
-                  style={{ '--x': `${b.x}px`, '--y': `${b.y}px`, '--s': b.size, '--spin': `${b.spin}deg`, animationDelay: `${520 + b.delay}ms` } as CSSProperties}
+                  className={`sk-spark${b.leaf ? ' sk-spark--leaf' : ''}`}
+                  viewBox={b.leaf ? '-22 -22 44 44' : '0 0 24 24'}
+                  style={{ '--x': `${b.x}px`, '--y': `${b.y}px`, '--s': b.size, '--spin': `${b.spin}deg`, animationDelay: `${980 + b.delay}ms` } as CSSProperties}
                 >
-                  {b.star ? <path d={SPARKLE} /> : <rect x="6" y="6" width="12" height="12" rx="3" />}
+                  <path d={b.leaf ? LEAF : SPARKLE} />
                 </svg>
               ))}
-              {PETALS.map((p, i) => (
-                <svg
-                  key={i}
-                  className={`sk-petal${p.gold ? ' sk-petal--gold' : ''}`}
-                  viewBox="-24 -24 48 48"
-                  style={{ '--x': `${p.x}px`, '--y': `${p.y}px`, '--rot': `${p.rot}deg`, '--s': p.scale, animationDelay: `${1080 + p.delay}ms` } as CSSProperties}
-                >
-                  <path d={PETAL} />
-                </svg>
-              ))}
-              {EMBERS.map((m, i) => (
-                <i
-                  key={i}
-                  className="sk-bit"
-                  style={{ '--x': `${m.x}px`, '--y': `${m.y}px`, '--drift': `${m.drift}px`, width: m.size, height: m.size, animationDelay: `${1560 + m.delay}ms` } as CSSProperties}
-                />
-              ))}
-            </div>
-
-            {/* after: the fogón's flame, built from the petals */}
-            <div className="sk-flame" aria-hidden>
-              <img src={art('item_fogon_flame_1')} alt="" />
             </div>
           </div>
 
           <div className="sk-guy" aria-hidden>
             <div className="sk-puff">
               {PUFF.map(([x, y, d], i) => (
-                <i key={i} style={{ '--x': `${x}px`, '--y': `${y}px`, width: d, height: d, animationDelay: `${2200 + i * 25}ms` } as CSSProperties} />
+                <i key={i} style={{ '--x': `${x}px`, '--y': `${y}px`, width: d, height: d, animationDelay: `${2300 + i * 25}ms` } as CSSProperties} />
               ))}
             </div>
             <div className="sk-guy__body">
-              <img className="sk-guy__pose sk-guy__pose--cheer" src={art('g_celebrate')} alt="" />
-              <img className="sk-guy__pose sk-guy__pose--thumbs" src={art('g_thumbs')} alt="" />
+              <img className="sk-guy__pose sk-guy__pose--sip" src={art('mate_a3_sorbo')} alt="" />
+              <img className="sk-guy__pose sk-guy__pose--ahh" src={art('mate_a4_ahh')} alt="" />
+              <img className="sk-guy__pose sk-guy__pose--look" src={art('mate_a1_base')} alt="" />
             </div>
           </div>
         </div>
@@ -276,12 +283,12 @@ export function StreakDay({ onNext }: { onNext: () => void }) {
 
       <div className="sk-week" aria-hidden>
         {[0, 1, 2, 3, 4, 5, 6].map((k) => (
-          <div key={k} className={`sk-day${k === 0 ? ' sk-day--today' : ''}`} style={{ animationDelay: `${3350 + k * 45}ms` }}>
+          <div key={k} className={`sk-day${k === 0 ? ' sk-day--today' : ''}`} style={{ animationDelay: `${3450 + k * 45}ms` }}>
             <span>{DAY_INITIALS[(today + k) % 7]}</span>
             <i>
               {k === 0 && (
                 <>
-                  <img className="sk-day__flame" src={art('item_fogon_flame_3')} alt="" />
+                  <img className="sk-day__mate" src={art('habit_mate')} alt="" />
                   <svg className="sk-day__check" viewBox="0 0 24 24">
                     <path d="M6 12.5l4 4 8-9" />
                   </svg>
