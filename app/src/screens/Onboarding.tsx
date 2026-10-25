@@ -91,10 +91,14 @@ export function Onboarding({ onPreviewDone }: { onPreviewDone?: () => void }) {
   const [plan, setPlan] = useState<string[]>([])
 
   useEffect(preload, [])
+  // Stable, because Scene, Talk and Generating time their exit from them: a new function on
+  // every render (Home's clock re-renders us four times a second while Paucho works) would
+  // restart their timers forever and leave the screen blank.
+  const toName = useCallback(() => setStep('name'), [])
   const toAbout = useCallback(() => setStep('about'), [])
   const toPlan = useCallback(() => setStep('plan'), [])
 
-  if (step === 'scene') return <Scene onDone={() => setStep('name')} />
+  if (step === 'scene') return <Scene onDone={toName} />
   if (step === 'quiz') {
     return (
       <Questionnaire player={player} answers={answers} onChange={setAnswers} onDone={() => setStep('habits')} onBack={() => setStep('about')} />
