@@ -14,6 +14,7 @@ import { Onboarding } from './screens/Onboarding'
 import { PauchoTab } from './screens/PauchoTab'
 import { Reveal } from './screens/Reveal'
 import { Settings } from './screens/Settings'
+import { StreakDay } from './screens/DayOne'
 import { TestMenu } from './screens/TestMenu'
 import { TripRun } from './screens/TripRun'
 import { TripStory } from './screens/TripStory'
@@ -62,6 +63,7 @@ export default function App() {
   const [testMenu, setTestMenu] = useState(false)
   const [settings, setSettings] = useState(false)
   const [replayOnboarding, setReplayOnboarding] = useState(false)
+  const [replayStreak, setReplayStreak] = useState(false)
   const [arriving, setArriving] = useState(false)
   const [lockedTap, setLockedTap] = useState(false)
   const [askPush, setAskPush] = useState(false)
@@ -157,6 +159,8 @@ export default function App() {
         }}
       />
     )
+  } else if (replayStreak) {
+    content = <StreakDay onNext={() => setReplayStreak(false)} />
   } else if (view === 'reveal') {
     content = <Reveal startAt={revealAt} onDone={backHome} />
   } else if (view === 'story') {
@@ -216,7 +220,7 @@ export default function App() {
     )
   }
 
-  const welcome = view === 'tabs' && s.onboarded && !replayOnboarding
+  const welcome = view === 'tabs' && s.onboarded && !replayOnboarding && !replayStreak
   return (
     <div className="app">
       {content}
@@ -246,8 +250,8 @@ export default function App() {
           }}
         />
       )}
-      {testMenu && <TestMenu onClose={() => setTestMenu(false)} onOnboarding={() => setReplayOnboarding(true)} onAskPush={() => setAskPush(true)} />}
-      {testMode && s.onboarded && !testMenu && !replayOnboarding && view === 'tabs' && (
+      {testMenu && <TestMenu onClose={() => setTestMenu(false)} onOnboarding={() => setReplayOnboarding(true)} onAskPush={() => setAskPush(true)} onStreak={() => setReplayStreak(true)} />}
+      {testMode && s.onboarded && !testMenu && !replayOnboarding && !replayStreak && view === 'tabs' && (
         <button className="testfab" onClick={() => setTestMenu(true)} aria-label="Menú de prueba">
           🛠
         </button>

@@ -2,7 +2,17 @@ import { nextJob, actions, todayKey, useGame } from '../game/store'
 import { jobInfo } from '../game/journey'
 
 /** Playtest helpers. Open by tapping the Home greeting 5 times, or with ?test in the URL. */
-export function TestMenu({ onClose, onOnboarding, onAskPush }: { onClose: () => void; onOnboarding: () => void; onAskPush: () => void }) {
+export function TestMenu({
+  onClose,
+  onOnboarding,
+  onAskPush,
+  onStreak,
+}: {
+  onClose: () => void
+  onOnboarding: () => void
+  onAskPush: () => void
+  onStreak: () => void
+}) {
   const s = useGame((g) => g)
   const job = nextJob(s)
   const run = (fn: () => void) => () => {
@@ -24,6 +34,7 @@ export function TestMenu({ onClose, onOnboarding, onAskPush }: { onClose: () => 
         <button onClick={run(actions.debugCoins)}>+100 herraduras</button>
         <button onClick={run(actions.debugPremium)}>Gauchito Premium: {s.premium ? 'sí (sacarlo)' : 'no (activarlo)'}</button>
         <button onClick={run(onOnboarding)}>Ver el onboarding (no borra nada)</button>
+        <button onClick={run(onStreak)}>Ver la racha del día 1</button>
         <button onClick={run(onAskPush)}>Ver el «¿Te aviso?» de Paucho</button>
         <button
           className="testmenu__danger"

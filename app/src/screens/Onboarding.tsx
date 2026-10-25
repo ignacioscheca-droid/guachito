@@ -117,7 +117,7 @@ export function Onboarding({ onPreviewDone }: { onPreviewDone?: () => void }) {
     )
   }
   if (step === 'day1') return <DayOneCard companion={him} onNext={() => setStep('streak')} />
-  if (step === 'streak') return <StreakDay companion={him} onNext={() => setStep('goal')} />
+  if (step === 'streak') return <StreakDay onNext={() => setStep('goal')} />
   if (step === 'goal') {
     return (
       <StreakGoal

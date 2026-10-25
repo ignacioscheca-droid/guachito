@@ -150,7 +150,9 @@ and the `guachito_assets/` folder. Everything people read says Gauchito.
   `aboutYou.ts`, goals in `STARTER_GOALS` in content.ts). The plan becomes the daily
   habits, so energy is split over 7 (MAX_HABITS = 7). He is called Paucho unless renamed ·
   9) day 1 (Finch 32–34, `src/screens/DayOne.tsx`): "¡Jueves genial!" card with a gentle
-  reminder, "1 día de racha", and "¿Cuántos días seguidos…?" (2/5/7/14, saved as
+  reminder, "1 día de racha" (Duolingo's streak screen as a morning mate, ported from main
+  2026-10-25: night → swipe up pours yerba into the mate and brings the dawn → Gauchito sips it;
+  `habit_mate` split by `design/tools/make_mate_parts.py`; test menu → "Ver la racha del día 1"), and "¿Cuántos días seguidos…?" (2/5/7/14, saved as
   `streakGoal`). The app doesn't count streaks yet.
   Naming the dog comes later, not in onboarding. Art brief: Claude Doc "Gauchito — Escena del mate (onboarding)"
   (https://claude.ai/code/artifact/a95a438f-5c51-43af-8984-69abcb3ff50b, tab "Para pegar en
