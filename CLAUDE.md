@@ -76,8 +76,9 @@ and the `guachito_assets/` folder. Everything people read says Gauchito.
   9) day 1 (Finch 32–34, `src/screens/DayOne.tsx`): "¡Jueves genial!" card with a gentle
   reminder, "1 día de racha" (Duolingo's streak screen, owner's call 2026-10-25, as a morning on
   the campo — fire read as a wildfire next to him: it starts at night and swiping up pours yerba
-  into an empty mate and brings the dawn → bombilla drops, sun rises, 0 rolls to 1 → Gauchito pops out of steam sipping
-  it (A poses sorbo/ahh/base); test menu → "Ver la racha del día 1" replays it), and "¿Cuántos días seguidos…?" (2/5/7/14, saved as
+  into an empty mate and brings the dawn → sun rises, 0 rolls to 1 → Gauchito pops out of steam sipping
+  it (A poses sorbo/ahh/base). The mate is `habit_mate` split by `design/tools/make_mate_parts.py`
+  into mate_empty / mate_yerba / mate_bombilla, so the painted yerba rises in the mouth; test menu → "Ver la racha del día 1" replays it), and "¿Cuántos días seguidos…?" (2/5/7/14, saved as
   `streakGoal`). The app doesn't count streaks yet.
   Naming the dog comes later, not in onboarding. Art brief: Claude Doc "Gauchito — Escena del mate (onboarding)"
   (https://claude.ai/code/artifact/a95a438f-5c51-43af-8984-69abcb3ff50b, tab "Para pegar en

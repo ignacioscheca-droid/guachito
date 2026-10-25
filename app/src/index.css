@@ -2567,7 +2567,7 @@ img {
 }
 /* ---- "1 día de racha", Duolingo's streak screen as a morning on the campo ----
    Starts at night; swiping up pours the yerba and brings the dawn. ms after the swipe:
-   0     the yerba finishes pouring · 450 the mate hops · 650 the bombilla drops, lands at 880
+   0     the yerba finishes pouring · 450 the mate hops, 850 it settles
    950   the sun comes up, leaves and sparkles fly, steam starts · 1150 a grey 0 · 1550 it rolls to 1
    2300  puff of steam, Gauchito pops out sipping the mate · 2650 his bubble types out
    3100  the group and the campo rise · 3450 the week · 3900 today fills, 4250 its check
@@ -2860,36 +2860,39 @@ img {
   width: 100%;
   height: 100%;
 }
-/* the gourd without the bombilla (cut at the rim), and the bombilla on its own */
-.sk-mate__gourd {
-  clip-path: inset(37% 0 0 0);
-}
-.sk-mate__bombilla {
-  clip-path: polygon(0 0, 100% 0, 100% 37%, 64.5% 37%, 64.5% 43.7%, 53.9% 43.7%, 53.9% 37%, 0 37%);
-  opacity: 0;
-}
+/* the yerba sinks into the mouth, darker the deeper it is, and rises as you pour */
 .sk-mate__yerba {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-  transform: scale(var(--pull, 0));
-  transition: transform 0.4s ease-out;
+  transform: translateY(calc((1 - var(--pull, 0)) * 22px));
+  opacity: calc(var(--pull, 0) * 4);
+  transition:
+    transform 0.4s ease-out,
+    opacity 0.4s;
 }
-.sk--held .sk-mate__yerba {
+.sk-mate__depth {
+  fill: #1a0c05;
+  opacity: calc((1 - var(--pull, 0)) * 0.5);
+  transition: opacity 0.4s;
+}
+.sk--held .sk-mate__yerba,
+.sk--held .sk-mate__depth {
   transition: none;
+}
+.sk-mate__full {
+  opacity: 0;
 }
 .sk--lit .sk-mate__yerba {
   animation: sk-yerba 0.45s ease-out both;
 }
+.sk--lit .sk-mate__depth {
+  animation: sk-fade 0.45s forwards;
+}
+.sk--lit .sk-mate__full {
+  animation: sk-show 0.15s 0.45s both;
+}
 .sk--lit .sk-mate__body {
   animation:
     sk-hop 0.35s 0.45s ease-out,
-    sk-clink 0.4s 0.88s ease-out;
-}
-.sk--lit .sk-mate__bombilla {
-  animation: sk-drop 0.25s 0.63s cubic-bezier(0.5, 0, 1, 0.6) both;
-}
-.sk--lit .sk-mate__mouth {
-  animation: sk-fade 0.2s 0.9s forwards;
+    sk-clink 0.4s 0.85s ease-out;
 }
 .sk--lit .sk-mate {
   animation: sk-fade 0.1s 2.38s forwards;
@@ -3262,22 +3265,20 @@ img {
 @keyframes sk-fall {
   0% {
     opacity: 0;
-    transform: translateY(-230px);
+    transform: translateY(-230px) rotate(var(--spin));
   }
   20% {
     opacity: 1;
   }
   100% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) rotate(calc(var(--spin) + 180deg));
   }
 }
 @keyframes sk-yerba {
-  from {
-    transform: scale(var(--pull, 0));
-  }
   to {
-    transform: scale(1);
+    transform: none;
+    opacity: 1;
   }
 }
 @keyframes sk-hop {
@@ -3291,19 +3292,6 @@ img {
   }
   65% {
     transform: scale(0.96, 1.04);
-  }
-}
-@keyframes sk-drop {
-  0% {
-    opacity: 0;
-    transform: translateY(-120px);
-  }
-  20% {
-    opacity: 1;
-  }
-  to {
-    opacity: 1;
-    transform: none;
   }
 }
 @keyframes sk-wisp {

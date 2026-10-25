@@ -214,7 +214,7 @@ export function StreakDay({ onNext }: { onNext: () => void }) {
 
             <div className="sk-pour" aria-hidden>
               {POUR.map((p, i) => (
-                <i key={i} style={{ left: p.x, width: p.size, height: p.size, rotate: `${p.spin}deg`, animationDelay: `${p.delay}s` }} />
+                <i key={i} style={{ left: p.x, width: p.size, height: p.size, '--spin': `${p.spin}deg`, animationDelay: `${p.delay}s` } as CSSProperties} />
               ))}
             </div>
 
@@ -222,25 +222,22 @@ export function StreakDay({ onNext }: { onNext: () => void }) {
             <button className="sk-mate" aria-label="Cebar el mate" disabled={lit}>
               <span className="sk-mate__glow" />
               <span className="sk-mate__body">
-                <img className="sk-mate__gourd" src={art('habit_mate')} alt="" />
-                {/* the mouth: dark while empty, yerba rising as you pour */}
-                <svg className="sk-mate__mouth" viewBox="0 0 256 256">
+                {/* the icon in parts (design/tools/make_mate_parts.py): the yerba rises in the
+                    dark mouth as you pour, then the icon itself takes over */}
+                <img src={art('mate_empty')} alt="" />
+                <svg viewBox="0 0 256 256">
                   <defs>
                     <clipPath id="sk-mouth">
-                      <ellipse cx="117" cy="112.5" rx="46" ry="14" />
+                      <ellipse cx="116.5" cy="112.5" rx="47.5" ry="16" />
                     </clipPath>
-                    <pattern id="sk-yerba" width="9" height="7" patternUnits="userSpaceOnUse">
-                      <rect width="9" height="7" fill="#8a7426" />
-                      <rect x="1" y="1" width="3" height="2" fill="#b9a14a" />
-                      <rect x="5" y="4" width="3" height="2" fill="#5f4b0e" />
-                    </pattern>
                   </defs>
                   <g clipPath="url(#sk-mouth)">
-                    <rect x="60" y="90" width="120" height="40" fill="#3a1f10" />
-                    <ellipse className="sk-mate__yerba" cx="117" cy="114" rx="48" ry="16" fill="url(#sk-yerba)" />
+                    <image className="sk-mate__yerba" href={art('mate_yerba')} width="256" height="256" />
+                    <rect className="sk-mate__depth" x="60" y="90" width="120" height="40" />
                   </g>
                 </svg>
-                <img className="sk-mate__bombilla" src={art('habit_mate')} alt="" />
+                <img src={art('mate_bombilla')} alt="" />
+                <img className="sk-mate__full" src={art('habit_mate')} alt="" />
               </span>
               <svg className="sk-steam" viewBox="-20 -60 60 64">
                 <path d={WISP} />
