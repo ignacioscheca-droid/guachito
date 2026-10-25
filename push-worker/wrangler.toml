@@ -1,0 +1,14 @@
+# Gauchito's "the obra is done" notification: the app tells this worker when Paucho's job
+# ends, and a Durable Object alarm sends the push at that moment (GitHub's crons only do the
+# fixed 9/16/21 ones). Deployed by .github/workflows/push-worker.yml.
+name = "gauchito-push"
+main = "src/index.js"
+compatibility_date = "2025-06-01"
+
+[[durable_objects.bindings]]
+name = "TIMER"
+class_name = "Timer"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Timer"]

@@ -1,0 +1,33 @@
+# Deploys push-worker/ (the "the obra is done" notification) to Cloudflare Workers.
+# Needs the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets, plus the VAPID keys
+# the daily notifications already use.
+name: Push worker
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['push-worker/**']
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      HAS_CF: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+    steps:
+      - if: env.HAS_CF != 'true'
+        run: echo "Falta el secreto CLOUDFLARE_API_TOKEN (y CLOUDFLARE_ACCOUNT_ID): no se publica el worker."
+      - uses: actions/checkout@v4
+        if: env.HAS_CF == 'true'
+      - uses: cloudflare/wrangler-action@v3
+        if: env.HAS_CF == 'true'
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: push-worker
+          secrets: |
+            VAPID_PUBLIC_KEY
+            VAPID_PRIVATE_KEY
+        env:
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
