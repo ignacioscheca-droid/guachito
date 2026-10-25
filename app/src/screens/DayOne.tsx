@@ -176,9 +176,16 @@ export function StreakDay({ onNext }: { onNext: () => void }) {
         setPull(0)
       }}
     >
-      {/* the campo at dawn; the sun comes up when the mate is ready */}
+      {/* the sky: night, turning to dawn as the mate fills, and to morning when it's ready */}
+      <div className="sk-sky sk-sky--dawn" aria-hidden />
+      <div className="sk-sky sk-sky--night" aria-hidden>
+        <span className="sk-moon" />
+        {scatter(30, 9, (r, i) => (
+          <i key={i} style={{ left: `${r() * 100}%`, top: `${r() * 45}%`, animationDelay: `${r() * -3}s`, scale: `${0.5 + r()}` }} />
+        ))}
+      </div>
+      {/* the campo, which rises with the group */}
       <div className="sk-land" aria-hidden>
-        <div className="sk-sky sk-sky--dawn" />
         <div className="sk-sun" />
         {CLOUDS.map(([left, top, width, secs], i) => (
           <i key={i} className="sk-cloud" style={{ left: `${left}%`, top: `${top}%`, width, animationDuration: `${secs}s` }} />
