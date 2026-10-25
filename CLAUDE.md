@@ -10,13 +10,18 @@ This branch is a separate build, published at `/guachito/areas/` (installs as "G
 It keeps its own save (`gauchito.v2` in localStorage), so the owner's app on main is
 untouched. Since 2026-10-23 it takes the daily notifications: its own `sw.js` (reads the
 "gauchito-v2" IndexedDB snapshot, talks about the obras), and `PUSH_SUBSCRIPTION` holds
-this build's subscription. Paucho asks first with his own pop-up (`NotifAsk` in
+this build's subscription. When a job starts, the app asks `push-worker/` (on main, a Cloudflare Worker with a Durable Object alarm) for a push when it ends: `PUSH_WORKER_URL` in push.ts, empty until deployed. Paucho asks first with his own pop-up (`NotifAsk` in
 Welcomes.tsx, after a job starts; `shouldAskPush` in push.ts: up to 3 times, 2 days apart),
 and only "¡Sí, avisame!" opens the phone's dialog. Its design is the owner's, from his Royal Match references:
 - **Day loop:** each habit gives 10 energy. The bar asks 30, and one more habit at each of
   Finch's stages (`energyGoal` in `src/game/journey.ts`). One full bar a day starts the
   next job for 8 hours; after that, habits give herraduras (the currency, +30 for filling the
-  bar, +5 each). Seeing a finished job (`Reveal`) is what counts it (`actions.completeJob`).
+  bar, +5 each). Seeing a finished job is what counts it (`actions.completeJob`). Paucho
+  gathers energy whenever he isn't working (`chargeTarget`): also while a finished job waits
+  to be seen, for the one after it.
+- **Habits of your own:** "Agregar un hábito" ends the list (Finch's), for today only
+  (`extras`, by day) or every day; 5 themes of 5 suggestions (`HABIT_SUGGESTIONS` in
+  content.ts). With nothing left, Paucho congratulates you over the same button.
 - **The journey (`JOURNEY`):** Área 1 "El rancho de Paucho" (casa, fogón, aljibe),
   Área 2 "El galpón" (the cucha brings the dog, then galpón, gallinero), a trip to the south
   (`TRIP`, which brings lenga posts for the corrales), then Área 3 "Los corrales" (corral, molino,
@@ -34,7 +39,7 @@ and only "¡Sí, avisame!" opens the phone's dialog. Its design is the owner's, 
   - The tab bar is Royal Match's: icons only, and the chosen tab is wider, lit, with its icon raised over its name.
 - **Paucho talks to you (the owner's rule, for everything):** up close, like the onboarding's mate (`PauchoTalk`, with the `mate_b*` close-ups, mouth moving while the line types out), or in a bubble over his head in the field (`AreaScene` `say`). When he is up close, the Paucho in the field steps out.
   - **The bar fills** (`FullTalk`): Home counts to the top while he says "¡Yujuuu!" in the field. Then he comes up close to thank you, and the day's herraduras fly from his hand to the counter. Next he tells you what he'll build and until when; "¡Dale, Paucho!" sets him off and he says "¡Toc, toc! Te aviso cuando esté". Each line has three variants.
-  - **Back with an obra finished,** all in Home: its materials glow with a "✓ ¡Listo!" chip and Paucho greets you. Tapping the obra (or the bar) builds it in place; a dot fills on the area's progress (●●○), and he shows it to you up close. Then the next obra's materials glow and he invites you to it. Its icon is at the end of the bar. The last obra of an area goes on to `Reveal`'s area celebration.
+  - **Back with an obra finished,** all in Home: Paucho greets you up close ("¿La vemos?", the obra still under its pile behind him). "¡A ver!" builds it in place; a dot fills on the area's progress (●●○), and he shows it to you up close. Then the next obra's materials glow and he invites you to it. Its icon is at the end of the bar. The last obra of an area goes on to `Reveal`'s area celebration.
 - **Área 1:** ChatGPT's art in `arte_build/` (area1_etapa0..3 and area1_assets/), imported by `design/tools/import_area1.py`.
   - **One scene per stage:** each obra not built yet shows as a pile of its materials.
   - **Layers, so things move:** the cloudless sky, three clouds crossing it, the stage (no sky, no trees, fire out), and two tree sprites swaying.

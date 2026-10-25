@@ -51,6 +51,65 @@ export const STARTER_GOALS: HabitDef[] = [
 /** Emojis offered when creating your own habit. */
 export const HABIT_EMOJIS = ['🧸', '🤗', '❤️', '🏋️', '🏃', '🚴', '🧘', '📚', '💧', '🍎', '😴', '🎸', '🌱', '☀️', '🍳', '📵', '🐶', '🎨', '✍️', '📞']
 
+/** Ideas when adding a habit of your own (like Finch's suggestions): five themes, five each. */
+export const HABIT_SUGGESTIONS: { id: string; name: string; items: [string, string][] }[] = [
+  {
+    id: 'faciles',
+    name: 'Victorias fáciles',
+    items: [
+      ['🛏️', 'Tender la cama'],
+      ['💧', 'Tomar un vaso de agua'],
+      ['🪥', 'Lavarme los dientes'],
+      ['👕', 'Cambiarme de ropa'],
+      ['🧼', 'Lavarme la cara'],
+    ],
+  },
+  {
+    id: 'gratitud',
+    name: 'Gratitud',
+    items: [
+      ['🙏', 'Anotar 3 cosas que agradezco'],
+      ['💌', 'Agradecerle a alguien'],
+      ['🌅', 'Mirar el atardecer'],
+      ['📸', 'Sacarle una foto a algo lindo'],
+      ['✍️', 'Anotar algo que me salió bien'],
+    ],
+  },
+  {
+    id: 'calma',
+    name: 'Calma',
+    items: [
+      ['🌬️', 'Respirar hondo 3 veces'],
+      ['🧘', 'Meditar 5 minutos'],
+      ['🧉', 'Un mate sin pantallas'],
+      ['🎶', 'Escuchar una canción tranqui'],
+      ['🚿', 'Una ducha sin apuro'],
+    ],
+  },
+  {
+    id: 'conexion',
+    name: 'Conexión',
+    items: [
+      ['📞', 'Llamar a alguien que quiero'],
+      ['🤗', 'Dar un abrazo'],
+      ['💬', 'Responder un mensaje pendiente'],
+      ['🍽️', 'Comer en familia'],
+      ['🐶', 'Jugar con mi mascota'],
+    ],
+  },
+  {
+    id: 'movimiento',
+    name: 'Movimiento',
+    items: [
+      ['🚶', 'Caminar 10 minutos'],
+      ['🦒', 'Estirarme un rato'],
+      ['💃', 'Bailar una canción'],
+      ['🪜', 'Subir por la escalera'],
+      ['☀️', 'Salir al sol 10 minutos'],
+    ],
+  },
+]
+
 /** Habits you pick in onboarding, before the plan fills up the rest. */
 export const HABITS_TO_PICK = 3
 /** The starter plan has as many goals as Finch's. */

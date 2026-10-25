@@ -40,6 +40,8 @@ export type GameState = {
   habits: string[]
   /** Habits the player created (name + emoji). */
   customHabits: HabitDef[]
+  /** Habits added for one day only ("Solo hoy"), by local day. */
+  extras: Record<string, string[]>
   /** Completed habit ids per local day (YYYY-MM-DD). */
   completions: Record<string, string[]>
   /** Energy each completion gave, per day, so a mistaken tick can be undone. */
@@ -89,6 +91,7 @@ const initial = (): GameState => ({
   streakGoal: null,
   habits: [],
   customHabits: [],
+  extras: {},
   completions: {},
   energyGains: {},
   coinGains: {},
@@ -184,6 +187,17 @@ export function findHabit(s: GameState, id: string): HabitDef {
 }
 
 export const goalOf = (s: GameState) => energyGoal(s.jobsDone)
+
+/**
+ * Paucho gathers energy whenever he isn't working: while charging, and also when a finished
+ * job waits to be seen (the energy is then for the one after it). One full bar a day.
+ */
+export function chargeTarget(s: GameState, day = todayKey(s)): { goal: number } | null {
+  if (s.lastFullDay === day) return null
+  if (s.work.status === 'charging' && nextJob(s)) return { goal: goalOf(s) }
+  if (s.work.status === 'done' && JOURNEY[s.jobsDone + 1]) return { goal: energyGoal(s.jobsDone + 1) }
+  return null
+}
 /** The bar was already filled today: the next job waits for tomorrow's energy. */
 export const restingToday = (s: GameState) => s.work.status === 'charging' && s.lastFullDay === todayKey(s)
 export const nextJob = (s: GameState) => JOURNEY[s.jobsDone] ?? null
@@ -222,6 +236,9 @@ export function todayKey(s: GameState = state) {
 
 export const doneToday = (s: GameState) => s.completions[todayKey(s)] ?? []
 
+/** Today's habits: the everyday ones and the ones added for today only. */
+export const habitsToday = (s: GameState) => [...s.habits, ...(s.extras[todayKey(s)] ?? []).filter((id) => !s.habits.includes(id))]
+
 export function workRemainingMs(s: GameState = state) {
   if (s.work.status !== 'working' || s.work.startedAt == null) return 0
   return Math.max(0, s.work.startedAt + WORK_MS - (Date.now() + s.workSkipMs))
@@ -253,6 +270,16 @@ export const actions = {
     return id
   },
 
+  /** A new habit of your own: for today only, or (`everyDay`) added to the daily ones. */
+  addHabit(name: string, emoji: string, everyDay: boolean) {
+    const id = `c${Date.now().toString(36)}`
+    const day = todayKey()
+    const customHabits = [...state.customHabits, { id, name: name.trim(), emoji }]
+    if (everyDay) set({ ...state, customHabits, habits: [...state.habits, id] })
+    else set({ ...state, customHabits, extras: { ...state.extras, [day]: [...(state.extras[day] ?? []), id] } })
+    return id
+  },
+
   setHabits(habits: string[]) {
     set({ ...state, habits })
   },
@@ -266,8 +293,9 @@ export const actions = {
     const done = state.completions[day] ?? []
     if (done.includes(id)) return { energy: 0, coins: 0, full: false, firstTime: false }
     const firstTime = !Object.values(state.completions).some((ids) => ids.includes(id))
-    const goal = goalOf(state)
-    const charging = state.work.status === 'charging' && nextJob(state) != null && state.lastFullDay !== day
+    const target = chargeTarget(state, day)
+    const goal = target?.goal ?? goalOf(state)
+    const charging = target != null
     const energy = charging ? Math.min(goal, state.energy + ENERGY_PER_HABIT) : state.energy
     const full = charging && energy >= goal
     const coins = full ? FULL_ENERGY_COINS : charging ? 0 : EXTRA_HABIT_COINS
@@ -279,7 +307,8 @@ export const actions = {
       energy,
       coins: state.coins + coins,
       lastFullDay: full ? day : state.lastFullDay,
-      work: full ? { status: 'ready', startedAt: null } : state.work,
+      // (a finished job still waiting to be seen stays so: the full bar shows after it)
+      work: full && state.work.status === 'charging' ? { status: 'ready', startedAt: null } : state.work,
     }
     if (done.length === 0 && daysTogether(next.completions) >= PAUCHO_TAB_DAYS) next = unlock(next, 'paucho')
     // (read before set(): afterwards `state` is already the new one)
@@ -295,7 +324,7 @@ export const actions = {
     if (!done.includes(id)) return
     const { [id]: gained = 0, ...gains } = state.energyGains[day] ?? {}
     const { [id]: coins = 0, ...coinGains } = state.coinGains[day] ?? {}
-    const unspent = state.work.status === 'charging' || state.work.status === 'ready'
+    const unspent = state.work.status === 'charging' || state.work.status === 'ready' || state.work.status === 'done'
     const energy = unspent ? Math.max(0, state.energy - gained) : state.energy
     const unfilled = state.work.status === 'ready' && energy < goalOf(state)
     set({
@@ -340,6 +369,8 @@ export const actions = {
     // the trip is next: Aventuras opens to say why he is going
     if (state.jobsDone + 1 === TRIP_JOB) next = unlock(next, 'aventuras')
     if (job?.kind === 'trip') next = { ...next, coins: next.coins + TRIP.coins }
+    // energy gathered while it waited to be seen: a full bar is ready to go
+    if (nextJob(next) && next.energy >= goalOf(next)) next = { ...next, work: { status: 'ready', startedAt: null } }
     set(next)
   },
 

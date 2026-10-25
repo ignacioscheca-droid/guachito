@@ -68,3 +68,21 @@ export function shouldAskPush(s: GameState) {
   const days = (Date.parse(todayKey(s)) - Date.parse(last)) / 86_400_000
   return days >= 2
 }
+
+/**
+ * The worker that sends "the obra is done" when Paucho's job ends (push-worker/ on main,
+ * deployed to Cloudflare). Empty until it is deployed: then nothing is scheduled.
+ */
+const PUSH_WORKER_URL = ''
+
+/** Asks for the "done" notification at `at` (ms), if notifications are on in this phone. */
+export function scheduleDonePush(subscription: string | null, at: number) {
+  if (!PUSH_WORKER_URL || !subscription) return
+  void fetch(`${PUSH_WORKER_URL}/done`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sub: JSON.parse(subscription), at }),
+  }).catch(() => {
+    /* offline: the 16:00 reminder still says it's done */
+  })
+}

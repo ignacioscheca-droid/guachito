@@ -9,6 +9,9 @@ import { useGame } from '../game/store'
  * keeps going up (Royal Match's grey rooms with a padlock). */
 const COMING = ['La cocina', 'La laguna', 'La estación']
 
+/** Set once the road has been panned down the first time (per device). */
+const PANNED_KEY = 'gauchito.areasPanned'
+
 /** Royal Match's slow pan: from the top of the road down to the current area. */
 function panTo(box: HTMLElement, target: number) {
   const from = box.scrollTop
@@ -53,14 +56,34 @@ export function AreasTab({ onGoHome }: { onGoHome: () => void }) {
     const box = road.current
     const tile = current.current
     if (!box || !tile) return
-    // it opens at the top, on the areas still to come, and glides down to the current one
+    const target = tile.offsetTop + tile.offsetHeight / 2 - box.clientHeight / 2
+    // the first time it opens at the top, on the areas still to come, and glides down to the
+    // current one; after that it opens on the current one
+    let panned = false
+    try {
+      panned = localStorage.getItem(PANNED_KEY) === '1'
+      localStorage.setItem(PANNED_KEY, '1')
+    } catch {
+      /* no storage: pan every time */
+    }
+    if (panned) {
+      box.scrollTop = target
+      return
+    }
     box.scrollTop = 0
-    return panTo(box, tile.offsetTop + tile.offsetHeight / 2 - box.clientHeight / 2)
+    return panTo(box, target)
   }, [])
 
   const tiles = Array.from({ length: AREAS.length + COMING.length }, (_, i) => i).reverse()
   return (
     <div className="aroad" ref={road}>
+      <section className="atile atile--soon">
+        <div className="atile__soon">
+          <span>✨</span>
+          <strong>Próximamente</strong>
+          <small>Más lugares para {s.name}</small>
+        </div>
+      </section>
       {tiles.map((i) => {
         const a = AREAS[i]
         const done = i < finished

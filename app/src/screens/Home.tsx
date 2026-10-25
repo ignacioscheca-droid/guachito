@@ -6,8 +6,10 @@ import { RideWorld } from '../components/RideWorld'
 import { Button, CoinPill, HabitIcon } from '../components/ui'
 import { art } from '../game/content'
 import { AREAS, areaView, ENERGY_PER_HABIT, EXTRA_HABIT_COINS, FULL_ENERGY_COINS, jobInfo, WORK_MS, type Job } from '../game/journey'
-import { actions, doneToday, findHabit, getState, goalOf, nextJob, restingToday, useGame } from '../game/store'
+import { actions, chargeTarget, doneToday, findHabit, getState, goalOf, habitsToday, nextJob, restingToday, useGame } from '../game/store'
 import { haptic, sfx } from '../game/sound'
+import { AddHabit } from '../components/AddHabit'
+import { PauchoFace } from '../components/Paucho'
 import { PauchoTalk } from '../components/PauchoTalk'
 import { formatClock } from './TripRun'
 
@@ -210,6 +212,7 @@ function ProgressBar({ p, barRef }: { p: Props; barRef: RefObject<HTMLButtonElem
 export function Home(p: Props) {
   const s = useGame((g) => g)
   const [editing, setEditing] = useState(false)
+  const [adding, setAdding] = useState(false)
   const [showDone, setShowDone] = useState(false)
   const [leaving, setLeaving] = useState<{ id: string; folding: boolean } | null>(null)
   const [burst, setBurst] = useState({ key: 0, x: 0, y: 0 })
@@ -218,11 +221,12 @@ export function Home(p: Props) {
   const coinsRef = useRef<HTMLSpanElement>(null)
   const [cardsTop, setCardsTop] = useState(470)
   const done = doneToday(s)
-  const open = s.habits.filter((h) => !done.includes(h))
-  const doneIds = s.habits.filter((h) => done.includes(h))
+  const today = habitsToday(s)
+  const open = today.filter((h) => !done.includes(h))
+  const doneIds = today.filter((h) => done.includes(h))
   const job = nextJob(s)
   const { status } = s.work
-  const charging = (status === 'charging' && job != null && !restingToday(s)) || p.fullPending
+  const charging = chargeTarget(s) != null || p.fullPending
   const traveling = job?.kind === 'trip' && status === 'working'
   const view = areaView(s.jobsDone)
 
@@ -274,7 +278,8 @@ export function Home(p: Props) {
   const [nextSay, setNextSay] = useState<string | null>(null)
   const area = AREAS[view.area]
   const doneObra = status === 'done' && job?.kind === 'build' && view.area === job.area ? area.obras[view.built] : null
-  const waiting = !!doneObra && phase == null
+  // he greets you up close as soon as you're back (the obra still under its pile behind him)
+  const waiting = !!doneObra && phase == null && !p.hidePaucho
   const openObra = () => {
     if (!doneObra || phase) return
     setPhase('reveal')
@@ -302,13 +307,13 @@ export function Home(p: Props) {
     window.setTimeout(() => setPhase((ph) => (ph === 'next' ? null : ph)), 6500)
   }
   if (phase === 'reveal' || phase === 'tell') look = { mode: 'reveal' }
-  const greet = s.playerName ? `¡Volviste, ${s.playerName}! Mirá lo que armé 🧉` : '¡Volviste! Mirá lo que armé 🧉'
-  const fieldSay = p.say ?? (waiting ? greet : phase === 'next' ? nextSay : null)
-  const pose = p.hidePaucho || phase === 'tell' ? null : phase === 'reveal' ? 'celebrate' : status === 'working' ? 'build' : status === 'done' ? 'wave' : 'idle'
+  const greet = doneObra ? `¡Volviste${s.playerName ? `, ${s.playerName}` : ''}! Terminé ${doneObra.the}. ¿La vemos? 🧉` : ''
+  const fieldSay = p.say ?? (phase === 'next' ? nextSay : null)
+  const pose = p.hidePaucho || phase === 'tell' || waiting ? null : phase === 'reveal' ? 'celebrate' : status === 'working' ? 'build' : status === 'done' ? 'wave' : 'idle'
   const dots = area.obras.map((_, i) => i < view.built + (phase === 'tell' ? 1 : 0))
 
   return (
-    <div className={`home3${waiting ? ' home3--waiting' : ''}`} ref={root}>
+    <div className="home3" ref={root}>
       {traveling ? (
         <div className="scene scene--away home3__scene">
           <RideWorld dog={s.dog.arrived} className="run__world--home" />
@@ -326,7 +331,7 @@ export function Home(p: Props) {
           cardsTop={cardsTop}
           onTapPaucho={p.onTapPaucho}
           say={phase === 'reveal' || phase === 'tell' ? null : fieldSay}
-          mark={waiting ? 'ready' : phase === 'next' ? 'next' : null}
+          mark={phase === 'next' ? 'next' : null}
           onTapObra={openObra}
         />
       )}
@@ -348,7 +353,14 @@ export function Home(p: Props) {
           ))}
         </div>
       )}
-      {phase === 'tell' && doneObra && <PauchoTalk compact pose="b4_contento" text={`¡Mirá cómo quedó ${doneObra.the}! ${doneObra.done}`} onNext={finishObra} />}
+      {waiting && (
+        <PauchoTalk pose="b1_saluda" text={greet}>
+          <Button variant="gold" onClick={openObra}>
+            ¡A ver! ✨
+          </Button>
+        </PauchoTalk>
+      )}
+      {phase === 'tell' && doneObra && <PauchoTalk compact pose="b4_contento" text={doneObra.done.startsWith('¡Mirá') ? doneObra.done : `¡Mirá cómo quedó ${doneObra.the}! ${doneObra.done}`} onNext={finishObra} />}
 
       <div className="home3__chips" style={{ top: cardsTop - 46 }}>
         {doneIds.length > 0 && (
@@ -363,9 +375,14 @@ export function Home(p: Props) {
 
       <div className="home3__cards" style={{ top: cardsTop }}>
         {open.length === 0 && (
-          <div className="hcard hcard--all">
-            <span className="hcard__icon">🎉</span>
-            <b>¡Hiciste todo por hoy!</b>
+          <div className="hall">
+            <span className="hall__face">
+              <PauchoFace outfit={s.outfit} />
+            </span>
+            <p className="hall__say">¡Cumpliste todo por hoy{s.playerName ? `, ${s.playerName}` : ''}! Estoy orgulloso de vos.</p>
+            <button className="hall__add" onClick={() => setAdding(true)}>
+              <b>＋</b> Agregar un hábito
+            </button>
           </div>
         )}
         {open.map((id) => {
@@ -388,6 +405,12 @@ export function Home(p: Props) {
             </button>
           )
         })}
+        {open.length > 0 && (
+          <button className="hcard hcard--add" onClick={() => setAdding(true)}>
+            <span className="hcard__icon">＋</span>
+            <b>Agregar un hábito</b>
+          </button>
+        )}
       </div>
 
       <div className="home__burst" style={{ left: burst.x, top: burst.y }}>
@@ -425,6 +448,7 @@ export function Home(p: Props) {
         </div>
       )}
       {editing && <EditHabits onClose={() => setEditing(false)} />}
+      {adding && <AddHabit onClose={() => setAdding(false)} />}
     </div>
   )
 }

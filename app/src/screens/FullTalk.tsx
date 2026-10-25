@@ -4,7 +4,8 @@ import { Button } from '../components/ui'
 import { art } from '../game/content'
 import { jobInfo, TRIP, WORK_MS } from '../game/journey'
 import { haptic, sfx } from '../game/sound'
-import { actions, nextJob, useGame } from '../game/store'
+import { scheduleDonePush } from '../game/push'
+import { actions, getState, nextJob, useGame } from '../game/store'
 import { returnTime } from './TripRun'
 
 const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)]
@@ -89,7 +90,15 @@ export function FullTalk({ start, onCoinsLanded, onDone }: { start: 'thanks' | '
   const at = returnTime(WORK_MS)
 
   if (step === 'thanks') {
-    return <PauchoTalk pose="b4_contento" text={`${lines.thanks} ${lines.gift}`} onNext={() => setStep('work')} />
+    // a finished obra still waits to be seen: first that, then he'll start the next one
+    const waiting = s.work.status === 'done'
+    return (
+      <PauchoTalk
+        pose="b4_contento"
+        text={waiting ? `${lines.thanks} ${lines.gift} ¡Y mirá, ya terminé ${jobInfo(job).the}!` : `${lines.thanks} ${lines.gift}`}
+        onNext={() => (waiting ? onDone(false) : setStep('work'))}
+      />
+    )
   }
   return (
     <PauchoTalk
@@ -100,6 +109,9 @@ export function FullTalk({ start, onCoinsLanded, onDone }: { start: 'thanks' | '
         variant="gold"
         onClick={() => {
           actions.startWork()
+          // the phone gets a notification when he's done
+          const now = getState()
+          if (now.work.startedAt != null) scheduleDonePush(now.pushSubscription, now.work.startedAt + WORK_MS)
           sfx('start')
           haptic('heavy')
           onDone(true)

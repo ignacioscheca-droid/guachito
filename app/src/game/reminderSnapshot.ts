@@ -2,7 +2,7 @@
 // from what you have done today. The SW can't read localStorage, so the app keeps a
 // small copy of the relevant state in IndexedDB. Nothing leaves the phone.
 import { ENERGY_PER_HABIT, jobInfo, WORK_MS } from './journey'
-import { findHabit, getState, goalOf, nextJob, restingToday, subscribe, type GameState } from './store'
+import { findHabit, getState, goalOf, habitsToday, nextJob, restingToday, subscribe, type GameState } from './store'
 
 /** Emoji for catalog habits, which use artist icons in the app. */
 const CATALOG_EMOJI: Record<string, string> = {
@@ -42,7 +42,7 @@ function build(s: GameState): ReminderSnapshot {
     v: 3,
     name: s.name,
     playerName: s.playerName,
-    habits: s.habits.map((id) => {
+    habits: habitsToday(s).map((id) => {
       const h = findHabit(s, id)
       return { id, name: h.name, emoji: h.emoji ?? CATALOG_EMOJI[id] ?? '⭐' }
     }),
