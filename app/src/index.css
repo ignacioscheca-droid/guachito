@@ -3136,6 +3136,19 @@ img {
 .sk--lit .sk-day--today i::before {
   animation: sk-pop 0.4s 3.9s cubic-bezier(0.3, 1.6, 0.5, 1) both;
 }
+/* the days already kept: orange with their check from the start */
+.sk-day--kept {
+  color: #f39a1e;
+}
+.sk-day--kept i {
+  background: #f39a1e;
+  box-shadow: 0 3px 0 #d9730d;
+}
+.sk-day--kept .sk-day__check,
+.sk--lit .sk-day--kept .sk-day__check {
+  animation: none;
+  scale: 1;
+}
 .sk-day__mate,
 .sk-day__check {
   position: absolute;
@@ -5094,6 +5107,14 @@ img.apiece[style*='bottom'] {
   display: flex;
   gap: 8px;
 }
+.hchip--streak img {
+  width: 20px;
+  margin-right: 4px;
+}
+.hchip.hchip--streak {
+  display: flex;
+  align-items: center;
+}
 .hchip {
   height: 36px;
   min-width: 36px;
@@ -5116,7 +5137,11 @@ img.apiece[style*='bottom'] {
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
-  padding: 0 14px calc(var(--safe-bottom) + 84px);
+  /* the cards fade into the scene as they scroll up, instead of a hard cut (Home sets the
+     top 30px higher, and this padding keeps the first card clear of the fade) */
+  padding: 30px 14px calc(var(--safe-bottom) + 84px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 40px);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 40px);
 }
 .home3__cards::-webkit-scrollbar {
   display: none;

@@ -90,7 +90,24 @@ const CLOUDS = [
 const TYPE_AT = 2650
 const TYPE_STEP = 26
 const READY_AT = 4600
-const LINE = '¡Primer mate de la racha! Volvé mañana y nos cebamos otro.'
+const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)]
+
+/** What Gauchito says over the mate: the first one, a new run, the goal, or one more day. */
+function streakLine(days: number, first: boolean, goal: number | null) {
+  if (days === 1) return first ? '¡Primer mate de la racha! Volvé mañana y nos cebamos otro.' : pick(['¡Un mate nuevo, una racha nueva! Mañana nos cebamos otro.', '¡Arrancamos de nuevo, y con mate! Te espero mañana.'])
+  if (goal && days === goal) return `¡Llegamos a tu meta: ${days} días seguidos! Yo sigo cebando si vos seguís.`
+  return pick([`¡${days} días seguidos tomando mate juntos! Mañana te espero con otro.`, `¡Ya van ${days} mates seguidos! Así da gusto arrancar el día.`, `¡${days} días de racha! Este mate tiene gusto a constancia.`])
+}
+
+/** Which of the week's days to show: up to three kept days before today, the rest ahead. */
+function weekDays(days: number) {
+  const back = Math.min(days - 1, 3)
+  return [0, 1, 2, 3, 4, 5, 6].map((k) => {
+    const d = new Date()
+    d.setDate(d.getDate() + k - back)
+    return { initial: DAY_INITIALS[d.getDay()], today: k === back, kept: k < back }
+  })
+}
 
 /**
  * "1 día de racha", Duolingo's streak screen as a morning on the campo: an empty mate
@@ -98,8 +115,9 @@ const LINE = '¡Primer mate de la racha! Volvé mañana y nos cebamos otro.'
  * comes up, leaves fly, the grey 0 rolls to a 1, and Gauchito pops out of the steam with
  * the mate in his hand, sipping, while the week comes in and today gets its check.
  */
-export function StreakDay({ onNext }: { onNext: () => void }) {
-  const today = new Date().getDay()
+export function StreakDay({ days = 1, first = true, goal = null, onFill, onNext }: { days?: number; first?: boolean; goal?: number | null; onFill?: () => void; onNext: () => void }) {
+  const [line] = useState(() => streakLine(days, first, goal))
+  const [week] = useState(() => weekDays(days))
   const screen = useRef<HTMLDivElement>(null)
   const slot = useRef<HTMLDivElement>(null)
   const drag = useRef<{ y: number; pull: number } | null>(null)
@@ -124,8 +142,8 @@ export function StreakDay({ onNext }: { onNext: () => void }) {
     let tick = 0
     const start = window.setTimeout(
       () => {
-        if (calm) return setTyped(LINE.length)
-        tick = window.setInterval(() => setTyped((n) => (n >= LINE.length ? (clearInterval(tick), n) : n + 1)), TYPE_STEP)
+        if (calm) return setTyped(line.length)
+        tick = window.setInterval(() => setTyped((n) => (n >= line.length ? (clearInterval(tick), n) : n + 1)), TYPE_STEP)
       },
       calm ? 0 : TYPE_AT,
     )
@@ -142,6 +160,7 @@ export function StreakDay({ onNext }: { onNext: () => void }) {
     drag.current = null
     screen.current?.classList.remove('sk--held')
     setLit(true)
+    onFill?.()
   }
 
   return (
@@ -199,8 +218,8 @@ export function StreakDay({ onNext }: { onNext: () => void }) {
 
       <div className="sk-group">
         <p className="sk-bubble" aria-live="polite">
-          <span>{LINE.slice(0, typed)}</span>
-          <span className="sk-bubble__rest">{LINE.slice(typed)}</span>
+          <span>{line.slice(0, typed)}</span>
+          <span className="sk-bubble__rest">{line.slice(typed)}</span>
         </p>
         <div className="sk-hero">
           <div className="sk-slot" ref={slot}>
@@ -209,7 +228,7 @@ export function StreakDay({ onNext }: { onNext: () => void }) {
                 <i />
                 <i />
               </span>
-              Deslizá para arriba para cebar tu primer mate
+              {days === 1 && first ? 'Deslizá para arriba para cebar tu primer mate' : 'Deslizá para arriba para cebar el mate de hoy'}
             </p>
 
             <div className="sk-pour" aria-hidden>
@@ -275,22 +294,27 @@ export function StreakDay({ onNext }: { onNext: () => void }) {
         </div>
 
         <div className="sk-count">
-          <p className="sk-num" aria-label="1">
+          <p className="sk-num" aria-label={String(days)}>
             <span className="sk-num__roll">
-              <span className="sk-num__one">1</span>
-              <span className="sk-num__zero">0</span>
+              <span className="sk-num__one">{days}</span>
+              <span className="sk-num__zero">{days - 1}</span>
             </span>
           </p>
-          <p className="sk-label">día de racha</p>
+          <p className="sk-label">{days === 1 ? 'día' : 'días'} de racha</p>
         </div>
       </div>
 
       <div className="sk-week" aria-hidden>
-        {[0, 1, 2, 3, 4, 5, 6].map((k) => (
-          <div key={k} className={`sk-day${k === 0 ? ' sk-day--today' : ''}`} style={{ animationDelay: `${3450 + k * 45}ms` }}>
-            <span>{DAY_INITIALS[(today + k) % 7]}</span>
+        {week.map((d, k) => (
+          <div key={k} className={`sk-day${d.today ? ' sk-day--today' : ''}${d.kept ? ' sk-day--kept' : ''}`} style={{ animationDelay: `${3450 + k * 45}ms` }}>
+            <span>{d.initial}</span>
             <i>
-              {k === 0 && (
+              {d.kept && (
+                <svg className="sk-day__check" viewBox="0 0 24 24">
+                  <path d="M6 12.5l4 4 8-9" />
+                </svg>
+              )}
+              {d.today && (
                 <>
                   <img className="sk-day__mate" src={art('habit_mate')} alt="" />
                   <svg className="sk-day__check" viewBox="0 0 24 24">

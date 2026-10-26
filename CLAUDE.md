@@ -33,6 +33,10 @@ and only "¡Sí, avisame!" opens the phone's dialog. Its design is the owner's, 
   - the third day with habits opens Paucho (friendship by days together, streak, clothes);
   - the first finished area opens Áreas;
   - the end of La chacra opens Aventuras.
+- **Racha:** each new day opens with the morning mate (`StreakDay` in DayOne.tsx, `mateDue`
+  in store.ts): you swipe to cebar it, the number rolls from yesterday's streak, kept days
+  show their check, and "¡Dale!" saves the day in `mates`. A day counts if its mate was
+  cebado or a habit was done (`keptDays`, `streakNow`); Home shows it as a "🧉 N" chip.
 - **Home, laid out like Royal Match's:**
   - The area fills the screen. Above it sit the herraduras, the gear and a progress bar: the day's energy, then the 8-hour countdown, with the obra at its end; it becomes a button when ready or done.
   - Habits are Finch-sized cards (3½ in view, the last cut by the tab bar). "✓ N" and ✏️ chips sit above them. No text floats over the scene.

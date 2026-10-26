@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import type { AboutYou } from './aboutYou'
 import { HABITS, STARTER_GOALS, type HabitDef } from './content'
-import { daysTogether } from './friendship'
+import { daysTogether, streak } from './friendship'
 import {
   ENERGY_PER_HABIT,
   energyGoal,
@@ -42,6 +42,8 @@ export type GameState = {
   customHabits: HabitDef[]
   /** Habits added for one day only ("Solo hoy"), by local day. */
   extras: Record<string, string[]>
+  /** Days the morning mate was cebado (the streak screen each new day). */
+  mates: string[]
   /** Completed habit ids per local day (YYYY-MM-DD). */
   completions: Record<string, string[]>
   /** Energy each completion gave, per day, so a mistaken tick can be undone. */
@@ -92,6 +94,7 @@ const initial = (): GameState => ({
   habits: [],
   customHabits: [],
   extras: {},
+  mates: [],
   completions: {},
   energyGains: {},
   coinGains: {},
@@ -239,6 +242,19 @@ export const doneToday = (s: GameState) => s.completions[todayKey(s)] ?? []
 /** Today's habits: the everyday ones and the ones added for today only. */
 export const habitsToday = (s: GameState) => [...s.habits, ...(s.extras[todayKey(s)] ?? []).filter((id) => !s.habits.includes(id))]
 
+/** Days kept for the streak: a habit done, or the morning mate cebado. */
+export function keptDays(s: GameState) {
+  const kept: Record<string, string[]> = { ...s.completions }
+  for (const d of s.mates) if (!kept[d]?.length) kept[d] = ['mate']
+  return kept
+}
+
+/** Days in a row kept, up to today. */
+export const streakNow = (s: GameState) => streak(keptDays(s), todayKey(s))
+
+/** A new day and its mate not cebado yet: the streak screen comes first. */
+export const mateDue = (s: GameState) => s.onboarded && !s.mates.includes(todayKey(s))
+
 export function workRemainingMs(s: GameState = state) {
   if (s.work.status !== 'working' || s.work.startedAt == null) return 0
   return Math.max(0, s.work.startedAt + WORK_MS - (Date.now() + s.workSkipMs))
@@ -260,7 +276,13 @@ const PAUCHO_TAB_DAYS = 3
 
 export const actions = {
   finishOnboarding(o: { name: string; playerName: string; habits: string[]; aboutYou: AboutYou; streakGoal: number }) {
-    set({ ...state, ...o, onboarded: true, name: o.name.trim() || 'Paucho', playerName: o.playerName.trim() })
+    set({ ...state, ...o, onboarded: true, name: o.name.trim() || 'Paucho', playerName: o.playerName.trim(), mates: [todayKey()] })
+  },
+
+  /** Today's mate, from the streak screen: today counts for the streak. */
+  cebarMate() {
+    const day = todayKey()
+    if (!state.mates.includes(day)) set({ ...state, mates: [...state.mates, day] })
   },
 
   /** Creates a habit of the player's own and returns its id. */

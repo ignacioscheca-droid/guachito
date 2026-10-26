@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { HabitToast } from './components/DayLoop'
 import { PauchoFace, preloadPaucho } from './components/Paucho'
 import { BottomNav, Button } from './components/ui'
-import { actions, canBuySomething, getState, nextJob, useGame, workRemainingMs, type TabId } from './game/store'
+import { actions, canBuySomething, getState, keptDays, mateDue, nextJob, todayKey, useGame, workRemainingMs, type TabId } from './game/store'
+import { streak } from './game/friendship'
 import { FIRST_BED } from './game/room'
 import { feel, sfx } from './game/sound'
 import { AreasTab } from './screens/AreasTab'
@@ -70,6 +71,7 @@ export default function App() {
   const [fullPending, setFullPending] = useState(false)
   const remaining = useWorkClock()
   const testMode = new URLSearchParams(location.search).has('test')
+  const morning = mateDue(s) && view === 'tabs' && !replayOnboarding
 
   useEffect(preloadPaucho, [])
 
@@ -161,6 +163,19 @@ export default function App() {
     )
   } else if (replayStreak) {
     content = <StreakDay onNext={() => setReplayStreak(false)} />
+  } else if (morning) {
+    // each new day opens with its mate, and the streak counts one more
+    content = (
+      <StreakDay
+        first={false}
+        days={streak({ ...keptDays(s), [todayKey(s)]: ['mate'] }, todayKey(s))}
+        goal={s.streakGoal}
+        onNext={() => {
+          actions.cebarMate()
+          setTab('inicio')
+        }}
+      />
+    )
   } else if (view === 'reveal') {
     content = <Reveal startAt={revealAt} onDone={backHome} />
   } else if (view === 'story') {
@@ -220,7 +235,7 @@ export default function App() {
     )
   }
 
-  const welcome = view === 'tabs' && s.onboarded && !replayOnboarding && !replayStreak
+  const welcome = view === 'tabs' && s.onboarded && !replayOnboarding && !replayStreak && !morning
   return (
     <div className="app">
       {content}

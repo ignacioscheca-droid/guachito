@@ -1,16 +1,16 @@
 import { PauchoFace } from '../components/Paucho'
 import { areaName, areasDone, TRIP, TRIP_JOB } from '../game/journey'
-import { bestStreak, daysTogether, friendship, LEVELS, streak } from '../game/friendship'
+import { bestStreak, daysTogether, friendship, LEVELS } from '../game/friendship'
 import { CLOTHES, SLOTS } from '../game/shop'
-import { actions, todayKey, useGame } from '../game/store'
+import { actions, keptDays, streakNow, useGame } from '../game/store'
 
 /** Paucho's page (Finch's bird profile): your friendship, your streak, his clothes, your memories. */
 export function PauchoTab({ onShop }: { onShop: () => void }) {
   const s = useGame((g) => g)
   const days = daysTogether(s.completions)
   const f = friendship(days)
-  const now = streak(s.completions, todayKey(s))
-  const best = Math.max(now, bestStreak(s.completions))
+  const now = streakNow(s)
+  const best = Math.max(now, bestStreak(keptDays(s)))
   const finished = areasDone(s.jobsDone)
 
   const memories: { emoji: string; text: string }[] = []

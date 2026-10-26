@@ -6,7 +6,7 @@ import { RideWorld } from '../components/RideWorld'
 import { Button, CoinPill, HabitIcon } from '../components/ui'
 import { art } from '../game/content'
 import { AREAS, areaView, ENERGY_PER_HABIT, EXTRA_HABIT_COINS, FULL_ENERGY_COINS, jobInfo, WORK_MS, type Job } from '../game/journey'
-import { actions, chargeTarget, doneToday, findHabit, getState, goalOf, habitsToday, nextJob, restingToday, useGame } from '../game/store'
+import { actions, chargeTarget, doneToday, findHabit, getState, goalOf, habitsToday, nextJob, restingToday, streakNow, useGame } from '../game/store'
 import { haptic, sfx } from '../game/sound'
 import { AddHabit } from '../components/AddHabit'
 import { PauchoFace } from '../components/Paucho'
@@ -224,6 +224,7 @@ export function Home(p: Props) {
   const today = habitsToday(s)
   const open = today.filter((h) => !done.includes(h))
   const doneIds = today.filter((h) => done.includes(h))
+  const streakDays = streakNow(s)
   const job = nextJob(s)
   const { status } = s.work
   const charging = chargeTarget(s) != null || p.fullPending
@@ -363,6 +364,12 @@ export function Home(p: Props) {
       {phase === 'tell' && doneObra && <PauchoTalk compact pose="b4_contento" text={doneObra.done.startsWith('¡Mirá') ? doneObra.done : `¡Mirá cómo quedó ${doneObra.the}! ${doneObra.done}`} onNext={finishObra} />}
 
       <div className="home3__chips" style={{ top: cardsTop - 46 }}>
+        {streakDays > 0 && (
+          <span className="hchip hchip--streak" aria-label={`${streakDays} días de racha`}>
+            <img src={art('habit_mate')} alt="" />
+            {streakDays}
+          </span>
+        )}
         {doneIds.length > 0 && (
           <button className="hchip" onClick={() => setShowDone(true)} aria-label="Hechos hoy">
             ✓ {doneIds.length}
@@ -373,7 +380,7 @@ export function Home(p: Props) {
         </button>
       </div>
 
-      <div className="home3__cards" style={{ top: cardsTop }}>
+      <div className="home3__cards" style={{ top: cardsTop - 30 }}>
         {open.length === 0 && (
           <div className="hall">
             <span className="hall__face">
