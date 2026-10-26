@@ -166,7 +166,7 @@ and the `guachito_assets/` folder. Everything people read says Gauchito.
   reminder, "1 día de racha" (Duolingo's streak screen as a morning mate, ported from main
   2026-10-25: night → swipe up pours yerba into the mate and brings the dawn → Gauchito sips it;
   `habit_mate` split by `design/tools/make_mate_parts.py`; test menu → "Ver la racha del día 1"), and "¿Cuántos días seguidos…?" (2/5/7/14, saved as
-  `streakGoal`). The app doesn't count streaks yet.
+  `streakGoal`). Later days count the streak too (see "Racha" above).
   Naming the dog comes later, not in onboarding. Art brief: Claude Doc "Gauchito — Escena del mate (onboarding)"
   (https://claude.ai/code/artifact/a95a438f-5c51-43af-8984-69abcb3ff50b, tab "Para pegar en
   ChatGPT" is the brief); the owner generates the art with ChatGPT from `kit_escena_mate/`.
