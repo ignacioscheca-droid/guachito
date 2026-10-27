@@ -97,6 +97,21 @@ data or break links: the `guachito.v1` localStorage key, the `guachito` IndexedD
 the repo and its Pages URL, `guachito.riv` and its `Guachito` artboard, CSS classes,
 and the `guachito_assets/` folder. Everything people read says Gauchito.
 
+## Design system (always use it, always keep it current)
+
+The owner's rule (2026-10-27), for every session: UI follows the **Gauchito Design System**,
+https://claude.ai/artifact/AjubNPcvbjovmSoMKry4t3 (a Design System artifact; its files are under
+`project/`: README.md, tokens.json, components/<Name>/README.md + preview.html, components/bundle.css).
+- Before building or changing UI, read its `project/README.md` (Artifact `read` with `path`) and
+  build with its tokens and components (Button, HabitCard, Chip, ProgressBar, AreaDots, TabBar,
+  PauchoTalk, FieldBubble, HabitPick, Modal, Card).
+- In code the tokens are the custom properties in `:root` of `app/src/index.css`, same names.
+  No new loose hex colors, radii or one-off buttons: add a token in both places instead.
+- When a change adds or alters a token or component, republish the changed files of the system in
+  the same task and tell the owner.
+- Miro (https://miro.com/app/board/uXjVEVFHpys=/) holds the as-is screens by flow; new or
+  improved screens are designed in Claude Design on top of this system.
+
 ## Working with the owner
 
 - Write to him in Rioplatense Spanish (voseo). App copy is also voseo.
