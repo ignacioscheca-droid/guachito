@@ -297,6 +297,8 @@ export function energyGoal(jobsDone: number) {
 /** Herraduras for filling the bar, and for each habit after that. */
 export const FULL_ENERGY_COINS = 30
 export const EXTRA_HABIT_COINS = 5
+/** Herraduras for finishing an area, handed over in its celebration (Reveal). */
+export const AREA_COINS = 50
 /** Like Finch's adventures, an obra or a trip takes eight real hours. */
 export const WORK_MS = 8 * 60 * 60 * 1000
 

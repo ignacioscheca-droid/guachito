@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gauchito · Área completada</title>
+    <!-- Mock-up only: the area celebration told in beats instead of one poster.
+         ?t=MS freezes it at that moment (for screenshots); no params plays it, tap to replay. -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --paper: #fbf3e4;
+        --card: #fffdf8;
+        --cream: #fff7e9;
+        --earth: #5b3a24;
+        --brown: #8b5e3c;
+        --red: #d6453d;
+        --green: #7a9a4b;
+        --sky: #8cc6f2;
+        --gold: #f2b33d;
+        --ink: #3a2417;
+        --surface: #ffffff;
+        --bubble: #fffaf2;
+        --dot-off: #e3d6c2;
+        --earth-ledge: #3f2716;
+        --gold-light: #ffd75e;
+        --gold-top: #f9c955;
+        --gold-bottom: #efa52b;
+        --gold-deep: #c47f15;
+        --backdrop: #e9dcc5;
+        --shadow: 0 6px 18px rgba(91, 58, 36, 0.12);
+        --pop: cubic-bezier(0.3, 1.6, 0.5, 1);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: var(--backdrop);
+        font-family: Nunito, system-ui, sans-serif;
+        color: var(--ink);
+      }
+      .phone {
+        position: relative;
+        width: 390px;
+        height: 844px;
+        overflow: hidden;
+        background: var(--sky);
+        cursor: pointer;
+      }
+
+      /* ---- the area: sky + finished stage, the camera opens on it ---- */
+      .cam {
+        position: absolute;
+        inset: 0;
+        transform-origin: 50% 48%;
+        animation: open 1.4s cubic-bezier(0.45, 0, 0.2, 1) both;
+      }
+      /* the scene's dirt (sampled from area1_scene_3) fills under the art */
+      /* past the art: its sky above and its dirt below (skyTop and ground in journey.ts) */
+      .cam {
+        background: linear-gradient(#50a8fc 300px, #fca33d 300px);
+      }
+      .cam img {
+        position: absolute;
+        left: 50%;
+        top: 170px;
+        width: 430px;
+        transform: translateX(-50%);
+      }
+      @keyframes open {
+        from {
+          transform: scale(1.35);
+        }
+      }
+      /* a warm glow behind the house, the only light effect */
+      .glow {
+        position: absolute;
+        left: 50%;
+        top: 230px;
+        width: 520px;
+        height: 340px;
+        transform: translateX(-50%);
+        background: radial-gradient(closest-side, rgba(255, 215, 94, 0.55), rgba(255, 215, 94, 0));
+        mix-blend-mode: screen;
+        animation: fade 1.2s 1s ease-out both;
+      }
+      /* keeps the lower half calm so Paucho and his words read */
+      .floor {
+        position: absolute;
+        inset: auto 0 0 0;
+        height: 360px;
+        background: linear-gradient(rgba(91, 58, 36, 0), rgba(91, 58, 36, 0.28));
+      }
+
+      /* ---- top: counter, title, area name with its dots ---- */
+      .coins {
+        position: absolute;
+        right: 14px;
+        top: 50px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px 5px 6px;
+        background: var(--card);
+        border-radius: 999px;
+        box-shadow: var(--shadow);
+        font-weight: 900;
+        font-size: 16px;
+      }
+      .coins img {
+        width: 26px;
+        height: 26px;
+      }
+      .coins.bump {
+        animation: pop 0.45s var(--pop);
+      }
+      .head {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 96px;
+        display: grid;
+        justify-items: center;
+        gap: 10px;
+      }
+      .title {
+        margin: 0;
+        font-size: 34px;
+        font-weight: 900;
+        color: var(--surface);
+        text-shadow:
+          0 3px 0 var(--earth),
+          0 6px 16px rgba(91, 58, 36, 0.45);
+        animation: drop 0.6s 1.3s var(--pop) both;
+      }
+      .name {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 16px;
+        background: var(--surface);
+        border-radius: 999px;
+        box-shadow: var(--shadow);
+        font-weight: 900;
+        font-size: 15px;
+        color: var(--brown);
+        animation: pop 0.5s 1.7s var(--pop) both;
+      }
+      .dots {
+        display: flex;
+        gap: 4px;
+      }
+      .dots i {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--gold);
+      }
+      .dots i:last-child {
+        animation: dot 0.5s 2.1s var(--pop) both;
+      }
+      @keyframes dot {
+        from {
+          background: var(--dot-off);
+          transform: scale(0.6);
+        }
+        60% {
+          transform: scale(1.5);
+        }
+      }
+
+      /* ---- Paucho, at the side, the house stays in view ---- */
+      .paucho {
+        position: absolute;
+        left: 66px;
+        top: 486px;
+        width: 258px;
+        animation:
+          jumpin 0.7s 2.3s var(--pop) both,
+          hop 1.1s 3s ease-in-out infinite,
+          out 0.25s 5s both;
+      }
+      .shadow {
+        position: absolute;
+        left: 125px;
+        top: 752px;
+        width: 140px;
+        height: 24px;
+        border-radius: 50%;
+        background: rgba(63, 39, 22, 0.28);
+        animation:
+          fade 0.4s 2.4s both,
+          shrink 1.1s 3s ease-in-out infinite,
+          out 0.25s 5s both;
+      }
+      @keyframes jumpin {
+        from {
+          transform: translateY(240px) scale(0.6);
+          opacity: 0;
+        }
+      }
+      @keyframes hop {
+        50% {
+          transform: translateY(-16px);
+        }
+      }
+      @keyframes shrink {
+        50% {
+          transform: scale(0.82);
+          opacity: 0.7;
+        }
+      }
+
+      /* ---- the reward: herraduras fly from Paucho to the counter ---- */
+      .fly {
+        position: absolute;
+        left: 272px;
+        top: 530px;
+        width: 34px;
+        opacity: 0;
+      }
+      @keyframes fly {
+        0% {
+          opacity: 0;
+          transform: translate(0, 0) scale(0.4);
+        }
+        15% {
+          opacity: 1;
+          transform: translate(var(--sx), -40px) scale(1.15);
+        }
+        85% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translate(62px, -470px) scale(0.6);
+        }
+      }
+      .plus {
+        position: absolute;
+        left: 250px;
+        top: 462px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        background: linear-gradient(var(--gold-top), var(--gold-bottom));
+        box-shadow: 0 3px 0 var(--gold-deep);
+        font-weight: 900;
+        font-size: 17px;
+        animation: plus 1.4s 3.1s var(--pop) both;
+      }
+      @keyframes plus {
+        0% {
+          opacity: 0;
+          transform: scale(0.4);
+        }
+        25%,
+        70% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(-30px);
+        }
+      }
+
+      /* ---- 6b: Paucho comes up close to invite you on (PauchoTalk); the field Paucho steps out ---- */
+      .ptalk {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        padding-bottom: 34px;
+        background: linear-gradient(rgba(40, 26, 14, 0.12), rgba(40, 26, 14, 0.5) 45%, rgba(40, 26, 14, 0.72));
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        animation: fade 0.3s 5s both;
+      }
+      .ptalk__guy {
+        position: relative;
+        z-index: 1;
+        width: 86%;
+        aspect-ratio: 760 / 751;
+        margin-bottom: -6%;
+        animation: pop 0.35s 5.05s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+      }
+      .ptalk__guy img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .ptalk__bubble {
+        position: relative;
+        z-index: 3;
+        width: calc(100% - 32px);
+        margin-top: -40px;
+        min-height: 58px;
+        padding: 14px 18px;
+        border-radius: 20px;
+        background: var(--card);
+        box-shadow: 0 8px 22px rgba(91, 58, 36, 0.18);
+        font-size: 20px;
+        font-weight: 900;
+        line-height: 1.35;
+        text-align: center;
+        animation: pop 0.4s 5.2s var(--pop) both;
+      }
+      .ptalk__bubble::before {
+        content: '';
+        position: absolute;
+        top: -9px;
+        left: 50%;
+        width: 18px;
+        height: 18px;
+        background: var(--card);
+        transform: translateX(-50%) rotate(45deg);
+        border-radius: 3px;
+      }
+      .ptalk__rest {
+        visibility: hidden;
+      }
+      .btn {
+        width: calc(100% - 48px);
+        height: 58px;
+        margin-top: 18px;
+        border: 0;
+        border-radius: 999px;
+        background: linear-gradient(var(--gold-top), var(--gold-bottom));
+        box-shadow:
+          0 4px 0 var(--gold-deep),
+          0 8px 18px rgba(239, 165, 43, 0.35);
+        font: 900 17px Nunito, sans-serif;
+        color: var(--ink);
+        animation: rise 0.3s 8.2s both;
+      }
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+      }
+      @keyframes out {
+        to {
+          opacity: 0;
+        }
+      }
+
+      /* ---- one short burst of confetti, three colours, then it's gone ---- */
+      .confetti i {
+        position: absolute;
+        top: -20px;
+        width: 9px;
+        height: 14px;
+        border-radius: 2px;
+        opacity: 0;
+        animation: fall var(--d) var(--w) cubic-bezier(0.2, 0.6, 0.4, 1) both;
+      }
+      @keyframes fall {
+        0% {
+          opacity: 1;
+          transform: translate(0, 0) rotate(0);
+        }
+        80% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translate(var(--x), var(--y)) rotate(var(--r));
+        }
+      }
+
+      @keyframes pop {
+        from {
+          transform: scale(0.5);
+          opacity: 0;
+        }
+      }
+      @keyframes drop {
+        from {
+          transform: translateY(-60px);
+          opacity: 0;
+        }
+      }
+      @keyframes fade {
+        from {
+          opacity: 0;
+        }
+      }
+
+      .note {
+        position: fixed;
+        left: 16px;
+        bottom: 12px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--brown);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="phone" id="phone">
+      <div class="cam">
+        <img src="../../../app/public/a/area1_sky.webp" alt="" />
+        <img src="../../../app/public/a/area1_scene_3.webp" alt="" />
+      </div>
+      <div class="glow"></div>
+      <div class="floor"></div>
+
+      <div class="coins" id="coins"><img src="../../../app/public/a/ui_herradura.webp" alt="" /><span id="n">120</span></div>
+      <div class="head">
+        <h1 class="title">¡Área completada!</h1>
+        <div class="name">El rancho de Paucho <span class="dots"><i></i><i></i><i></i></span></div>
+      </div>
+
+      <div class="confetti" id="confetti"></div>
+
+      <div class="shadow"></div>
+      <img class="paucho" src="../../../app/public/a/g_jump.webp" alt="" />
+      <div class="plus">+50</div>
+      <div id="flies"></div>
+
+      <div class="ptalk">
+        <div class="ptalk__guy">
+          <img src="../../../app/public/a/mate_b4_contento_cerrada.webp" alt="" />
+          <img id="mouth" src="../../../app/public/a/mate_b4_contento_abierta.webp" alt="" style="opacity: 0" />
+        </div>
+        <div class="ptalk__bubble"><span id="say"></span><span class="ptalk__rest" id="rest"></span></div>
+        <button class="btn">¡Arranquemos!</button>
+      </div>
+    </div>
+    <div class="note">Tocá el teléfono para repetir</div>
+
+    <script>
+      const T = Number(new URLSearchParams(location.search).get('t') ?? NaN)
+      const LINE = '¡Terminamos el rancho! Gracias a vos. Detrás hay lugar para un galpón… ¿arrancamos?'
+      const COLORS = ['var(--gold)', 'var(--red)', 'var(--sky)']
+
+      function build() {
+        const c = document.getElementById('confetti')
+        c.innerHTML = ''
+        for (let k = 0; k < 36; k++) {
+          const i = document.createElement('i')
+          const fromLeft = k % 2 === 0
+          i.style.left = fromLeft ? '20%' : '80%'
+          i.style.top = '250px'
+          i.style.background = COLORS[k % 3]
+          i.style.setProperty('--x', `${(fromLeft ? -1 : 1) * (20 + Math.random() * 150)}px`)
+          i.style.setProperty('--y', `${-120 + Math.random() * 520}px`)
+          i.style.setProperty('--r', `${Math.random() * 720 - 360}deg`)
+          i.style.setProperty('--d', `${1.4 + Math.random() * 0.8}s`)
+          i.style.setProperty('--w', `${2.3 + Math.random() * 0.2}s`)
+          c.appendChild(i)
+        }
+        const f = document.getElementById('flies')
+        f.innerHTML = ''
+        for (let k = 0; k < 5; k++) {
+          const img = document.createElement('img')
+          img.className = 'fly'
+          img.src = '../../../app/public/a/ui_herradura.webp'
+          img.style.setProperty('--sx', `${(k - 2) * 22}px`)
+          img.style.animation = `fly 0.9s ${3.3 + k * 0.12}s cubic-bezier(0.5, 0, 0.6, 1) both`
+          f.appendChild(img)
+        }
+      }
+
+      let timers = []
+      function play() {
+        timers.forEach(clearTimeout)
+        timers = []
+        const phone = document.getElementById('phone')
+        const clone = phone.cloneNode(true)
+        phone.replaceWith(clone)
+        clone.addEventListener('click', play)
+        build()
+        const n = document.getElementById('n')
+        const coins = document.getElementById('coins')
+        const say = document.getElementById('say')
+        n.textContent = '120'
+        say.textContent = ''
+        // each herradura lands: the counter bumps and counts up 10
+        for (let k = 0; k < 5; k++)
+          timers.push(
+            setTimeout(() => {
+              n.textContent = String(120 + (k + 1) * 10)
+              coins.classList.remove('bump')
+              void coins.offsetWidth
+              coins.classList.add('bump')
+            }, 4200 + k * 120),
+          )
+        // his line types out
+        // up close: his line types out while his mouth opens and shuts
+        const rest = document.getElementById('rest')
+        const mouth = document.getElementById('mouth')
+        rest.textContent = LINE
+        mouth.style.opacity = '0'
+        ;[...LINE].forEach((_, k) =>
+          timers.push(
+            setTimeout(() => {
+              say.textContent = LINE.slice(0, k + 1)
+              rest.textContent = LINE.slice(k + 1)
+              mouth.style.opacity = k === LINE.length - 1 ? '0' : String(Math.floor(k / 5) % 2)
+            }, 5600 + k * 28),
+          ),
+        )
+      }
+
+      if (Number.isFinite(T)) {
+        // freeze at T: every animation paused at that moment
+        build()
+        document.getElementById('n').textContent = T > 4800 ? '170' : '120'
+        const k = Math.max(0, Math.min(LINE.length, Math.floor((T - 5600) / 28)))
+        document.getElementById('say').textContent = LINE.slice(0, k)
+        document.getElementById('rest').textContent = LINE.slice(k)
+        document.getAnimations().forEach((a) => {
+          a.pause()
+          a.currentTime = T
+        })
+      } else {
+        play()
+      }
+    </script>
+  </body>
+</html>

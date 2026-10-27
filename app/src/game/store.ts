@@ -3,6 +3,7 @@ import type { AboutYou } from './aboutYou'
 import { HABITS, STARTER_GOALS, type HabitDef } from './content'
 import { daysTogether, streak } from './friendship'
 import {
+  AREA_COINS,
   ENERGY_PER_HABIT,
   energyGoal,
   EXTRA_HABIT_COINS,
@@ -385,7 +386,7 @@ export const actions = {
     if (job?.kind === 'build') {
       const lastOfArea = JOURNEY[state.jobsDone + 1]?.kind !== 'build' || (JOURNEY[state.jobsDone + 1] as { area: number }).area !== job.area
       if (job.area === 0 && job.obra === 0) next = unlock(next, 'casita')
-      if (lastOfArea) next = unlock(next, 'areas')
+      if (lastOfArea) next = { ...unlock(next, 'areas'), coins: next.coins + AREA_COINS }
       if (job.area === 1 && job.obra === 0) next = { ...next, dog: { arrived: true, name: next.dog.name } }
     }
     // the trip is next: Aventuras opens to say why he is going

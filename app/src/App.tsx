@@ -4,6 +4,7 @@ import { PauchoFace, preloadPaucho } from './components/Paucho'
 import { BottomNav, Button } from './components/ui'
 import { actions, canBuySomething, getState, keptDays, mateDue, nextJob, todayKey, useGame, workRemainingMs, type TabId } from './game/store'
 import { streak } from './game/friendship'
+import { areaView } from './game/journey'
 import { FIRST_BED } from './game/room'
 import { feel, sfx } from './game/sound'
 import { AreasTab } from './screens/AreasTab'
@@ -13,7 +14,7 @@ import { FullTalk } from './screens/FullTalk'
 import { Home } from './screens/Home'
 import { Onboarding } from './screens/Onboarding'
 import { PauchoTab } from './screens/PauchoTab'
-import { Reveal } from './screens/Reveal'
+import { AreaDone, Reveal } from './screens/Reveal'
 import { Settings } from './screens/Settings'
 import { StreakDay } from './screens/DayOne'
 import { TestMenu } from './screens/TestMenu'
@@ -65,6 +66,7 @@ export default function App() {
   const [settings, setSettings] = useState(false)
   const [replayOnboarding, setReplayOnboarding] = useState(false)
   const [replayStreak, setReplayStreak] = useState(false)
+  const [replayArea, setReplayArea] = useState(false)
   const [arriving, setArriving] = useState(false)
   const [lockedTap, setLockedTap] = useState(false)
   const [askPush, setAskPush] = useState(false)
@@ -163,6 +165,8 @@ export default function App() {
     )
   } else if (replayStreak) {
     content = <StreakDay onNext={() => setReplayStreak(false)} />
+  } else if (replayArea) {
+    content = <AreaDone area={areaView(s.jobsDone).area} onDone={() => setReplayArea(false)} />
   } else if (morning) {
     // each new day opens with its mate, and the streak counts one more
     content = (
@@ -235,7 +239,7 @@ export default function App() {
     )
   }
 
-  const welcome = view === 'tabs' && s.onboarded && !replayOnboarding && !replayStreak && !morning
+  const welcome = view === 'tabs' && s.onboarded && !replayOnboarding && !replayStreak && !replayArea && !morning
   return (
     <div className="app">
       {content}
@@ -265,8 +269,8 @@ export default function App() {
           }}
         />
       )}
-      {testMenu && <TestMenu onClose={() => setTestMenu(false)} onOnboarding={() => setReplayOnboarding(true)} onAskPush={() => setAskPush(true)} onStreak={() => setReplayStreak(true)} />}
-      {testMode && s.onboarded && !testMenu && !replayOnboarding && !replayStreak && view === 'tabs' && (
+      {testMenu && <TestMenu onClose={() => setTestMenu(false)} onOnboarding={() => setReplayOnboarding(true)} onAskPush={() => setAskPush(true)} onStreak={() => setReplayStreak(true)} onArea={() => setReplayArea(true)} />}
+      {testMode && s.onboarded && !testMenu && !replayOnboarding && !replayStreak && !replayArea && view === 'tabs' && (
         <button className="testfab" onClick={() => setTestMenu(true)} aria-label="Menú de prueba">
           🛠
         </button>
