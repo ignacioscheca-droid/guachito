@@ -182,6 +182,84 @@ function PauchoMaiz({ spot, onTap }: { spot: Spot; onTap?: () => void }) {
   )
 }
 
+/** Paucho at his caballete while he builds (trabaja_*.webp, from design/tools/import_trabajando.py). */
+const WORK_POSES = ['base', 'arriba', 'golpe', 'parpadeo', 'seca', 'mira', 'mate', 'mide'] as const
+type WorkPose = (typeof WORK_POSES)[number]
+/** The art's box, and in it his feet (centre, ground) and his height from hat to feet. */
+const WORK_BOX = { w: 420, h: 530, feetX: 125, feetY: 497, tall: 456 }
+type WorkSteps = [WorkPose, number][]
+
+const pickOne = <T,>(xs: readonly T[]) => xs[Math.floor(Math.random() * xs.length)]
+const between = (a: number, b: number) => a + Math.random() * (b - a)
+
+/** What he does next: a run of hammer blows (most of the time), a blink, or a pause. */
+function workIdle(): WorkSteps {
+  const r = Math.random()
+  if (r < 0.6) {
+    const blows: WorkSteps = []
+    for (let k = 2 + Math.floor(Math.random() * 3); k > 0; k--) blows.push(['arriba', 170], ['golpe', 130], ['base', 200])
+    return [...blows, ['base', between(500, 1000)]]
+  }
+  if (r < 0.8)
+    return [
+      ['parpadeo', 140],
+      ['base', between(600, 1100)],
+    ]
+  return [
+    [pickOne(['seca', 'mate', 'mide'] as const), between(1400, 2000)],
+    ['base', between(400, 700)],
+  ]
+}
+
+/** He hammers, blinks and rests on his own; each blow raises a puff of sawdust; tapped, he looks at you. */
+function PauchoTrabaja({ hero, aspect, onTap }: { hero: Spot; aspect: number; onTap?: () => void }) {
+  const [pose, setPose] = useState<WorkPose>('base')
+  const [hits, setHits] = useState(0)
+  const [looking, setLooking] = useState(0)
+  useEffect(() => {
+    let t = 0
+    let steps: WorkSteps = looking
+      ? [
+          ['mira', 1600],
+          ['base', 500],
+        ]
+      : []
+    const play = () => {
+      if (steps.length === 0) steps = workIdle()
+      const [p, ms] = steps.shift()!
+      setPose(p)
+      if (p === 'golpe') setHits((h) => h + 1)
+      t = window.setTimeout(play, ms)
+    }
+    play()
+    return () => clearTimeout(t)
+  }, [looking])
+
+  const h = (hero.h * WORK_BOX.h) / WORK_BOX.tall
+  const style: CSSProperties = {
+    left: `${hero.x - ((hero.h * WORK_BOX.feetX) / WORK_BOX.tall) * aspect}%`,
+    bottom: `${100 - hero.y - ((WORK_BOX.h - WORK_BOX.feetY) / WORK_BOX.tall) * hero.h}%`,
+    height: `${h}%`,
+    aspectRatio: WORK_BOX.w / WORK_BOX.h,
+    zIndex: Math.round(hero.y),
+  }
+  return (
+    <div
+      className="pwork"
+      style={style}
+      onClick={() => {
+        setLooking((k) => k + 1)
+        onTap?.()
+      }}
+    >
+      {WORK_POSES.map((p) => (
+        <img key={p} src={art(`trabaja_${p}`)} alt="" style={{ opacity: p === pose ? 1 : 0 }} draggable={false} />
+      ))}
+      {hits > 0 && <i key={hits} className="pwork__dust" aria-hidden />}
+    </div>
+  )
+}
+
 /** Puffs of smoke or steam rising from a point (x, y in % of the art; size, dx, dy in % of its width). */
 function Puffs({ x, y, n, size, dx, dy, seconds }: { x: number; y: number; n: number; size: number; dx: number; dy: number; seconds: number }) {
   return (
@@ -409,7 +487,8 @@ export function AreaScene({ area, built, current, pose = 'idle', outfit, celebra
             {say}
           </span>
         )}
-        {pose && !acting && (
+        {pose === 'build' && !cheering && <PauchoTrabaja hero={hero} aspect={a.aspect} onTap={onTapPaucho} />}
+        {pose && !acting && !(pose === 'build' && !cheering) && (
           <Paucho
             pose={cheering && a.act ? 'celebrate' : pose}
             outfit={outfit}

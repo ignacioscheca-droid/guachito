@@ -16,7 +16,7 @@ const POSE_ART: Record<PauchoPose, string> = {
   wave: 'g_wave',
   think: 'g_think',
   mate: 'g_mate',
-  // until ChatGPT's "Paucho construyendo"
+  // in an area he builds at his caballete (PauchoTrabaja in AreaScene); this is the fallback
   build: 'g_thumbs',
   map: 'g_map',
 }
