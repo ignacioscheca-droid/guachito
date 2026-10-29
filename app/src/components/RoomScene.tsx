@@ -72,10 +72,15 @@ type Props = {
   pose: PauchoRoomPose
   dog: boolean
   onTap?: (slot: string) => void
+  /** What Paucho says from the room: a bubble over his head, with its button if it has one. */
+  say?: string | null
+  sayAction?: ReactNode
+  /** Tapping a bubble with no button sends it away. */
+  onSayTap?: () => void
   children?: ReactNode
 }
 
-export function RoomScene({ placed, fresh, pose, dog, onTap, children }: Props) {
+export function RoomScene({ placed, fresh, pose, dog, onTap, say, sayAction, onSayTap, children }: Props) {
   // tapping a thing makes it jump (and the mecedora rock)
   const [tapped, setTapped] = useState<{ slot: string; n: number } | null>(null)
   const tap = (slot: string) => {
@@ -196,6 +201,18 @@ export function RoomScene({ placed, fresh, pose, dog, onTap, children }: Props) 
           ))}
 
         <Blinker key={pose} name={paucho} className={`rpaucho rpaucho--${pose}`} style={footStyle(PAUCHO, aspectOf(paucho), zOf(PAUCHO.bottom))} />
+
+        {say && (
+          <span
+            key={say}
+            className={`rscene__say${onSayTap ? ' rscene__say--tap' : ''}`}
+            style={{ left: `${PAUCHO.x}%`, top: `${((PAUCHO.bottom - PAUCHO.h) / 100) * (AH / AW) * 100}cqw` }}
+            onClick={onSayTap}
+          >
+            {say}
+            {sayAction}
+          </span>
+        )}
       </div>
       {children}
     </div>

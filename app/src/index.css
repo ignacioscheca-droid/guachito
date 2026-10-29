@@ -6574,7 +6574,8 @@ img.apiece[style*='bottom'] {
 
 /* ---------- Paucho talks: in the field (a bubble) and up close (PauchoTalk) ---------- */
 
-.ascene__say {
+.ascene__say,
+.rscene__say {
   position: absolute;
   z-index: 90;
   translate: -50% 0;
@@ -6592,7 +6593,8 @@ img.apiece[style*='bottom'] {
   animation: say-in 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) both;
   transform-origin: 50% 100%;
 }
-.ascene__say::after {
+.ascene__say::after,
+.rscene__say::after {
   content: '';
   position: absolute;
   left: 50%;
@@ -7461,4 +7463,47 @@ img.apiece[style*='bottom'] {
 /* while Paucho talks up close the tab bar waits (Home's talks sit inside the tab's layer, under it) */
 .app:has(.ptalk) .nav {
   pointer-events: none;
+}
+
+/* Paucho's bubble in the room: over his head, with room for a button under the words */
+.rscene__say {
+  z-index: 2000;
+  translate: -50% calc(-100% - 2.5cqw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.4cqw;
+  pointer-events: none;
+}
+.rscene__say--tap,
+.rscene__say .btn {
+  pointer-events: auto;
+}
+/* a thing he can't pay for yet is dimmed but can be tapped (he says what's missing) */
+.scard--short:not(.scard--glow) {
+  opacity: 0.5;
+}
+/* the cheapest thing, when nothing is within reach: it glows gold */
+.scard--glow {
+  box-shadow:
+    0 0 0 3px var(--gold),
+    var(--shadow);
+  animation: scard-glow 1.6s ease-in-out infinite;
+}
+@keyframes scard-glow {
+  50% {
+    box-shadow:
+      0 0 0 5px var(--gold),
+      var(--shadow);
+  }
+}
+/* on the first visit the room stays lit above the dimmed shop, so he and his bubble read */
+.casita .rscene {
+  z-index: 31;
+}
+.scard__price {
+  white-space: nowrap;
+}
+.scard--glow .scard__price {
+  background: var(--gold);
 }
