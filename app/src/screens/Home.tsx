@@ -1,12 +1,32 @@
 import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type ReactNode, type RefObject } from 'react'
 import { AreaScene, type ObraLook } from '../components/AreaScene'
 import { Confetti } from '../components/Confetti'
-import { HabitPicker } from '../components/HabitPicker'
+import { DoneSheet, HabitsSheet, MOMENTS, SkippedSheet } from '../components/HabitSheets'
 import { RideWorld } from '../components/RideWorld'
 import { Button, CoinPill, HabitIcon } from '../components/ui'
 import { art } from '../game/content'
 import { AREAS, areaView, ENERGY_PER_HABIT, EXTRA_HABIT_COINS, FULL_ENERGY_COINS, jobInfo, WORK_MS, type Job } from '../game/journey'
-import { actions, chargeTarget, doneToday, findHabit, getState, goalOf, habitsToday, nextJob, RESCUE_HABITS, restingToday, streakNow, todayKey, useGame } from '../game/store'
+import {
+  actions,
+  chargeTarget,
+  doneToday,
+  findHabit,
+  finished,
+  getState,
+  goalOf,
+  habitsToday,
+  nextJob,
+  planOf,
+  RESCUE_HABITS,
+  restingToday,
+  skippedToday,
+  streakNow,
+  timesDone,
+  todayKey,
+  useGame,
+  weekCount,
+  type GameState,
+} from '../game/store'
 import { haptic, sfx } from '../game/sound'
 import { AddHabit } from '../components/AddHabit'
 import { PauchoFace } from '../components/Paucho'
@@ -214,7 +234,12 @@ export function Home(p: Props) {
   const [editing, setEditing] = useState(false)
   const [adding, setAdding] = useState(false)
   const [showDone, setShowDone] = useState(false)
+  const [showSkipped, setShowSkipped] = useState(false)
+  // what Paucho says here for a moment (a habit set aside)
+  const [homeSay, setHomeSay] = useState<string | null>(null)
   const [leaving, setLeaving] = useState<{ id: string; folding: boolean } | null>(null)
+  // a habit of several times just ticked once: the card stays, the next tap waits for this one
+  const [counting, setCounting] = useState<string | null>(null)
   const [burst, setBurst] = useState({ key: 0, x: 0, y: 0 })
   const root = useRef<HTMLDivElement>(null)
   const bar = useRef<HTMLButtonElement>(null)
@@ -222,8 +247,11 @@ export function Home(p: Props) {
   const [cardsTop, setCardsTop] = useState(470)
   const done = doneToday(s)
   const today = habitsToday(s)
-  const open = today.filter((h) => !done.includes(h))
-  const doneIds = today.filter((h) => done.includes(h))
+  const skipped = skippedToday(s)
+  const open = today.filter((h) => !finished(s, h) && !skipped.includes(h))
+  const doneIds = today.filter((h) => finished(s, h))
+  // Finch's groups: by the moment of the day, shown only when there's more than one
+  const groups = MOMENTS.map(([m, label]) => ({ label, ids: open.filter((id) => planOf(s, id).moment === m) })).filter((g) => g.ids.length)
   const streakDays = streakNow(s)
   // the streak gone cold, which today's habits can recalentar
   const rescue = s.dayStart?.day === todayKey(s) && s.dayStart.rescue?.offered ? s.dayStart.rescue : null
@@ -247,23 +275,41 @@ export function Home(p: Props) {
 
   // Finch's tick: confetti on the habit, its energy (or herraduras) flies off, the card leaves.
   const tick = (id: string, e: MouseEvent<HTMLButtonElement>) => {
-    if (leaving || p.fullPending || !root.current) return
+    if (leaving || counting || p.fullPending || !root.current) return
     const card = e.currentTarget
     const r = card.getBoundingClientRect()
     const box = root.current.getBoundingClientRect()
+    // a habit of several times only leaves with its last one
+    const last = timesDone(s, id) + 1 >= planOf(s, id).times
     setBurst((b) => ({ key: b.key + 1, x: r.right - 40 - box.left, y: r.top + r.height / 2 - box.top }))
     sfx('check')
     haptic('success')
-    // the card shows its tick for a moment, then folds so the next ones slide up (no gap)
-    setLeaving({ id, folding: false })
-    window.setTimeout(() => setLeaving({ id, folding: true }), 380)
+    if (last) {
+      // the card shows its tick for a moment, then folds so the next ones slide up (no gap)
+      setLeaving({ id, folding: false })
+      window.setTimeout(() => setLeaving({ id, folding: true }), 380)
+    } else setCounting(id)
     // its energy (or herraduras) flies off and counts when it lands (fly: 650 ms)
     fly(card.querySelector('.hcard__reward') ?? card, charging ? (bar.current?.querySelector('.pbar__start') ?? bar.current) : coinsRef.current, charging ? 'ui_energia' : 'ui_herradura')
     if (!charging) sfx('coin', 0, 620)
     window.setTimeout(() => {
       setLeaving(null)
+      setCounting(null)
       p.onCompleteHabit(id)
     }, 650)
+  }
+
+  // «Hoy no puedo»: the card leaves for the 💤 chip, and Paucho takes it well
+  const skip = (id: string) => {
+    actions.skipHabit(id)
+    sfx('tap')
+    const after = getState()
+    const left = habitsToday(after).filter((h) => !finished(after, h) && !skippedToday(after).includes(h))
+    const target = chargeTarget(after)
+    const short = target && after.energy + left.reduce((n, h) => n + (planOf(after, h).times - timesDone(after, h)) * ENERGY_PER_HABIT, 0) < target.goal
+    const line = short ? 'Hoy juntamos lo que se pueda, y mañana seguimos. ¡Tranqui!' : pick(['¡Tranqui! Mañana le damos.', 'No pasa nada, hoy hacemos lo que se pueda.', 'Dale, ese queda para otro día.'])
+    setHomeSay(line)
+    window.setTimeout(() => setHomeSay((l) => (l === line ? null : l)), 4500)
   }
 
   // The obra under way, as it looks right now.
@@ -311,7 +357,7 @@ export function Home(p: Props) {
   }
   if (phase === 'reveal' || phase === 'tell') look = { mode: 'reveal' }
   const greet = doneObra ? `¡Volviste${s.playerName ? `, ${s.playerName}` : ''}! Terminé ${doneObra.the}. ¿La vemos? 🧉` : ''
-  const fieldSay = p.say ?? (phase === 'next' ? nextSay : null)
+  const fieldSay = p.say ?? (phase === 'next' ? nextSay : homeSay)
   const pose = p.hidePaucho || phase === 'tell' || waiting ? null : phase === 'reveal' ? 'celebrate' : status === 'working' ? 'build' : status === 'done' ? 'wave' : 'idle'
   const dots = area.obras.map((_, i) => i < view.built + (phase === 'tell' ? 1 : 0))
 
@@ -382,6 +428,11 @@ export function Home(p: Props) {
             ✓ {doneIds.length}
           </button>
         )}
+        {skipped.length > 0 && (
+          <button className="hchip" onClick={() => setShowSkipped(true)} aria-label="Hoy no">
+            💤 {skipped.length}
+          </button>
+        )}
         <button className="hchip" onClick={() => setEditing(true)} aria-label="Editar hábitos">
           ✏️
         </button>
@@ -393,32 +444,31 @@ export function Home(p: Props) {
             <span className="hall__face">
               <PauchoFace outfit={s.outfit} />
             </span>
-            <p className="hall__say">¡Cumpliste todo por hoy{s.playerName ? `, ${s.playerName}` : ''}! Estoy orgulloso de vos.</p>
+            <p className="hall__say">
+              {skipped.length ? `¡Listo por hoy${s.playerName ? `, ${s.playerName}` : ''}! Lo que no se pudo, mañana.` : `¡Cumpliste todo por hoy${s.playerName ? `, ${s.playerName}` : ''}! Estoy orgulloso de vos.`}
+            </p>
             <button className="hall__add" onClick={() => setAdding(true)}>
               <b>＋</b> Agregar un hábito
             </button>
           </div>
         )}
-        {open.map((id) => {
-          const h = findHabit(s, id)
-          return (
-            <button
-              key={id}
-              className={`hcard${leaving?.id === id ? ` hcard--ticked${leaving.folding ? ' hcard--folding' : ''}` : ''}`}
-              onClick={(e) => tick(id, e)}
-            >
-              <span className="hcard__icon">
-                <HabitIcon habit={h} />
-              </span>
-              <b>{h.name}</b>
-              <em className="hcard__reward">
-                +{charging ? ENERGY_PER_HABIT : EXTRA_HABIT_COINS}
-                <img src={art(charging ? 'ui_energia' : 'ui_herradura')} alt="" />
-              </em>
-              <span className={`hcard__tick${leaving?.id === id ? ' hcard__tick--on' : ''}`}>✓</span>
-            </button>
-          )
-        })}
+        {groups.map((g) => (
+          <div key={g.label} className="hgroup">
+            {groups.length > 1 && <p className="hgroup__title">{g.label}</p>}
+            {g.ids.map((id) => (
+              <HabitCard
+                key={id}
+                id={id}
+                s={s}
+                charging={charging}
+                leaving={leaving?.id === id ? leaving : null}
+                counted={counting === id}
+                onTick={(e) => tick(id, e)}
+                onSkip={() => skip(id)}
+              />
+            ))}
+          </div>
+        ))}
         {open.length > 0 && (
           <button className="hcard hcard--add" onClick={() => setAdding(true)}>
             <span className="hcard__icon">＋</span>
@@ -431,67 +481,107 @@ export function Home(p: Props) {
         <Confetti burstKey={burst.key} count={22} spread={0.7} />
       </div>
 
-      {showDone && (
-        <div className="overlay overlay--top" onClick={() => setShowDone(false)}>
-          <div className="modal donelist" onClick={(e) => e.stopPropagation()}>
-            <h2>Hechos hoy</h2>
-            <p>Tocá uno para desmarcarlo.</p>
-            {doneIds.map((id) => {
-              const h = findHabit(s, id)
-              return (
-                <button
-                  key={id}
-                  className="hcard hcard--done"
-                  onClick={() => {
-                    sfx('uncheck')
-                    actions.uncompleteHabit(id)
-                  }}
-                >
-                  <span className="hcard__icon">
-                    <HabitIcon habit={h} />
-                  </span>
-                  <b>{h.name}</b>
-                  <span className="hcard__tick hcard__tick--on">✓</span>
-                </button>
-              )
-            })}
-            <Button variant="light" onClick={() => setShowDone(false)}>
-              Listo
-            </Button>
-          </div>
-        </div>
-      )}
-      {editing && <EditHabits onClose={() => setEditing(false)} />}
+      {showDone && <DoneSheet ids={doneIds} onClose={() => setShowDone(false)} />}
+      {showSkipped && <SkippedSheet ids={skipped} onClose={() => setShowSkipped(false)} />}
+      {editing && <HabitsSheet onClose={() => setEditing(false)} onSkip={skip} />}
       {adding && <AddHabit onClose={() => setAdding(false)} />}
     </div>
   )
 }
 
-function EditHabits({ onClose }: { onClose: () => void }) {
-  const current = useGame((g) => g.habits)
-  const name = useGame((g) => g.name)
-  const [picked, setPicked] = useState(current)
+const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)]
+const WEEK_LETTERS = ['D', 'L', 'M', 'M', 'J', 'V', 'S']
+
+/** How far a card slides to show «Hoy no puedo». */
+const SWIPE_OPEN = 112
+
+/**
+ * A habit, Finch-sized: its name, what's left of it (drops for one of several times, the
+ * week's count, its days), what it gives, and the tick (a gold "+1" until its last time).
+ * Slid to the left it shows «Hoy no puedo».
+ */
+function HabitCard({
+  id,
+  s,
+  charging,
+  leaving,
+  counted,
+  onTick,
+  onSkip,
+}: {
+  id: string
+  s: GameState
+  charging: boolean
+  leaving: { folding: boolean } | null
+  counted: boolean
+  onTick: (e: MouseEvent<HTMLButtonElement>) => void
+  onSkip: () => void
+}) {
+  const h = findHabit(s, id)
+  const plan = planOf(s, id)
+  const n = timesDone(s, id)
+  const [dx, setDx] = useState(0)
+  const drag = useRef<{ x: number; y: number; from: number; moved: boolean } | null>(null)
+  const swiped = useRef(false)
+  const many = plan.times > 1
+  const sub = many ? null : plan.when.kind === 'week' ? `${weekCount(s, id)} de ${plan.when.times} esta semana` : plan.when.kind === 'days' ? WEEK_LETTERS.filter((_, d) => (plan.when as { days: number[] }).days.includes(d)).join(' · ') : null
   return (
-    <div className="overlay overlay--top" onClick={onClose}>
-      <div className="modal edithabits" onClick={(e) => e.stopPropagation()}>
-        <h2>Tus hábitos</h2>
-        <p>Cada hábito le da {ENERGY_PER_HABIT} de energía a {name} para la obra del día; cuando la barra se llena, los demás suman herraduras.</p>
-        <div className="edithabits__list">
-          <HabitPicker picked={picked} onChange={setPicked} />
-        </div>
-        <Button
-          disabled={picked.length === 0}
-          onClick={() => {
-            actions.setHabits(picked)
-            onClose()
-          }}
-        >
-          Guardar
-        </Button>
-        <Button variant="ghost" onClick={onClose}>
-          Cancelar
-        </Button>
-      </div>
+    <div className={`hrow${leaving ? ` hrow--leaving${leaving.folding ? ' hcard--folding' : ''}` : ''}`}>
+      <button className="hrow__skip" onClick={onSkip} tabIndex={dx ? 0 : -1}>
+        💤
+        <span>Hoy no puedo</span>
+      </button>
+      <button
+        className={`hcard${leaving ? ' hcard--ticked' : ''}${counted ? ' hcard--counted' : ''}`}
+        style={{ transform: dx ? `translateX(${dx}px)` : undefined, transition: drag.current ? 'none' : undefined }}
+        onPointerDown={(e) => {
+          drag.current = { x: e.clientX, y: e.clientY, from: dx, moved: false }
+        }}
+        onPointerMove={(e) => {
+          const d = drag.current
+          if (!d) return
+          const mx = e.clientX - d.x
+          if (!d.moved && Math.abs(mx) > 10 && Math.abs(mx) > Math.abs(e.clientY - d.y)) d.moved = true
+          if (d.moved) setDx(Math.max(-SWIPE_OPEN - 20, Math.min(0, d.from + mx)))
+        }}
+        onPointerUp={() => {
+          const d = drag.current
+          drag.current = null
+          if (!d?.moved) return
+          swiped.current = true
+          setDx((x) => (x < -SWIPE_OPEN / 2 ? -SWIPE_OPEN : 0))
+        }}
+        onPointerCancel={() => {
+          drag.current = null
+          setDx((x) => (x < -SWIPE_OPEN / 2 ? -SWIPE_OPEN : 0))
+        }}
+        onClick={(e) => {
+          // a swipe isn't a tap; and with «Hoy no puedo» showing, a tap closes it
+          if (swiped.current) return void (swiped.current = false)
+          if (dx) return setDx(0)
+          onTick(e)
+        }}
+      >
+        <span className="hcard__icon">
+          <HabitIcon habit={h} />
+        </span>
+        <span className="hcard__text">
+          <b>{h.name}</b>
+          {many && (
+            <span className="hcard__drops" aria-label={`${n} de ${plan.times}`}>
+              {Array.from({ length: plan.times }, (_, i) => (
+                <i key={i} className={i < n ? 'on' : i === n && counted ? 'on hcard__drop--new' : ''} />
+              ))}
+            </span>
+          )}
+          {sub && <small>{sub}</small>}
+        </span>
+        <em className="hcard__reward">
+          +{charging ? ENERGY_PER_HABIT : EXTRA_HABIT_COINS}
+          <img src={art(charging ? 'ui_energia' : 'ui_herradura')} alt="" />
+        </em>
+        {many && n + 1 < plan.times && !leaving ? <span className="hcard__tick hcard__tick--plus">+1</span> : <span className={`hcard__tick${leaving ? ' hcard__tick--on' : ''}`}>✓</span>}
+      </button>
     </div>
   )
 }

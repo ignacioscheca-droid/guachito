@@ -2,7 +2,7 @@
 // from what you have done today. The SW can't read localStorage, so the app keeps a
 // small copy of the relevant state in IndexedDB. Nothing leaves the phone.
 import { ENERGY_PER_HABIT, jobInfo, WORK_MS } from './journey'
-import { findHabit, getState, goalOf, habitsToday, nextJob, restingToday, subscribe, type GameState } from './store'
+import { findHabit, finishedOn, getState, goalOf, habitsToday, nextJob, restingToday, skippedToday, subscribe, type GameState } from './store'
 
 /** Emoji for catalog habits, which use artist icons in the app. */
 const CATALOG_EMOJI: Record<string, string> = {
@@ -42,11 +42,12 @@ function build(s: GameState): ReminderSnapshot {
     v: 3,
     name: s.name,
     playerName: s.playerName,
-    habits: habitsToday(s).map((id) => {
+    habits: habitsToday(s).filter((id) => !skippedToday(s).includes(id)).map((id) => {
       const h = findHabit(s, id)
       return { id, name: h.name, emoji: h.emoji ?? CATALOG_EMOJI[id] ?? '⭐' }
     }),
-    completions: Object.fromEntries(days.map((d) => [d, s.completions[d]])),
+    // a habit counts as done once all its times are
+    completions: Object.fromEntries(days.map((d) => [d, finishedOn(s, d)])),
     work: { status: s.work.status, doneAt: s.work.startedAt != null ? s.work.startedAt + WORK_MS : null, job: job ? jobInfo(job).the : null, trip: job?.kind === 'trip' },
     resting: restingToday(s),
     toGo: s.work.status === 'charging' ? Math.ceil((goalOf(s) - s.energy) / ENERGY_PER_HABIT) : 0,

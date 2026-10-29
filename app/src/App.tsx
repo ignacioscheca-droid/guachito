@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { HabitToast } from './components/DayLoop'
 import { PauchoFace, preloadPaucho } from './components/Paucho'
 import { BottomNav, Button } from './components/ui'
 import { actions, canBuySomething, getState, keptDays, mateDue, nextJob, todayKey, useGame, workRemainingMs, type TabId } from './game/store'
@@ -26,7 +25,7 @@ import { shouldAskPush } from './game/push'
 
 type View = 'tabs' | 'reveal' | 'story' | 'trip'
 
-/** Finch's toasts after ticking a habit. */
+/** What Paucho says in the field after a habit. */
 const PRAISE = ['¡Sos un genio!', '¡Bien ahí!', '¡Qué crack!', '¡Increíble!', '¡Bravo!', '¡Así se hace!']
 
 /** Ticks while Paucho works and marks the job finished when the eight hours are up. */
@@ -55,7 +54,6 @@ export default function App() {
   const s = useGame((g) => g)
   const [tab, setTab] = useState<TabId>('inicio')
   const [view, setView] = useState<View>('tabs')
-  const [toast, setToast] = useState<{ key: number; title: string; sub: string } | null>(null)
   // Paucho up close when the bar is full: thanks (and the herraduras), then what he'll build
   const [talk, setTalk] = useState<'thanks' | 'work' | null>(null)
   // what Paucho says in the field for a moment
@@ -104,11 +102,6 @@ export default function App() {
     window.scrollTo(0, 0)
   }, [view, tab, s.onboarded])
 
-  useEffect(() => {
-    if (!toast) return
-    const t = window.setTimeout(() => setToast(null), 2600)
-    return () => clearTimeout(t)
-  }, [toast])
 
   // Watching the trip when he gets back: straight to his story.
   useEffect(() => {
@@ -139,7 +132,7 @@ export default function App() {
     if (shouldAskPush(getState())) window.setTimeout(() => setAskPush(true), 5200)
   }
 
-  // Like Finch: a toast for each habit, and when the bar fills, the full-energy sequence.
+  // Like Finch: a cheer for each habit, and when the bar fills, the full-energy sequence.
   const completeHabit = (id: string) => {
     const r = actions.completeHabit(id)
     setCelebrateKey((k) => k + 1)
@@ -154,11 +147,9 @@ export default function App() {
       return
     }
     if (warm) return say(warm, 6000)
-    setToast({
-      key: Date.now(),
-      title: PRAISE[Math.floor(Math.random() * PRAISE.length)],
-      sub: r.firstTime ? '¡Primera vez que lo completás!' : r.coins > 0 ? `+${r.coins} herraduras` : `+${r.energy} de energía`,
-    })
+    // Paucho cheers in the field (the energy or herraduras already flew to where they add up)
+    const praise = PRAISE[Math.floor(Math.random() * PRAISE.length)]
+    say(r.firstTime ? `${praise} ¡Primera vez que lo hacés!` : praise, 2200)
   }
 
   const backHome = () => {
@@ -273,7 +264,6 @@ export default function App() {
     <div className="app">
       {content}
       {arriving && <div className="arrive-veil" aria-hidden />}
-      {toast && view === 'tabs' && <HabitToast key={toast.key} title={toast.title} sub={toast.sub} />}
       {talk && <FullTalk start={talk} onCoinsLanded={() => setFullPending(false)} onDone={talkDone} />}
       {welcome && s.dog.arrived && !s.dog.name && <DogName />}
       {welcome && !(s.dog.arrived && !s.dog.name) && s.unlockQueue.length > 0 && <UnlockWelcome tab={s.unlockQueue[0]} onGo={setTab} />}

@@ -51,9 +51,13 @@ export type GameState = {
   extras: Record<string, string[]>
   /** Days the morning mate was cebado (the streak screen each new day). */
   mates: string[]
-  /** Completed habit ids per local day (YYYY-MM-DD). */
+  /** Completed habit ids per local day (YYYY-MM-DD); a habit done several times a day is in it once per time. */
   completions: Record<string, string[]>
-  /** Energy each completion gave, per day, so a mistaken tick can be undone. */
+  /** How each habit is done: times a day, which days, the moment (no entry: once, every day, whenever). */
+  habitPlans: Record<string, HabitPlan>
+  /** Habits set aside for the day («Hoy no puedo»), by local day. */
+  skips: Record<string, string[]>
+  /** Energy each completion gave, per day (`gainKey`), so a mistaken tick can be undone. */
   energyGains: Record<string, Record<string, number>>
   /** Same for the herraduras a completion gave. */
   coinGains: Record<string, Record<string, number>>
@@ -88,6 +92,16 @@ export type GameState = {
   workSkipMs: number
 }
 
+/** Times a day, days of the week (0 = Sunday) or times a week, and the moment of the day. */
+export type HabitPlan = {
+  times: number
+  when: { kind: 'daily' } | { kind: 'days'; days: number[] } | { kind: 'week'; times: number }
+  moment: Moment
+}
+export type Moment = 'morning' | 'any' | 'night'
+export const MAX_TIMES = 10
+export const DEFAULT_PLAN: HabitPlan = { times: 1, when: { kind: 'daily' }, moment: 'any' }
+
 /**
  * What the morning found: missed days a termo covered, or a streak gone cold that today's
  * habits can still recalentar (`rescue.days` is what it was).
@@ -116,6 +130,8 @@ const initial = (): GameState => ({
   extras: {},
   mates: [],
   completions: {},
+  habitPlans: {},
+  skips: {},
   energyGains: {},
   coinGains: {},
   energy: 0,
@@ -257,10 +273,44 @@ export function todayKey(s: GameState = state) {
   return `${d.getFullYear()}-${mm}-${dd}`
 }
 
+/** Every tick of the day, a habit done three times being in it three times. */
 export const doneToday = (s: GameState) => s.completions[todayKey(s)] ?? []
 
-/** Today's habits: the everyday ones and the ones added for today only. */
-export const habitsToday = (s: GameState) => [...s.habits, ...(s.extras[todayKey(s)] ?? []).filter((id) => !s.habits.includes(id))]
+export const planOf = (s: GameState, id: string): HabitPlan => s.habitPlans[id] ?? DEFAULT_PLAN
+/** Times a habit was done on a day. */
+export const timesDone = (s: GameState, id: string, day = todayKey(s)) => (s.completions[day] ?? []).filter((h) => h === id).length
+/** Done all its times that day. */
+export const finished = (s: GameState, id: string, day = todayKey(s)) => timesDone(s, id, day) >= planOf(s, id).times
+/** Habits finished on a day (each once). */
+export const finishedOn = (s: GameState, day: string) => [...new Set(s.completions[day] ?? [])].filter((id) => finished(s, id, day))
+
+const weekday = (day: string) => new Date(`${day}T12:00:00`).getDay()
+/** Days of the week `day` is in, Monday first, up to the day before it. */
+function weekBefore(day: string) {
+  const back = (weekday(day) + 6) % 7
+  return Array.from({ length: back }, (_, i) => addDays(day, i - back))
+}
+
+/** Its day: every day, one of its days, or (so many times a week) until the week's are done. */
+function dueOn(s: GameState, id: string, day: string) {
+  const { when } = planOf(s, id)
+  if (when.kind === 'days') return when.days.includes(weekday(day))
+  if (when.kind === 'week') return weekBefore(day).filter((d) => finished(s, id, d)).length < when.times
+  return true
+}
+
+/** Times a week-habit was done this week (today included), for "2 de 3 esta semana". */
+export const weekCount = (s: GameState, id: string) => [...weekBefore(todayKey(s)), todayKey(s)].filter((d) => finished(s, id, d)).length
+
+/** Today's habits: the everyday ones due today and the ones added for today only (set-aside ones too). */
+export const habitsToday = (s: GameState) => {
+  const day = todayKey(s)
+  return [...s.habits.filter((id) => dueOn(s, id, day)), ...(s.extras[day] ?? []).filter((id) => !s.habits.includes(id))]
+}
+export const skippedToday = (s: GameState) => s.skips[todayKey(s)] ?? []
+
+/** Where a tick's energy and herraduras are kept: the habit, then `id#2`, `id#3`… for its later times. */
+const gainKey = (id: string, n: number) => (n === 0 ? id : `${id}#${n + 1}`)
 
 /** Days kept for the streak: a habit done, the morning mate cebado, or a missed day saved. */
 export function keptDays(s: GameState) {
@@ -403,6 +453,26 @@ export const actions = {
     set({ ...state, habits })
   },
 
+  /** How a habit is done: times a day, its days, its moment. */
+  setPlan(id: string, plan: HabitPlan) {
+    const times = Math.max(1, Math.min(MAX_TIMES, plan.times))
+    set({ ...state, habitPlans: { ...state.habitPlans, [id]: { ...plan, times } } })
+  },
+
+  /** Takes a habit off the list (and its plan); its past days stay. */
+  removeHabit(id: string) {
+    const day = todayKey()
+    const { [id]: _, ...habitPlans } = state.habitPlans
+    set({ ...state, habits: state.habits.filter((h) => h !== id), extras: { ...state.extras, [day]: (state.extras[day] ?? []).filter((h) => h !== id) }, habitPlans })
+  },
+
+  /** «Hoy no puedo»: the habit leaves today's list (no energy, the streak doesn't mind); `back` undoes it. */
+  skipHabit(id: string, back = false) {
+    const day = todayKey()
+    const today = (state.skips[day] ?? []).filter((h) => h !== id)
+    set({ ...state, skips: { ...state.skips, [day]: back ? today : [...today, id] } })
+  },
+
   /**
    * Ticks a habit. While the bar fills it gives energy; the tick that fills it also gives
    * FULL_ENERGY_COINS; after that (or with no job left) habits give herraduras.
@@ -410,7 +480,8 @@ export const actions = {
   completeHabit(id: string): Completion {
     const day = todayKey()
     const done = state.completions[day] ?? []
-    if (done.includes(id)) return { energy: 0, coins: 0, full: false, firstTime: false, recalentado: null }
+    const n = timesDone(state, id, day)
+    if (n >= Math.min(MAX_TIMES, planOf(state, id).times)) return { energy: 0, coins: 0, full: false, firstTime: false, recalentado: null }
     const firstTime = !Object.values(state.completions).some((ids) => ids.includes(id))
     const target = chargeTarget(state, day)
     const goal = target?.goal ?? goalOf(state)
@@ -421,8 +492,8 @@ export const actions = {
     let next: GameState = {
       ...state,
       completions: { ...state.completions, [day]: [...done, id] },
-      energyGains: { ...state.energyGains, [day]: { ...state.energyGains[day], [id]: energy - state.energy } },
-      coinGains: { ...state.coinGains, [day]: { ...state.coinGains[day], [id]: coins } },
+      energyGains: { ...state.energyGains, [day]: { ...state.energyGains[day], [gainKey(id, n)]: energy - state.energy } },
+      coinGains: { ...state.coinGains, [day]: { ...state.coinGains[day], [gainKey(id, n)]: coins } },
       energy,
       coins: state.coins + coins,
       lastFullDay: full ? day : state.lastFullDay,
@@ -445,19 +516,22 @@ export const actions = {
     return { energy: gained, coins, full, firstTime, recalentado }
   },
 
-  /** Unticks a habit; its energy comes back out unless the job already started. */
+  /** Unticks a habit (its last time); its energy comes back out unless the job already started. */
   uncompleteHabit(id: string) {
     const day = todayKey()
     const done = state.completions[day] ?? []
-    if (!done.includes(id)) return
-    const { [id]: gained = 0, ...gains } = state.energyGains[day] ?? {}
-    const { [id]: coins = 0, ...coinGains } = state.coinGains[day] ?? {}
+    const n = timesDone(state, id, day)
+    if (!n) return
+    const key = gainKey(id, n - 1)
+    const { [key]: gained = 0, ...gains } = state.energyGains[day] ?? {}
+    const { [key]: coins = 0, ...coinGains } = state.coinGains[day] ?? {}
+    const last = done.lastIndexOf(id)
     const unspent = state.work.status === 'charging' || state.work.status === 'ready' || state.work.status === 'done'
     const energy = unspent ? Math.max(0, state.energy - gained) : state.energy
     const unfilled = state.work.status === 'ready' && energy < goalOf(state)
     set({
       ...state,
-      completions: { ...state.completions, [day]: done.filter((h) => h !== id) },
+      completions: { ...state.completions, [day]: done.filter((_, i) => i !== last) },
       energyGains: { ...state.energyGains, [day]: gains },
       coinGains: { ...state.coinGains, [day]: coinGains },
       energy,

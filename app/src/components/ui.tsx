@@ -82,6 +82,48 @@ export function BottomNav({
   )
 }
 
+/** A sheet that comes up from the bottom over a dimmed screen: editing, lists, choices. */
+export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+  return (
+    <div className="bsheet-back" onClick={onClose}>
+      <div className="bsheet" role="dialog" aria-label={title} onClick={(e) => e.stopPropagation()}>
+        <i className="bsheet__grip" aria-hidden />
+        <h2 className="bsheet__title">{title}</h2>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+/** One choice out of a few, side by side. */
+export function Segmented<T extends string>({ value, options, onChange }: { value: T; options: [T, string][]; onChange: (v: T) => void }) {
+  return (
+    <div className="seg" role="radiogroup">
+      {options.map(([v, label]) => (
+        <button key={v} className={v === value ? 'on' : ''} role="radio" aria-checked={v === value} onClick={() => onChange(v)}>
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/** − N + for a small count. */
+export function Stepper({ value, min, max, unit, onChange }: { value: number; min: number; max: number; unit: string; onChange: (v: number) => void }) {
+  return (
+    <div className="stepper">
+      <button onClick={() => onChange(Math.max(min, value - 1))} disabled={value <= min} aria-label="Menos">
+        −
+      </button>
+      <strong>{value}</strong>
+      <button onClick={() => onChange(Math.min(max, value + 1))} disabled={value >= max} aria-label="Más">
+        +
+      </button>
+      <span>{unit}</span>
+    </div>
+  )
+}
+
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return <div className={`card ${className}`}>{children}</div>
 }
