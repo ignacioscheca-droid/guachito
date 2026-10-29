@@ -65,7 +65,8 @@ export function UnlockWelcome({ tab, onGo }: { tab: TabId; onGo: (t: TabId) => v
   )
 }
 
-const DOG_NAMES = ['Tero', 'Pampa', 'Chispa', 'Lobo', 'Mate', 'Tango', 'Canela', 'Ñandú', 'Pirata', 'Negro']
+/** Criollo names for the dice. */
+const DOG_NAMES = ['Pampa', 'Facón', 'Tero', 'Ñandú', 'Chimichurri', 'Chamamé', 'Malambo', 'Baqueano', 'Locro', 'Alfajor', 'Mate', 'Chispa', 'Canela', 'Tango', 'Bandido', 'Ombú']
 
 /** The dog came with La cucha: you name him. */
 export function DogName() {
