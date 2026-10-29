@@ -8,7 +8,7 @@ import { AREA_COINS, EXTRA_HABIT_COINS, TRIP, TRIP_JOB } from '../game/journey'
 import { FIRST_BED, friendDays, optionArt, priceOf, roomOption, ROOM_SLOTS, ROOM_TABS, type RoomOption, type RoomTab } from '../game/room'
 import { CLOTHES, type Clothes } from '../game/shop'
 import { feel, sfx } from '../game/sound'
-import { actions, roomLock, southOpen, useGame, type GameState } from '../game/store'
+import { actions, roomLock, southOpen, TERMO_PRICE, TERMOS_MAX, useGame, type GameState } from '../game/store'
 
 type Tab = RoomTab | 'paucho'
 
@@ -200,6 +200,21 @@ export function Casita() {
     }
     speak({ text: pick([`¡Qué lindo quedó${you}!`, `¡Mirá eso${you}! Me encanta.`, `¡Gracias${you}! Ahora sí parece mi casa.`]), ttl: 3200 })
   }
+  // a termo keeps a missed day in the streak; he holds up to TERMOS_MAX
+  const buyTermo = () => {
+    if (s.termos >= TERMOS_MAX) {
+      feel('locked', 'warning')
+      return speak({ text: `Ya tengo ${TERMOS_MAX} termos llenos${you}: con eso cubrimos ${TERMOS_MAX} días. ¡Más no me entran en la alforja!`, ttl: 6000 })
+    }
+    if (s.coins < TERMO_PRICE) {
+      feel('locked', 'warning')
+      return speak(short('El termo', TERMO_PRICE))
+    }
+    if (!actions.buyTermo()) return
+    feel('buy', 'success')
+    celebrate()
+    speak({ text: `¡Termo lleno${you}! Si un día no podés venir, con esto no se nos enfría el mate.`, ttl: 5000 })
+  }
   const buyClothes = (c: Clothes) => {
     if (!actions.buyClothes(c.id)) return
     feel('buy', 'success')
@@ -304,6 +319,25 @@ export function Casita() {
                 </div>
               </div>
             ))}
+          {tab === 'paucho' && (
+            <button className={`scard scard--termo${s.termos >= TERMOS_MAX ? ' scard--have' : s.coins < TERMO_PRICE ? ' scard--short' : ''}`} onClick={buyTermo}>
+              <span className="scard__pic">
+                <span className="sicon">🧉</span>
+                <span className="scard__count">{s.termos}/{TERMOS_MAX}</span>
+              </span>
+              <b>Termo</b>
+              <span className="scard__price">
+                {s.termos >= TERMOS_MAX ? (
+                  'Lleno'
+                ) : (
+                  <>
+                    <img src={art('ui_herradura')} alt="" />
+                    {TERMO_PRICE}
+                  </>
+                )}
+              </span>
+            </button>
+          )}
           {tab === 'paucho' &&
             CLOTHES.map((c) => {
               const have = s.clothes.includes(c.id)

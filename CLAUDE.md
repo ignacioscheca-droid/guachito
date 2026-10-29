@@ -43,7 +43,7 @@ and only "¡Sí, avisame!" opens the phone's dialog. Its design is the owner's, 
     the next goal (or the one after). Still to come: the 14/30/50/100 extras (a recuerdo, the mate de plata,
     the poncho de la racha, a cuadro), which need art.
   - **Termo:** up to `TERMOS_MAX` (2); each one covers a missed day by itself, and the day shows frosted.
-    One comes with each goal; sold in the Casita for `TERMO_PRICE` (60) once that shop has it.
+    One comes with each goal; sold in the Casita's Paucho tab for `TERMO_PRICE` (60), first card (🧉 stand-in until its art arrives).
   - **Recalentar:** more days missed than termos, but at most 3: `Rescue` (Racha.tsx) offers to recalentar
     it with `RESCUE_HABITS` (3) habits today (Home's chip shows "🔥 N / 3"). Otherwise it starts over.
   - **Back after longer:** `WelcomeBack` (Racha.tsx): Paucho is glad to see you, no streak talk, asks for one habit.
