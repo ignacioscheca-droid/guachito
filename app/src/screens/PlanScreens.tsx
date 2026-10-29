@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Medio } from '../components/Medio'
+import { PauchoTalk } from '../components/PauchoTalk'
 import { Button, HabitIcon } from '../components/ui'
+import { art } from '../game/content'
 import { findHabit, useGame } from '../game/store'
 
 /** How long "armando tus metas" takes: the ring fills up in this time. */
@@ -69,11 +71,14 @@ export function StarterPlan({
   player,
   companion,
   plan,
+  notes = {},
   onAccept,
 }: {
   player: string
   companion: string
   plan: string[]
+  /** Why a goal is there, under its name (the calm ones). */
+  notes?: Record<string, string>
   onAccept: () => void
 }) {
   const state = useGame((s) => s)
@@ -106,7 +111,10 @@ export function StarterPlan({
             return (
               <li key={id} style={{ animationDelay: `${200 + k * 90}ms` }}>
                 <HabitIcon habit={h} className="plan-icon" />
-                <span>{h.name}</span>
+                <span>
+                  {h.name}
+                  {notes[id] && <small>{notes[id]}</small>}
+                </span>
               </li>
             )
           })}
@@ -115,6 +123,62 @@ export function StarterPlan({
       <div className="plan-foot">
         <Button onClick={onAccept}>¡Vamos!</Button>
       </div>
+    </div>
+  )
+}
+
+/** The first goal of the plan is a gift: Paucho says it already counts (it is done on day 1). */
+export function FirstGift({ player, companion, onNext }: { player: string; companion: string; onNext: () => void }) {
+  const you = player.trim()
+  return (
+    <div className="screen ogoal">
+      <img className="ogoal__bg" src={art('area1_scene_0')} alt="" />
+      <PauchoTalk
+        compact
+        pose="b4_contento"
+        text={`¡Ya te levantaste${you ? `, ${you}` : ''}, eso ya cuenta! Te regalo ese primer hábito: ya me diste un poquito de energía.`}
+      >
+        <Button variant="gold" onClick={onNext}>
+          ¡Gracias, {companion}!
+        </Button>
+      </PauchoTalk>
+    </div>
+  )
+}
+
+const GOALS = [
+  { days: 7, label: 'Una semana entera' },
+  { days: 14, label: 'Dos semanas' },
+  { days: 30, label: 'Un mes de mates' },
+]
+
+/** «¿Cuántos días seguidos nos cebamos un mate?»: Paucho offers the streak goal, nothing preselected. */
+export function StreakGoal({ player, onCommit }: { player: string; onCommit: (days: number) => void }) {
+  const [days, setDays] = useState<number | null>(null)
+  const you = player.trim()
+  return (
+    <div className="screen ogoal">
+      <img className="ogoal__bg" src={art('area1_scene_0')} alt="" />
+      <PauchoTalk compact pose="b5_ofrece" text={`¿Cuántos días seguidos nos cebamos un mate${you ? `, ${you}` : ''}?`}>
+        <div className="ogoal__picks" role="radiogroup">
+          {GOALS.map((g) => (
+            <button
+              key={g.days}
+              className={`mq-opt mq-opt--plain ogoal__pick${g.days === days ? ' mq-opt--on' : ''}`}
+              role="radio"
+              aria-checked={g.days === days}
+              onClick={() => setDays(g.days)}
+            >
+              <span className="mq-opt__text">
+                {g.days} días <small>{g.label}</small>
+              </span>
+            </button>
+          ))}
+        </div>
+        <Button variant="gold" disabled={days == null} onClick={() => days != null && onCommit(days)}>
+          ¡Me comprometo!
+        </Button>
+      </PauchoTalk>
     </div>
   )
 }

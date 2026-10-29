@@ -48,6 +48,9 @@ export const STARTER_GOALS: HabitDef[] = [
   { id: 'pendiente', name: 'Hacer una cosa que vengo postergando', emoji: '✅' },
 ]
 
+/** The plan's first goal is a gift: it comes already done on day 1 (energy included). */
+export const FIRST_HABIT_GIFT = 'levantarme'
+
 /** Emojis offered when creating your own habit. */
 export const HABIT_EMOJIS = ['🧸', '🤗', '❤️', '🏋️', '🏃', '🚴', '🧘', '📚', '💧', '🍎', '😴', '🎸', '🌱', '☀️', '🍳', '📵', '🐶', '🎨', '✍️', '📞']
 

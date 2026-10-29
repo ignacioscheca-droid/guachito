@@ -180,29 +180,37 @@ https://claude.ai/artifact/AjubNPcvbjovmSoMKry4t3 (a Design System artifact; its
 - Ranch layout follows his reference image `rancho_completo_unlocked.png` (local only);
   `design/tools/ranch_preview.py` renders the layout for review.
 - Out of scope: weekly history view, offline caching, usage logging.
-- Onboarding (`app/src/screens/Onboarding.tsx`): a mate scene replaces the welcome screen.
+- Onboarding (`app/src/screens/Onboarding.tsx`), shortened 2026-10-29 (owner's call after reviewing
+  every flow): a mate scene replaces the welcome screen, and there is ONE mate.
   1) Gauchito ceba un mate y te mira (no text) · 2) "¡Hola! Soy el Gauchito ___" (the
   player names him) → "Soy tu compañero para cuidarte un poquito cada día. ¡Y cuando
-  vos te cuidás, a mí también me hace bien!" · 3) "¿Cómo te llamás?" · 4) "¡Un gusto,
-  {nombre}! ¿Querés un mate?" Sí → "¡Tomá, está muy rico!" / No → "¡Más para mí!" ·
-  5) "Bueno, y ahora contame un poco de vos." → questionnaire (`src/screens/Questionnaire.tsx`,
-  questions in `src/game/aboutYou.ts`): Finch's 12–24 except "have you used Finch before?";
-  "¿Qué te trae por acá, {nombre}?" titles its areas question. Gauchito sits above each question taking notes in a libreta,
+  vos te cuidás, a mí también me hace bien!" · 3) "¿Cómo te llamás?" · 4) the morning mate
+  (`StreakDay` in `DayOne.tsx`, with its `hint` prop: "¡Un gusto, {nombre}! Deslizá para arriba
+  y cebamos el primer mate"): cebarlo there IS streak day 1, so `finishOnboarding` already puts
+  today in `mates` and the day-1 streak screen does not play again. Night → dawn as the yerba
+  pours, Gauchito sips; test menu → "Ver la racha del día 1" replays it · 5) "Bueno, y ahora
+  contame un poco de vos." → questionnaire (`src/screens/Questionnaire.tsx`, questions in
+  `src/game/aboutYou.ts`), only 4 questions, all of them feed `buildPlan`: what brings you
+  (areas, with «Quiero sentirme más tranquilo/a» = `calma`), sleep hours, movement, what you
+  postpone. Wording is wellness only: never "ansiedad", "tratar", "curar" or "diagnóstico", and no
+  question about symptoms or health conditions (a legal decision, not a design one). Gauchito sits above each question taking notes in a libreta,
   like Duo (`components/Libreta.tsx`: 13 pixel-aligned poses from ChatGPT, brief in the Claude Doc
   "Gauchito — Anotando en la libreta", https://claude.ai/code/artifact/5807fe3f-04b8-4d94-9e80-43c50d447058;
   originals in `escena_libreta/`, local only, imported by `design/tools/import_libreta.py`): he writes,
   looks and blinks on his own and reacts to each answer. Answers are saved as
   `aboutYou` · 6) pick up to 3 habits from the grid · 7) "Armando tus metas…" (Finch 25,
-  with placeholder 5-star reviews instead of "45 million people") · 8) "El plan de
-  {nombre}" (Finch 26, `src/screens/PlanScreens.tsx`): 7 goals like Finch's — the picked
-  habits, up to 2 goals the answers point to, then Finch's basics (`buildPlan` in
-  `aboutYou.ts`, goals in `STARTER_GOALS` in content.ts). The plan becomes the daily
-  habits, so energy is split over 7 (MAX_HABITS = 7). He is called Paucho unless renamed ·
-  9) day 1 (Finch 32–34, `src/screens/DayOne.tsx`): "¡Jueves genial!" card with a gentle
-  reminder, "1 día de racha" (Duolingo's streak screen as a morning mate, ported from main
-  2026-10-25: night → swipe up pours yerba into the mate and brings the dawn → Gauchito sips it;
-  `habit_mate` split by `design/tools/make_mate_parts.py`; test menu → "Ver la racha del día 1"), and "¿Cuántos días seguidos…?" (2/5/7/14, saved as
-  `streakGoal`). Later days count the streak too (see "Racha" above).
+  with placeholder 5-star reviews instead of "45 million people", left as is on purpose) · 8) "El plan de
+  {nombre}" (`src/screens/PlanScreens.tsx`): 7 goals — «Levantarme de la cama» always first
+  (`FIRST_HABIT_GIFT` in content.ts), the picked habits, the two calm ones if `calma` was chosen
+  (`calmPicks`: Respirar hondo 3 veces + Un mate tranqui; each shows "Para sentirte con más calma"),
+  up to 2 goals the other answers point to, then Finch's basics (`buildPlan` in
+  `aboutYou.ts`, goals in `STARTER_GOALS`). The plan becomes the daily habits (MAX_HABITS = 7).
+  He is called Paucho unless renamed · 9) `FirstGift`: Paucho says "¡Ya te levantaste, eso ya cuenta!"
+  — the first habit is a gift, and `finishOnboarding` ticks it (`actions.completeHabit`), so Home
+  opens with its energy already in the bar · 10) `StreakGoal` (mockup R1 in design/mockups/ronda2):
+  Paucho asks "¿Cuántos días seguidos nos cebamos un mate?" over the casita lot, 7 / 14 / 30 days,
+  nothing preselected, «¡Me comprometo!» → `streakGoal` (the goal ladder is in "Racha" above).
+  The old blue "¡Jueves genial!" Día 1 card is gone.
   Naming the dog comes later, not in onboarding. Art brief: Claude Doc "Gauchito — Escena del mate (onboarding)"
   (https://claude.ai/code/artifact/a95a438f-5c51-43af-8984-69abcb3ff50b, tab "Para pegar en
   ChatGPT" is the brief); the owner generates the art with ChatGPT from `kit_escena_mate/`.

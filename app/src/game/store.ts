@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import type { AboutYou } from './aboutYou'
-import { HABITS, STARTER_GOALS, type HabitDef } from './content'
+import { FIRST_HABIT_GIFT, HABITS, STARTER_GOALS, type HabitDef } from './content'
 import { dayKey, daysTogether, streak } from './friendship'
 import {
   AREA_COINS,
@@ -393,6 +393,8 @@ export const PAUCHO_TAB_DAYS = 3
 export const actions = {
   finishOnboarding(o: { name: string; playerName: string; habits: string[]; aboutYou: AboutYou; streakGoal: number }) {
     set({ ...state, ...o, onboarded: true, name: o.name.trim() || 'Paucho', playerName: o.playerName.trim(), mates: [todayKey()] })
+    // the first habit is a gift: already done on day 1, so the bar starts with its energy
+    if (o.habits.includes(FIRST_HABIT_GIFT)) actions.completeHabit(FIRST_HABIT_GIFT)
   },
 
   /**
