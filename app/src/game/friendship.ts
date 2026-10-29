@@ -21,7 +21,7 @@ export function friendship(days: number) {
   return { level: LEVELS[i], index: i, next, toNext: next ? next.days - days : 0 }
 }
 
-const dayKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+export const dayKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
 /** Days in a row with a habit, up to `today` (today still counts as kept until it ends). */
 export function streak(c: Completions, today: string) {

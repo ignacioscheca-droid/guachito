@@ -17,6 +17,7 @@ import { PauchoTab } from './screens/PauchoTab'
 import { AreaDone, Reveal } from './screens/Reveal'
 import { Settings } from './screens/Settings'
 import { StreakDay } from './screens/DayOne'
+import { GoalDone, Rescue } from './screens/Racha'
 import { TestMenu } from './screens/TestMenu'
 import { TripRun } from './screens/TripRun'
 import { TripStory } from './screens/TripStory'
@@ -74,6 +75,12 @@ export default function App() {
   const remaining = useWorkClock()
   const testMode = new URLSearchParams(location.search).has('test')
   const morning = mateDue(s) && view === 'tabs' && !replayOnboarding
+  // a streak goal reached this morning: its celebration comes after the mate
+  const [goalDone, setGoalDone] = useState<number | null>(null)
+  // the morning works out the streak first: termos for the days missed, or a rescue
+  useEffect(() => {
+    if (morning) actions.openDay()
+  }, [morning])
 
   useEffect(preloadPaucho, [])
 
@@ -117,12 +124,17 @@ export default function App() {
     setFieldSay(line)
     window.setTimeout(() => setFieldSay((l) => (l === line ? null : l)), ms)
   }
+  // the mate recalentado by the habit that also filled the bar: said after the full bar's talk
+  const laterSay = useRef<string | null>(null)
   const talkDone = (started: boolean) => {
     setTalk(null)
     setFullPending(false)
     setTab('inicio')
+    const warm = laterSay.current
+    laterSay.current = null
+    if (warm) say(warm, 6000)
     if (!started) return
-    if (nextJob(getState())?.kind !== 'trip') say('¡Toc, toc! Te aviso cuando esté 🔨')
+    if (!warm && nextJob(getState())?.kind !== 'trip') say('¡Toc, toc! Te aviso cuando esté 🔨')
     // he just set off for eight hours: the moment to offer to let you know
     if (shouldAskPush(getState())) window.setTimeout(() => setAskPush(true), 5200)
   }
@@ -131,7 +143,9 @@ export default function App() {
   const completeHabit = (id: string) => {
     const r = actions.completeHabit(id)
     setCelebrateKey((k) => k + 1)
+    const warm = r.recalentado ? `¡Recalentamos el mate! Volvimos a ${r.recalentado} días de racha 🔥` : null
     if (r.full) {
+      laterSay.current = warm
       // Home counts the bar up to the top (the herraduras held back), Paucho cheers in the
       // field, then he comes up close to thank you and hand them over
       setFullPending(true)
@@ -139,6 +153,7 @@ export default function App() {
       window.setTimeout(() => setTalk('thanks'), 1400)
       return
     }
+    if (warm) return say(warm, 6000)
     setToast({
       key: Date.now(),
       title: PRAISE[Math.floor(Math.random() * PRAISE.length)],
@@ -167,16 +182,30 @@ export default function App() {
     content = <StreakDay onNext={() => setReplayStreak(false)} />
   } else if (replayArea) {
     content = <AreaDone area={areaView(s.jobsDone).area} onDone={() => setReplayArea(false)} />
+  } else if (goalDone != null) {
+    content = <GoalDone goal={goalDone} onDone={() => setGoalDone(null)} />
   } else if (morning) {
-    // each new day opens with its mate, and the streak counts one more
-    content = (
+    // each new day opens with its mate, and the streak counts one more; a streak gone cold
+    // is offered a rescue first
+    const ds = s.dayStart?.day === todayKey(s) ? s.dayStart : null
+    const days = streak({ ...keptDays(s), [todayKey(s)]: ['mate'] }, todayKey(s))
+    content = !ds ? null : ds.rescue && !ds.rescue.offered ? (
+      <Rescue days={ds.rescue.days} onDone={() => setTab('inicio')} />
+    ) : (
       <StreakDay
+        key={ds.day}
         first={false}
-        days={streak({ ...keptDays(s), [todayKey(s)]: ['mate'] }, todayKey(s))}
+        days={days}
         goal={s.streakGoal}
+        saved={s.savedDays}
+        termo={ds.termo.length}
+        termos={s.termos}
+        today={todayKey(s)}
+        rescue={ds.rescue?.days ?? 0}
         onNext={() => {
           actions.cebarMate()
           setTab('inicio')
+          if (s.streakGoal && days >= s.streakGoal) setGoalDone(s.streakGoal)
         }}
       />
     )

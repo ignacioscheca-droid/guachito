@@ -42,6 +42,8 @@
   --tick-deep: #3f7a33;
   --tick-off: #f4efe7;
   --tick-off-ledge: #e2d8c8;
+  --frost: #a9d8f0;
+  --frost-deep: #5ea7cf;
   --shadow: 0 6px 18px rgba(91, 58, 36, 0.12);
   --radius: 22px;
   --safe-top: env(safe-area-inset-top, 0px);
@@ -7043,4 +7045,133 @@ img.apiece[style*='bottom'] {
 .addhabit__themes .on {
   background: rgba(255, 255, 255, 0.25);
   color: #fff;
+}
+
+/* ---- the streak: its goal under the morning mate, the goal reached, the mate gone cold ---- */
+.sk-goal {
+  width: min(100%, 300px);
+  margin: 14px auto 0;
+  opacity: 0;
+}
+.sk--lit .sk-goal {
+  animation: sk-up 0.4s 3.35s ease-out both;
+}
+.sk-goal p {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--earth);
+}
+.sk-goal small {
+  font-size: 14px;
+  color: var(--muted);
+}
+.sk-goal__track {
+  display: block;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--tick-off);
+  box-shadow: inset 0 2px 0 var(--tick-off-ledge);
+  overflow: hidden;
+}
+.sk-goal__track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(var(--energy-top), var(--energy-bottom));
+}
+.sk-goal__track--frost i {
+  background: linear-gradient(var(--frost), var(--frost-deep));
+}
+.sk-day--frost {
+  color: var(--frost-deep);
+}
+.sk-day--frost i {
+  background: var(--frost);
+  box-shadow: 0 3px 0 var(--frost-deep);
+}
+.sk-day__frost {
+  color: var(--surface);
+  font-size: 17px;
+}
+
+.racha {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+.racha--gold {
+  background: linear-gradient(var(--gold-light), var(--sand-soft) 50%, var(--paper));
+}
+.racha--cold {
+  background: linear-gradient(var(--sand), var(--cream) 50%, var(--paper));
+}
+.racha__top {
+  position: absolute;
+  right: 14px;
+  top: calc(var(--safe-top) + 12px);
+  z-index: 80;
+}
+.racha__burst {
+  position: absolute;
+  left: 50%;
+  top: 22%;
+}
+.racha__num {
+  margin-top: calc(var(--safe-top) + 70px);
+  font-size: 150px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--energy);
+  filter: drop-shadow(0 5px 0 var(--energy-bottom));
+  animation: drop 0.6s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+.racha__name {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--earth);
+  animation: pop 0.5s 0.35s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+.racha__mate {
+  width: 190px;
+  margin-top: calc(var(--safe-top) + 90px);
+  filter: grayscale(0.4);
+}
+.racha__prizes {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+.racha__prizes span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  background: var(--bubble);
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--earth);
+  animation: pop 0.45s 0.2s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+.racha__prizes img {
+  width: 28px;
+}
+.racha__prizes b {
+  font-size: 24px;
+}
+.hchip.hchip--rescue {
+  background: var(--sand-soft);
+  color: var(--energy-bottom);
+}
+/* the goal's number stays in view behind Paucho */
+.racha .ptalk {
+  background: linear-gradient(transparent 55%, color-mix(in srgb, var(--earth) 35%, transparent));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }

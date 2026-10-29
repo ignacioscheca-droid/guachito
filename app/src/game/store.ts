@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import type { AboutYou } from './aboutYou'
 import { HABITS, STARTER_GOALS, type HabitDef } from './content'
-import { daysTogether, streak } from './friendship'
+import { dayKey, daysTogether, streak } from './friendship'
 import {
   AREA_COINS,
   ENERGY_PER_HABIT,
@@ -26,7 +26,7 @@ export type WorkStatus = 'charging' | 'ready' | 'working' | 'done'
 export type TabId = 'areas' | 'aventuras' | 'inicio' | 'paucho' | 'casita'
 
 /** What ticking a habit gave: energy while the bar fills, herraduras once it is full. */
-export type Completion = { energy: number; coins: number; full: boolean; firstTime: boolean }
+export type Completion = { energy: number; coins: number; full: boolean; firstTime: boolean; recalentado: number | null }
 
 export type GameState = {
   version: 2
@@ -36,8 +36,14 @@ export type GameState = {
   playerName: string
   /** Onboarding questionnaire answers ("Contame un poco de vos"). */
   aboutYou: AboutYou | null
-  /** Days in a row the player committed to on day 1 (2, 5, 7 or 14). */
+  /** Days in a row the player is going for (7, 14, 30…: `STREAK_GOALS`); reaching it is celebrated and the next one chosen. */
   streakGoal: number | null
+  /** Termos in hand (up to TERMOS_MAX): each one keeps a missed day in the streak. */
+  termos: number
+  /** Missed days the streak keeps anyway: a termo covered them, or the mate was recalentado. */
+  savedDays: Record<string, 'termo' | 'recalentado'>
+  /** How the day began for the streak, worked out when it opens (`actions.openDay`). */
+  dayStart: DayStart | null
   habits: string[]
   /** Habits the player created (name + emoji). */
   customHabits: HabitDef[]
@@ -82,6 +88,16 @@ export type GameState = {
   workSkipMs: number
 }
 
+/**
+ * What the morning found: missed days a termo covered, or a streak gone cold that today's
+ * habits can still recalentar (`rescue.days` is what it was).
+ */
+export type DayStart = {
+  day: string
+  termo: string[]
+  rescue: { missed: string[]; days: number; offered: boolean } | null
+}
+
 // Its own key, so this build never touches the save of the app on main ("guachito.v1").
 const KEY = 'gauchito.v2'
 
@@ -92,6 +108,9 @@ const initial = (): GameState => ({
   playerName: '',
   aboutYou: null,
   streakGoal: null,
+  termos: 0,
+  savedDays: {},
+  dayStart: null,
   habits: [],
   customHabits: [],
   extras: {},
@@ -243,11 +262,44 @@ export const doneToday = (s: GameState) => s.completions[todayKey(s)] ?? []
 /** Today's habits: the everyday ones and the ones added for today only. */
 export const habitsToday = (s: GameState) => [...s.habits, ...(s.extras[todayKey(s)] ?? []).filter((id) => !s.habits.includes(id))]
 
-/** Days kept for the streak: a habit done, or the morning mate cebado. */
+/** Days kept for the streak: a habit done, the morning mate cebado, or a missed day saved. */
 export function keptDays(s: GameState) {
   const kept: Record<string, string[]> = { ...s.completions }
   for (const d of s.mates) if (!kept[d]?.length) kept[d] = ['mate']
+  for (const d in s.savedDays) if (!kept[d]?.length) kept[d] = [s.savedDays[d]]
   return kept
+}
+
+// ---- the streak's goals, termos and recalentar (Duolingo's, with mate) ----
+
+/** The goal ladder: Paucho proposes the next one each time you reach yours. */
+export const STREAK_GOALS = [7, 14, 30, 50, 100, 365]
+/** Herraduras for reaching a goal (a termo comes with each). */
+const GOAL_COINS: Record<number, number> = { 7: 50, 14: 100, 30: 150, 50: 200, 100: 300, 365: 500 }
+export const goalCoins = (goal: number) => GOAL_COINS[goal] ?? 30
+export const nextGoal = (goal: number) => STREAK_GOALS.find((g) => g > goal) ?? goal + 365
+export const TERMOS_MAX = 2
+export const TERMO_PRICE = 60
+/** Habits that recalientan the mate on the day you come back. */
+export const RESCUE_HABITS = 3
+/** A longer gap can't be recalentado: the streak starts over. */
+const RESCUE_MAX_GAP = 3
+
+const addDays = (day: string, n: number) => {
+  const d = new Date(`${day}T12:00:00`)
+  d.setDate(d.getDate() + n)
+  return dayKey(d)
+}
+
+/** Missed days between the last kept one and today (oldest first); none if no streak was going. */
+function missedDays(s: GameState, today: string): string[] {
+  const kept = keptDays(s)
+  const out: string[] = []
+  for (let d = addDays(today, -1); out.length < 30; d = addDays(d, -1)) {
+    if (kept[d]?.length) return out
+    out.unshift(d)
+  }
+  return []
 }
 
 /** Days in a row kept, up to today. */
@@ -278,6 +330,50 @@ const PAUCHO_TAB_DAYS = 3
 export const actions = {
   finishOnboarding(o: { name: string; playerName: string; habits: string[]; aboutYou: AboutYou; streakGoal: number }) {
     set({ ...state, ...o, onboarded: true, name: o.name.trim() || 'Paucho', playerName: o.playerName.trim(), mates: [todayKey()] })
+  },
+
+  /**
+   * A new day opens (before its mate): termos cover the days missed, if there are enough;
+   * if not, and the gap is short, today's habits can recalentar the streak.
+   */
+  openDay() {
+    const day = todayKey()
+    if (state.dayStart?.day === day) return
+    const missed = missedDays(state, day)
+    let next: GameState = { ...state, dayStart: { day, termo: [], rescue: null } }
+    if (missed.length && missed.length <= state.termos) {
+      const savedDays = { ...state.savedDays }
+      for (const d of missed) savedDays[d] = 'termo'
+      next = { ...next, termos: state.termos - missed.length, savedDays, dayStart: { day, termo: missed, rescue: null } }
+    } else if (missed.length && missed.length <= RESCUE_MAX_GAP) {
+      const days = streak(keptDays(state), addDays(missed[0], -1))
+      next = { ...next, dayStart: { day, termo: [], rescue: { missed, days, offered: false } } }
+    }
+    set(next)
+  },
+
+  /** Paucho offered to recalentar the mate: yes (do the habits today) or start over. */
+  answerRescue(yes: boolean) {
+    const ds = state.dayStart
+    if (!ds?.rescue) return
+    set({ ...state, dayStart: { ...ds, rescue: yes ? { ...ds.rescue, offered: true } : null } })
+  },
+
+  /** The goal reached: its herraduras and a termo, and the next goal (the player may pick another). */
+  reachGoal() {
+    const goal = state.streakGoal
+    if (!goal) return
+    set({ ...state, coins: state.coins + goalCoins(goal), termos: Math.min(TERMOS_MAX, state.termos + 1), streakGoal: nextGoal(goal) })
+  },
+
+  setStreakGoal(goal: number) {
+    set({ ...state, streakGoal: goal })
+  },
+
+  buyTermo(): boolean {
+    if (state.termos >= TERMOS_MAX || state.coins < TERMO_PRICE) return false
+    set({ ...state, coins: state.coins - TERMO_PRICE, termos: state.termos + 1 })
+    return true
   },
 
   /** Today's mate, from the streak screen: today counts for the streak. */
@@ -314,7 +410,7 @@ export const actions = {
   completeHabit(id: string): Completion {
     const day = todayKey()
     const done = state.completions[day] ?? []
-    if (done.includes(id)) return { energy: 0, coins: 0, full: false, firstTime: false }
+    if (done.includes(id)) return { energy: 0, coins: 0, full: false, firstTime: false, recalentado: null }
     const firstTime = !Object.values(state.completions).some((ids) => ids.includes(id))
     const target = chargeTarget(state, day)
     const goal = target?.goal ?? goalOf(state)
@@ -334,10 +430,19 @@ export const actions = {
       work: full && state.work.status === 'charging' ? { status: 'ready', startedAt: null } : state.work,
     }
     if (done.length === 0 && daysTogether(next.completions) >= PAUCHO_TAB_DAYS) next = unlock(next, 'paucho')
+    // the third habit of the day you came back recalienta the mate: the missed days count
+    let recalentado: number | null = null
+    const rescue = state.dayStart?.day === day ? state.dayStart.rescue : null
+    if (rescue && done.length + 1 >= RESCUE_HABITS) {
+      const savedDays = { ...next.savedDays }
+      for (const d of rescue.missed) savedDays[d] = 'recalentado'
+      next = { ...next, savedDays, dayStart: { ...state.dayStart!, rescue: null } }
+      recalentado = streak(keptDays(next), day)
+    }
     // (read before set(): afterwards `state` is already the new one)
     const gained = energy - state.energy
     set(next)
-    return { energy: gained, coins, full, firstTime }
+    return { energy: gained, coins, full, firstTime, recalentado }
   },
 
   /** Unticks a habit; its energy comes back out unless the job already started. */
@@ -467,6 +572,17 @@ export const actions = {
   // ---- test menu ----
   debugNextDay() {
     set({ ...state, dayOffset: state.dayOffset + 1 })
+  },
+  /** Two days later: one day missed, for the termo and recalentar. */
+  debugMissDay() {
+    set({ ...state, dayOffset: state.dayOffset + 2 })
+  },
+  debugTermo() {
+    set({ ...state, termos: Math.min(TERMOS_MAX, state.termos + 1) })
+  },
+  /** Leaves the streak goal at today's streak, so tomorrow's mate reaches it. */
+  debugGoalTomorrow() {
+    set({ ...state, streakGoal: streakNow(state) + 1 })
   },
   debugFillEnergy() {
     if (state.work.status !== 'charging' || !nextJob(state)) return

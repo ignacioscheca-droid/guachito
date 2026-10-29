@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { Button } from '../components/ui'
 import { art } from '../game/content'
+import { dayKey } from '../game/friendship'
+import { RESCUE_HABITS, TERMOS_MAX } from '../game/store'
 
 // The three screens that open day 1, after the starter plan (Finch's 32-34).
 
@@ -92,20 +94,27 @@ const TYPE_STEP = 26
 const READY_AT = 4600
 const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)]
 
-/** What Gauchito says over the mate: the first one, a new run, the goal, or one more day. */
-function streakLine(days: number, first: boolean, goal: number | null) {
+/** What Gauchito says over the mate: the first one, a new run, a termo, the goal, or one more day. */
+function streakLine(days: number, first: boolean, goal: number | null, termo: number, rescue: number) {
+  if (rescue > 0) return `¡Este mate va de arranque! Hacé ${RESCUE_HABITS} hábitos hoy y recuperamos ${rescue === 1 ? 'el día' : `los ${rescue} días`}.`
+  if (termo > 0)
+    return termo === 1 ? 'Ayer no viniste, pero el termo mantuvo el agua caliente. ¡Seguimos!' : `Estos ${termo} días no viniste, pero los termos mantuvieron el agua caliente. ¡Seguimos!`
   if (days === 1) return first ? '¡Primer mate de la racha! Volvé mañana y nos cebamos otro.' : pick(['¡Un mate nuevo, una racha nueva! Mañana nos cebamos otro.', '¡Arrancamos de nuevo, y con mate! Te espero mañana.'])
-  if (goal && days === goal) return `¡Llegamos a tu meta: ${days} días seguidos! Yo sigo cebando si vos seguís.`
+  if (goal && days >= goal) return `¡${days} mates seguidos! Llegamos a tu meta.`
+  if (goal && Math.random() < 0.5) return `¡${days} mates seguidos! ${goal - days === 1 ? 'Falta uno' : `Faltan ${goal - days}`} para tu meta.`
   return pick([`¡${days} días seguidos tomando mate juntos! Mañana te espero con otro.`, `¡Ya van ${days} mates seguidos! Así da gusto arrancar el día.`, `¡${days} días de racha! Este mate tiene gusto a constancia.`])
 }
 
-/** Which of the week's days to show: up to three kept days before today, the rest ahead. */
-function weekDays(days: number) {
+/**
+ * Which of the week's days to show: up to three kept days before today, the rest ahead.
+ * A day a termo (or recalentar) saved shows frosted instead of with its check.
+ */
+function weekDays(days: number, saved: Record<string, string>, today?: string) {
   const back = Math.min(days - 1, 3)
   return [0, 1, 2, 3, 4, 5, 6].map((k) => {
-    const d = new Date()
+    const d = today ? new Date(`${today}T12:00:00`) : new Date()
     d.setDate(d.getDate() + k - back)
-    return { initial: DAY_INITIALS[d.getDay()], today: k === back, kept: k < back }
+    return { initial: DAY_INITIALS[d.getDay()], today: k === back, kept: k < back, frost: k < back && dayKey(d) in saved }
   })
 }
 
@@ -115,9 +124,35 @@ function weekDays(days: number) {
  * comes up, leaves fly, the grey 0 rolls to a 1, and Gauchito pops out of the steam with
  * the mate in his hand, sipping, while the week comes in and today gets its check.
  */
-export function StreakDay({ days = 1, first = true, goal = null, onFill, onNext }: { days?: number; first?: boolean; goal?: number | null; onFill?: () => void; onNext: () => void }) {
-  const [line] = useState(() => streakLine(days, first, goal))
-  const [week] = useState(() => weekDays(days))
+export function StreakDay({
+  days = 1,
+  first = true,
+  goal = null,
+  saved = {},
+  termo = 0,
+  termos = 0,
+  rescue = 0,
+  today,
+  onFill,
+  onNext,
+}: {
+  days?: number
+  first?: boolean
+  goal?: number | null
+  /** Missed days the streak kept anyway (they show frosted). */
+  saved?: Record<string, string>
+  /** Days a termo just covered (the morning says so), and the termos left. */
+  termo?: number
+  termos?: number
+  /** A streak gone cold that today's habits will recalentar: the days it had. */
+  rescue?: number
+  /** The game's today (the test menu can move it). */
+  today?: string
+  onFill?: () => void
+  onNext: () => void
+}) {
+  const [line] = useState(() => streakLine(days, first, goal, termo, rescue))
+  const [week] = useState(() => weekDays(days, saved, today))
   const screen = useRef<HTMLDivElement>(null)
   const slot = useRef<HTMLDivElement>(null)
   const drag = useRef<{ y: number; pull: number } | null>(null)
@@ -302,14 +337,26 @@ export function StreakDay({ days = 1, first = true, goal = null, onFill, onNext 
           </p>
           <p className="sk-label">{days === 1 ? 'día' : 'días'} de racha</p>
         </div>
+        {(termo > 0 || (goal != null && !first)) && (
+          <div className="sk-goal">
+            <p>
+              {termo > 0 ? 'Termos' : `Meta: ${goal} días`}
+              <small>{termo > 0 ? (termos === 0 ? 'no te queda ninguno' : termos === 1 ? `te queda 1 de ${TERMOS_MAX}` : `te quedan ${termos} de ${TERMOS_MAX}`) : `🧉 ${Math.min(days, goal!)} / ${goal}`}</small>
+            </p>
+            <span className={`sk-goal__track${termo > 0 ? ' sk-goal__track--frost' : ''}`}>
+              <i style={{ width: `${(termo > 0 ? termos / TERMOS_MAX : Math.min(1, days / goal!)) * 100}%` }} />
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="sk-week" aria-hidden>
         {week.map((d, k) => (
-          <div key={k} className={`sk-day${d.today ? ' sk-day--today' : ''}${d.kept ? ' sk-day--kept' : ''}`} style={{ animationDelay: `${3450 + k * 45}ms` }}>
+          <div key={k} className={`sk-day${d.today ? ' sk-day--today' : ''}${d.kept ? ' sk-day--kept' : ''}${d.frost ? ' sk-day--frost' : ''}`} style={{ animationDelay: `${3450 + k * 45}ms` }}>
             <span>{d.initial}</span>
             <i>
-              {d.kept && (
+              {d.frost && <b className="sk-day__frost">❄</b>}
+              {d.kept && !d.frost && (
                 <svg className="sk-day__check" viewBox="0 0 24 24">
                   <path d="M6 12.5l4 4 8-9" />
                 </svg>

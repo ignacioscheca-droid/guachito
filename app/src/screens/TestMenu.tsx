@@ -30,6 +30,9 @@ export function TestMenu({
           {s.coins}
         </p>
         <button onClick={run(actions.debugNextDay)}>Pasar al día siguiente</button>
+        <button onClick={run(actions.debugMissDay)}>Faltar un día (pasa a pasado mañana)</button>
+        <button onClick={run(actions.debugTermo)}>+1 termo (tenés {s.termos})</button>
+        <button onClick={run(actions.debugGoalTomorrow)}>Que mañana se cumpla la meta (hoy {s.streakGoal ?? '—'})</button>
         <button onClick={run(actions.debugFillEnergy)}>Llenar la energía</button>
         <button onClick={run(actions.debugFinishWork)}>Terminar el trabajo ya</button>
         <button onClick={run(actions.debugSkipJob)}>Saltar a la obra terminada</button>

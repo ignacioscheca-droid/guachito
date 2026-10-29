@@ -36,7 +36,16 @@ and only "¡Sí, avisame!" opens the phone's dialog. Its design is the owner's, 
 - **Racha:** each new day opens with the morning mate (`StreakDay` in DayOne.tsx, `mateDue`
   in store.ts): you swipe to cebar it, the number rolls from yesterday's streak, kept days
   show their check, and "¡Dale!" saves the day in `mates`. A day counts if its mate was
-  cebado or a habit was done (`keptDays`, `streakNow`); Home shows it as a "🧉 N" chip.
+  cebado, a habit was done, or it was saved (`savedDays`; `keptDays`, `streakNow`); Home shows it as a "🧉 N" chip.
+  Duolingo's system with mate (owner-approved 2026-10-29), worked out each morning by `actions.openDay`:
+  - **Goals:** ladder `STREAK_GOALS` 7 → 14 → 30 → 50 → 100 → 365; the morning mate shows a bar to the goal.
+    Reaching it plays `GoalDone` (screens/Racha.tsx): `goalCoins` herraduras and a termo, then Paucho proposes
+    the next goal (or the one after). Still to come: the 14/30/50/100 extras (a recuerdo, the mate de plata,
+    the poncho de la racha, a cuadro), which need art.
+  - **Termo:** up to `TERMOS_MAX` (2); each one covers a missed day by itself, and the day shows frosted.
+    One comes with each goal; sold in the Casita for `TERMO_PRICE` (60) once that shop has it.
+  - **Recalentar:** more days missed than termos, but at most 3: `Rescue` (Racha.tsx) offers to recalentar
+    it with `RESCUE_HABITS` (3) habits today (Home's chip shows "🔥 N / 3"). Otherwise it starts over.
 - **Home, laid out like Royal Match's:**
   - The area fills the screen. Above it sit the herraduras, the gear and a progress bar: the day's energy, then the 8-hour countdown, with the obra at its end; it becomes a button when ready or done.
   - Habits are Finch-sized cards (3½ in view, the last cut by the tab bar). "✓ N" and ✏️ chips sit above them. No text floats over the scene.
