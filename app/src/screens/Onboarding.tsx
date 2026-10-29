@@ -2,17 +2,18 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { HabitPicker } from '../components/HabitPicker'
 import { BLINKS, Medio, MEDIO } from '../components/Medio'
 import { Button } from '../components/ui'
-import { buildPlan, type AboutYou } from '../game/aboutYou'
+import { buildPlan, calmPicks, CALM_NOTE, type AboutYou } from '../game/aboutYou'
 import { art, HABITS_TO_PICK, PLAN_SIZE } from '../game/content'
 import { actions } from '../game/store'
-import { DayOneCard, StreakDay, StreakGoal } from './DayOne'
-import { Generating, StarterPlan } from './PlanScreens'
+import { StreakDay } from './DayOne'
+import { FirstGift, Generating, StarterPlan, StreakGoal } from './PlanScreens'
 import { Questionnaire } from './Questionnaire'
 
 // First open: Gauchito se ceba un mate, te mira y charla con vos (see CLAUDE.md). In this
 // build it happens on the empty lot where he is about to build his casita (area1_etapa0: stage 0, the piles of materials).
-type TalkStep = 'name' | 'purpose' | 'player' | 'mate' | 'reply' | 'about' | 'habits'
-type Step = 'scene' | TalkStep | 'quiz' | 'generating' | 'plan' | 'day1' | 'streak' | 'goal'
+// The only mate is the streak's: you cebás it ('mate'), and that is day 1 of the streak.
+type TalkStep = 'name' | 'purpose' | 'player' | 'about' | 'habits'
+type Step = 'scene' | TalkStep | 'mate' | 'quiz' | 'generating' | 'plan' | 'gift' | 'goal'
 
 /**
  * The opening, frame by frame. `steam` = the yerba, in % of the frame.
@@ -85,7 +86,6 @@ export function Onboarding({ onPreviewDone }: { onPreviewDone?: () => void }) {
   const [step, setStep] = useState<Step>('scene')
   const [companion, setCompanion] = useState(DEFAULT_NAME)
   const [player, setPlayer] = useState('')
-  const [wantsMate, setWantsMate] = useState(true)
   const [habits, setHabits] = useState<string[]>([])
   const [answers, setAnswers] = useState<AboutYou>({})
   const [plan, setPlan] = useState<string[]>([])
@@ -95,10 +95,12 @@ export function Onboarding({ onPreviewDone }: { onPreviewDone?: () => void }) {
   // every render (Home's clock re-renders us four times a second while Paucho works) would
   // restart their timers forever and leave the screen blank.
   const toName = useCallback(() => setStep('name'), [])
-  const toAbout = useCallback(() => setStep('about'), [])
   const toPlan = useCallback(() => setStep('plan'), [])
 
   if (step === 'scene') return <Scene onDone={toName} />
+  if (step === 'mate') {
+    return <StreakDay hint={`¡Un gusto, ${player.trim()}! Deslizá para arriba y cebamos el primer mate`} onNext={() => setStep('about')} />
+  }
   if (step === 'quiz') {
     return (
       <Questionnaire player={player} answers={answers} onChange={setAnswers} onDone={() => setStep('habits')} onBack={() => setStep('about')} />
@@ -108,24 +110,25 @@ export function Onboarding({ onPreviewDone }: { onPreviewDone?: () => void }) {
   if (step === 'generating') return <Generating companion={him} onDone={toPlan} />
   if (step === 'plan') {
     const built = buildPlan(habits, answers, PLAN_SIZE)
+    const notes = Object.fromEntries(calmPicks(habits, answers).filter((id) => built.includes(id)).map((id) => [id, CALM_NOTE]))
     return (
       <StarterPlan
         player={player}
         companion={him}
         plan={built}
+        notes={notes}
         onAccept={() => {
           setPlan(built)
-          setStep('day1')
+          setStep('gift')
         }}
       />
     )
   }
-  if (step === 'day1') return <DayOneCard companion={him} onNext={() => setStep('streak')} />
-  if (step === 'streak') return <StreakDay onNext={() => setStep('goal')} />
+  if (step === 'gift') return <FirstGift player={player} companion={him} onNext={() => setStep('goal')} />
   if (step === 'goal') {
     return (
       <StreakGoal
-        companion={him}
+        player={player}
         onCommit={(streakGoal) =>
           onPreviewDone ? onPreviewDone() : actions.finishOnboarding({ name: companion, playerName: player, habits: plan, aboutYou: answers, streakGoal })
         }
@@ -134,8 +137,8 @@ export function Onboarding({ onPreviewDone }: { onPreviewDone?: () => void }) {
   }
 
   return (
-    <div className={`screen mi mi--${step}${step === 'reply' && wantsMate ? ' mi--hand' : ''}`}>
-      <Talk step={step} companion={companion} player={player} wantsMate={wantsMate} onReplyDone={toAbout} />
+    <div className={`screen mi mi--${step}`}>
+      <Talk step={step} companion={companion} player={player} />
 
       <div className="mi-sheet">
         {step === 'name' && (
@@ -191,29 +194,6 @@ export function Onboarding({ onPreviewDone }: { onPreviewDone?: () => void }) {
           </form>
         )}
 
-        {step === 'mate' && (
-          <div className="mi-choices">
-            <Button
-              variant="gold"
-              onClick={() => {
-                setWantsMate(true)
-                setStep('reply')
-              }}
-            >
-              Sí 🧉
-            </Button>
-            <Button
-              variant="light"
-              onClick={() => {
-                setWantsMate(false)
-                setStep('reply')
-              }}
-            >
-              No, gracias
-            </Button>
-          </div>
-        )}
-
         {step === 'habits' && (
           <>
             <div className="mi-habits">
@@ -234,22 +214,16 @@ function Talk({
   step,
   companion,
   player,
-  wantsMate,
-  onReplyDone,
 }: {
   step: TalkStep
   companion: string
   player: string
-  wantsMate: boolean
-  onReplyDone: () => void
 }) {
   const you = player.trim()
   const lines: Record<TalkStep, Line> = {
     name: { pose: 'b1_saluda', text: '¡Hola! Soy el Gauchito' },
     purpose: { pose: 'b2_habla', text: PURPOSE, lead: { pose: 'b4_contento', ms: 900 } },
     player: { pose: 'b3_escucha', text: '¿Cómo te llamás?' },
-    mate: { pose: 'b5_ofrece', text: `¡Un gusto, ${you}! ¿Querés un mate?` },
-    reply: wantsMate ? { pose: 'b6_toma', text: '¡Tomá, está muy rico!' } : { pose: 'b7_mas_para_mi', text: '¡Más para mí!' },
     about: { pose: 'b2_habla', text: 'Bueno, y ahora contame un poco de vos.' },
     habits: { pose: 'b2_habla', text: `¡Gracias por contarme, ${you}! Elegí hasta ${HABITS_TO_PICK} hábitos para tu plan.`, lead: { pose: 'b4_contento', ms: 900 } },
   }
@@ -264,13 +238,6 @@ function Talk({
     const t = window.setTimeout(() => setLedStep(step), leadMs)
     return () => clearTimeout(t)
   }, [step, hasLead, leadMs])
-
-  // After answering about the mate, he moves on by himself.
-  useEffect(() => {
-    if (step !== 'reply' || !done) return
-    const t = window.setTimeout(onReplyDone, 1400)
-    return () => clearTimeout(t)
-  }, [step, done, onReplyDone])
 
   const pose = line.lead && ledStep !== step ? line.lead.pose : line.pose
   return (

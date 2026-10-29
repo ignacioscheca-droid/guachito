@@ -1947,15 +1947,8 @@ img {
 
 /* steps without typing: buttons go down, where the thumb is */
 .mi--purpose .mi-sheet,
-.mi--about .mi-sheet,
-.mi--mate .mi-sheet {
+.mi--about .mi-sheet {
   justify-content: flex-end;
-}
-
-/* "¡Tomá!": he brings the mate closer to you */
-.mi--hand .mi-medio {
-  transform-origin: 85% 75%;
-  animation: mi-hand 0.8s cubic-bezier(0.3, 1.3, 0.5, 1);
 }
 
 /* habits step: smaller Gauchito, the picker gets the room */
@@ -2002,17 +1995,6 @@ img {
 @keyframes mi-pop {
   0% {
     transform: translateY(6px) scale(0.97);
-  }
-  100% {
-    transform: none;
-  }
-}
-@keyframes mi-hand {
-  0% {
-    transform: none;
-  }
-  45% {
-    transform: scale(1.07) translateY(4px);
   }
   100% {
     transform: none;
@@ -2502,101 +2484,6 @@ img {
   }
 }
 
-/* ---------- onboarding: día 1 (tarjeta, racha, meta) ---------- */
-
-.d1 {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 100dvh;
-  padding: calc(var(--safe-top) + 28px) 22px 0;
-  background: linear-gradient(180deg, #3a93d2, #5eaee3);
-  color: #fff;
-  text-align: center;
-  isolation: isolate;
-}
-.d1-kicker {
-  margin: 8px 0 0;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  opacity: 0.85;
-}
-.d1-day {
-  margin: 6px 0 0;
-  font-size: 22px;
-  font-weight: 900;
-}
-.d1-card {
-  position: relative;
-  width: min(78%, 310px);
-  aspect-ratio: 4 / 5;
-  margin: 34px 0 0;
-  padding: 9px;
-  border-radius: 18px;
-  background: #fff;
-  box-shadow: 0 14px 30px rgba(10, 50, 90, 0.3);
-  rotate: -4deg;
-  animation: d1-card-in 0.6s cubic-bezier(0.3, 1.3, 0.5, 1) both;
-}
-.d1-card img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 40%;
-  border-radius: 11px;
-}
-.d1-card figcaption {
-  position: absolute;
-  top: 26px;
-  left: 20px;
-  right: 20px;
-  font-size: 21px;
-  font-weight: 900;
-  line-height: 1.2;
-  color: #fff;
-  text-shadow:
-    0 2px 0 rgba(30, 90, 140, 0.45),
-    0 3px 12px rgba(20, 70, 120, 0.5);
-}
-.d1-card figcaption small {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-.d1-card em {
-  font-style: normal;
-  color: var(--gold-light);
-}
-.d1-bolt {
-  margin-top: auto;
-  font-size: 40px;
-  line-height: 1;
-}
-.d1-text {
-  margin: 10px 0 0;
-  font-size: 17px;
-  font-weight: 800;
-  line-height: 1.35;
-}
-.d1-foot {
-  width: 100%;
-  padding: 22px 0 calc(var(--safe-bottom) + 18px);
-}
-.d1-foot .btn {
-  background: #fff;
-  color: var(--ink);
-  box-shadow: 0 4px 0 rgba(10, 50, 90, 0.25);
-}
-
-.d1-guy {
-  width: 96px;
-  flex: none;
-}
 /* ---- "1 día de racha", Duolingo's streak screen as a morning on the campo ----
    Starts at night; swiping up pours the yerba and brings the dawn. ms after the swipe:
    0     the yerba finishes pouring · 450 the mate hops, 850 it settles
@@ -3468,117 +3355,35 @@ img {
   }
 }
 
-.d1-title {
-  margin: 10px 0 0;
-  font-size: 25px;
-  font-weight: 900;
-  line-height: 1.2;
-}
-.d1-talk {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  margin-top: 22px;
-}
-.d1-bubble {
+/* ---------- onboarding: Paucho gives the first habit and offers the streak goal ---------- */
+.ogoal {
   position: relative;
-  flex: 1;
-  margin: 0 0 30px;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: #fff;
-  color: var(--ink);
-  font-size: 17px;
-  font-weight: 800;
-  line-height: 1.3;
-  text-align: left;
-  animation: mi-pop 0.4s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: linear-gradient(var(--sky), var(--sand-soft));
 }
-.d1-bubble::before {
-  content: '';
+.ogoal__bg {
   position: absolute;
-  left: -6px;
-  bottom: 16px;
-  width: 16px;
-  height: 16px;
-  background: #fff;
-  transform: rotate(45deg);
-  border-radius: 3px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
-.d1-goals {
+.ogoal__picks {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  width: 100%;
-  margin-top: 18px;
+  gap: 8px;
 }
-.d1-goal {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 58px;
-  padding: 0 16px;
-  border-radius: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  font-size: 17px;
-  text-align: left;
-  transition:
-    border-color 0.2s,
-    background 0.2s;
+.ogoal__pick {
+  min-height: 50px;
 }
-.d1-goal strong {
-  font-weight: 900;
-}
-.d1-goal__emoji {
-  font-size: 24px;
-}
-.d1-goal__label {
-  margin-left: auto;
-  font-size: 15px;
+.plan-card li small {
+  display: block;
+  font-size: 12px;
   font-weight: 700;
-  opacity: 0.9;
-}
-.d1-goal--on {
-  border: 3px solid #fff;
-  background: rgba(255, 255, 255, 0.16);
-}
-.d1-goal--on .d1-goal__label {
-  font-weight: 900;
-  opacity: 1;
-}
-.d1-goal--on::after {
-  content: '✓';
-  position: absolute;
-  top: -10px;
-  right: -8px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: #fff;
-  color: #3a93d2;
-  font-size: 15px;
-  font-weight: 900;
-}
-.d1-goals + .d1-foot {
-  margin-top: auto;
+  color: var(--muted);
 }
 
-@keyframes d1-card-in {
-  from {
-    opacity: 0;
-    transform: translateY(30px) scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
 /* ---------- from the onboarding into Home ---------- */
 
 /* the last onboarding screen's blue, fading away over Home */

@@ -1,6 +1,6 @@
-// "Contame un poco de vos": the onboarding questionnaire, after Finch's (minus "have
-// you used Finch before?"). The answers stay on the phone; the personalized plan will
-// be built from them.
+// "Contame un poco de vos": the onboarding questionnaire, cut down to what the plan uses.
+// The answers stay on the phone; the personalized plan is built from them.
+import { FIRST_HABIT_GIFT } from './content'
 
 /** Question id -> chosen option ids (one for single choice). */
 export type AboutYou = Record<string, string[]>
@@ -27,24 +27,27 @@ export type Question = {
   skip?: (answers: AboutYou) => boolean
 }
 
-export const SECTIONS = ['Sobre vos', 'Energía y actividad', 'Cómo viene tu vida', 'En qué te ayudo']
+export const SECTIONS = ['En qué te ayudo', 'Cómo viene tu día']
 
 const you = (name: string) => (name ? `, ${name}` : '')
 
+// Only what the plan uses (buildPlan): four questions, wellness wording, nothing about symptoms.
 export const QUESTIONS: Question[] = [
   {
-    id: 'edad',
+    id: 'areas',
     section: 0,
-    title: () => '¿Cuántos años tenés?',
-    subtitle: 'Así puedo acompañarte mejor.',
+    title: (name) => `¿Qué te trae por acá${you(name)}?`,
+    subtitle: 'Elegí todo lo que quieras.',
+    multi: true,
     options: [
-      { id: 'menos-18', label: 'Menos de 18' },
-      { id: '18-24', label: '18 a 24' },
-      { id: '25-34', label: '25 a 34' },
-      { id: '35-44', label: '35 a 44' },
-      { id: '45-54', label: '45 a 54' },
-      { id: '55-64', label: '55 a 64' },
-      { id: '65-mas', label: '65 o más' },
+      { id: 'familia', emoji: '🏡', label: 'Pasar más tiempo con los míos' },
+      { id: 'vinculos', emoji: '🤝', label: 'Conectar más con la gente' },
+      { id: 'foco', emoji: '🎯', label: 'Ganar foco y productividad' },
+      { id: 'rutina', emoji: '🌱', label: 'Armar y sostener una rutina' },
+      { id: 'dormir', emoji: '😴', label: 'Dormir mejor' },
+      { id: 'cuerpo', emoji: '💪', label: 'Moverme más y cuidar el cuerpo' },
+      { id: 'calma', emoji: '🍃', label: 'Quiero sentirme más tranquilo/a' },
+      { id: 'confianza', emoji: '🌻', label: 'Quererme y confiar más en mí' },
     ],
   },
   {
@@ -59,16 +62,6 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 'levantarse',
-    section: 1,
-    title: () => '¿Qué tan fácil te resulta levantarte de la cama?',
-    options: [
-      { id: 'facil', emoji: '🐬', label: 'Muy fácil, me levanto enseguida' },
-      { id: 'depende', emoji: '🌱', label: 'Depende, hay días que cuesta' },
-      { id: 'dificil', emoji: '🧸', label: 'Difícil, seguido me cuesta mucho' },
-    ],
-  },
-  {
     id: 'actividad',
     section: 1,
     title: () => '¿Cuánto te movés durante el día?',
@@ -76,77 +69,11 @@ export const QUESTIONS: Question[] = [
       { id: 'mucho', emoji: '🏃', label: 'Estoy en movimiento casi todo el día' },
       { id: 'mezcla', emoji: '🚶', label: 'Combino ratos sin moverme con algo de movimiento' },
       { id: 'poco', emoji: '🪑', label: 'Me muevo poco y quiero moverme más' },
-      { id: 'limitado', emoji: '🌻', label: 'Tengo alguna condición que limita mi movimiento' },
-    ],
-  },
-  {
-    id: 'agobio',
-    section: 2,
-    title: () => '¿Qué tan seguido sentís que todo te supera?',
-    options: [
-      { id: 'semanal', emoji: '😫', label: 'Varias veces por semana' },
-      { id: 'mensual', emoji: '😕', label: 'Algunos días al mes' },
-      { id: 'casi-nunca', emoji: '😌', label: 'Casi nunca, manejo bien el estrés' },
-    ],
-  },
-  {
-    id: 'apoyo',
-    section: 2,
-    title: () => '¿Con cuántas personas contás cuando las cosas se ponen difíciles?',
-    options: [
-      { id: '3-mas', emoji: '🌳', label: '3 o más' },
-      { id: '2', emoji: '🌿', label: '2' },
-      { id: '1', emoji: '🌱', label: '1' },
-      { id: 'solo', emoji: '🍃', label: 'Por ahora, solo conmigo' },
-    ],
-  },
-  {
-    id: 'rutina',
-    section: 2,
-    title: () => '¿Qué tan conforme estás con tu rutina?',
-    options: [
-      { id: 'mucho', emoji: '🥳', label: 'Mucho, me cuido bien' },
-      { id: 'algo', emoji: '😊', label: 'Más o menos, quiero mejorar algunas cosas' },
-      { id: 'poco', emoji: '😮', label: 'Poco, quiero un cambio grande' },
-    ],
-  },
-  {
-    id: 'salud-mental',
-    section: 3,
-    title: () => '¿Lidiás con alguno de estos temas de salud mental?',
-    subtitle: 'Elegí los que quieras. Queda solo en tu teléfono.',
-    multi: true,
-    options: [
-      { id: 'ansiedad', label: 'Ansiedad' },
-      { id: 'depresion', label: 'Depresión' },
-      { id: 'tdah', label: 'TDAH', hint: 'Déficit de atención e hiperactividad' },
-      { id: 'tept', label: 'TEPT', hint: 'Estrés postraumático' },
-      { id: 'bipolar', label: 'Trastorno bipolar' },
-      { id: 'toc', label: 'TOC', hint: 'Obsesivo-compulsivo' },
-      { id: 'ninguno', label: 'Ninguno de estos', none: true },
-      { id: 'privado', label: 'Prefiero no decirlo', none: true },
-    ],
-  },
-  {
-    id: 'areas',
-    section: 3,
-    title: (name) => `¿Qué te trae por acá${you(name)}?`,
-    subtitle: 'Elegí todo lo que quieras.',
-    multi: true,
-    options: [
-      { id: 'familia', emoji: '🏡', label: 'Pasar más tiempo con los míos' },
-      { id: 'vinculos', emoji: '🤝', label: 'Conectar más con la gente' },
-      { id: 'foco', emoji: '🎯', label: 'Ganar foco y productividad' },
-      { id: 'rutina', emoji: '🌱', label: 'Armar y sostener una rutina' },
-      { id: 'dormir', emoji: '😴', label: 'Dormir mejor' },
-      { id: 'cuerpo', emoji: '💪', label: 'Moverme más y cuidar el cuerpo' },
-      { id: 'estres', emoji: '🧘', label: 'Bajar el estrés' },
-      { id: 'confianza', emoji: '🌻', label: 'Quererme y confiar más en mí' },
     ],
   },
   {
     id: 'postergar',
-    section: 3,
+    section: 1,
     title: () => '¿Qué cosas solés postergar?',
     subtitle: 'Elegí todas las que te pasen.',
     multi: true,
@@ -159,26 +86,8 @@ export const QUESTIONS: Question[] = [
       { id: 'nada', emoji: '✨', label: 'Casi nada, ¡soy re puntual!', none: true },
     ],
   },
-  {
-    id: 'por-que',
-    section: 3,
-    title: () => '¿Por qué creés que lo postergás?',
-    subtitle: 'Elegí todas las que te pasen.',
-    multi: true,
-    options: [
-      { id: 'abruma', emoji: '🏔️', label: 'Me abruma' },
-      { id: 'confianza', emoji: '🌼', label: 'No confío en mí' },
-      { id: 'miedo-exito', emoji: '🌟', label: 'Me da miedo que me vaya bien' },
-      { id: 'motivacion', emoji: '🍂', label: 'Me falta motivación' },
-      { id: 'tiempo', emoji: '⏰', label: 'No me hago el tiempo' },
-    ],
-    // Nothing to put off, nothing to ask about.
-    skip: (a) => (a.postergar ?? []).includes('nada'),
-  },
 ]
 
-/** The goal Home shows first: the easiest one to tick. */
-const EASY_FIRST = 'levantarme'
 /** Finch's starter plan, in its order. */
 const FINCH_PLAN = ['levantarme', 'dientes', 'cara', 'vaso-agua', 'estirarme', 'feliz', 'respirar']
 /** At most this many goals come from the answers, so the plan stays mostly Finch's. */
@@ -191,30 +100,33 @@ const COVERS: Record<string, string[]> = {
   mate: ['los-mios'],
   pantallas: ['los-mios'],
 }
+/** «Quiero sentirme más tranquilo/a» adds two of these, in this order. */
+const CALM = ['respirar', 'mate', 'estirarme']
+export const CALM_NOTE = 'Para sentirte con más calma'
+
+/** The calm habits the plan adds, if that goal was chosen. */
+export function calmPicks(picked: string[], a: AboutYou): string[] {
+  if (!(a.areas ?? []).includes('calma')) return []
+  const skip = new Set(picked.flatMap((id) => COVERS[id] ?? []))
+  return CALM.filter((id) => !skip.has(id)).slice(0, 2)
+}
 
 /**
- * The starter plan: the habits you picked, then goals your answers point to, then
- * Finch's, up to PLAN_SIZE in all; "Levantarme de la cama" moves to the top.
+ * The starter plan: the first goal, which is a gift (FIRST_HABIT_GIFT: it comes already
+ * done), the habits you picked, the calm ones, goals your answers point to, then Finch's,
+ * up to PLAN_SIZE in all.
  */
 export function buildPlan(picked: string[], a: AboutYou, size: number): string[] {
   const has = (q: string, ...ids: string[]) => (a[q] ?? []).some((id) => ids.includes(id))
   const fromAnswers = [
-    // What they came for ("¿Qué te trae por acá?") first...
     has('areas', 'familia') && 'los-mios',
     has('areas', 'dormir') && 'dormir',
     has('areas', 'cuerpo') && 'caminar',
-    has('areas', 'estres') && 'respirar',
     has('areas', 'vinculos') && 'escribirle',
     has('areas', 'confianza') && 'algo-bien',
     has('areas', 'rutina') && 'tender-cama',
-    // ...then what the other answers point to.
-    has('levantarse', 'dificil') && 'levantarme',
-    (has('agobio', 'semanal') || has('salud-mental', 'ansiedad')) && 'respirar',
     has('sueno', 'menos-5', '5-7') && 'dormir',
     has('actividad', 'poco') && 'caminar',
-    has('apoyo', '1', 'solo') && 'escribirle',
-    has('por-que', 'confianza') && 'algo-bien',
-    has('rutina', 'poco') && 'tender-cama',
     has('postergar', 'mensajes') && 'mensaje',
     has('postergar', 'decisiones', 'turnos', 'ejercicio', 'casa') && 'pendiente',
   ].filter((id): id is string => !!id)
@@ -224,11 +136,10 @@ export function buildPlan(picked: string[], a: AboutYou, size: number): string[]
   const add = (id: string) => {
     if (plan.length < size && !plan.includes(id) && !skip.has(id)) plan.push(id)
   }
+  add(FIRST_HABIT_GIFT)
   picked.forEach(add)
+  calmPicks(picked, a).forEach(add)
   fromAnswers.filter((id) => !plan.includes(id) && !skip.has(id)).slice(0, FROM_ANSWERS).forEach(add)
   FINCH_PLAN.forEach(add)
-  // Home lists one very easy goal first, then the habits they chose (the owner's call).
-  const easy = plan.indexOf(EASY_FIRST)
-  if (easy > 0) plan.unshift(...plan.splice(easy, 1))
   return plan
 }
