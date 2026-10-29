@@ -57,7 +57,7 @@ export function BottomNav({
   face: ReactNode
   badges?: Partial<Record<TabId, boolean>>
   onTab: (t: TabId) => void
-  onLocked: () => void
+  onLocked: (t: TabId) => void
 }) {
   return (
     <nav className="nav nav5">
@@ -67,7 +67,7 @@ export function BottomNav({
           <button
             key={t.id}
             className={`nav__tab${tab === t.id ? ' nav__tab--on' : ''}${unlocked ? '' : ' nav5__locked'}`}
-            onClick={() => (unlocked ? onTab(t.id) : onLocked())}
+            onClick={() => (unlocked ? onTab(t.id) : onLocked(t.id))}
             aria-label={unlocked ? undefined : 'Se desbloquea más adelante'}
           >
             <span className="nav__icon">

@@ -3,10 +3,11 @@ import { PauchoFace } from '../components/Paucho'
 import { Button } from '../components/ui'
 import { art } from '../game/content'
 import { daysTogether } from '../game/friendship'
-import { TRIP } from '../game/journey'
+import { AREAS, areaName, areaView, JOURNEY, jobInfo, TRIP, TRIP_JOB } from '../game/journey'
 import { enableReminders } from '../game/push'
 import { haptic, sfx } from '../game/sound'
-import { actions, useGame, type TabId } from '../game/store'
+import { actions, PAUCHO_TAB_DAYS, useGame, type GameState, type TabId } from '../game/store'
+import { PauchoTalk } from '../components/PauchoTalk'
 
 /** Royal Match-style welcome when a tab opens: what it is, and a button to go there. */
 export function UnlockWelcome({ tab, onGo }: { tab: TabId; onGo: (t: TabId) => void }) {
@@ -44,9 +45,10 @@ export function UnlockWelcome({ tab, onGo }: { tab: TabId; onGo: (t: TabId) => v
     haptic('celebrate')
   }, [tab])
   if (!c) return null
-  const close = (go: boolean) => {
+  // no «Más tarde»: what just opened is worth a look now
+  const go = () => {
     actions.dismissUnlock()
-    if (go) onGo(tab)
+    onGo(tab)
   }
   return (
     <div className="overlay unlock">
@@ -55,11 +57,8 @@ export function UnlockWelcome({ tab, onGo }: { tab: TabId; onGo: (t: TabId) => v
         <small>¡Desbloqueaste!</small>
         <h2>{c.title}</h2>
         <p>{c.text}</p>
-        <Button variant="gold" onClick={() => close(true)}>
+        <Button variant="gold" onClick={go}>
           {c.go}
-        </Button>
-        <Button variant="ghost" onClick={() => close(false)}>
-          Más tarde
         </Button>
       </div>
     </div>
@@ -174,5 +173,35 @@ export function NotifAsk({ onClose }: { onClose: () => void }) {
         )}
       </div>
     </div>
+  )
+}
+
+/** What a locked tab waits for, and how far along you are, in Paucho's words. */
+function lockLine(s: GameState, tab: TabId) {
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+  if (tab === 'casita') return `¡Ahí va a estar mi casita! Cuando terminemos ${jobInfo(JOURNEY[0]).the}, es mía y te la muestro.`
+  if (tab === 'paucho') {
+    const left = Math.max(1, PAUCHO_TAB_DAYS - daysTogether(s.completions))
+    return `Eso es para cuando seamos compañeros. Nos ${left === 1 ? 'falta un día' : `faltan ${left} días`} con hábitos.`
+  }
+  if (tab === 'areas') {
+    const { area, built } = areaView(s.jobsDone)
+    const left = AREAS[area].obras.length - built
+    return `Ahí van las áreas que terminemos. A ${areaName(area, s.name, true)} le ${left === 1 ? 'falta una obra' : `faltan ${plural(left, 'obra', 'obras')}`}.`
+  }
+  const galpon = areaName(1, s.name, true)
+  const left = Math.max(1, TRIP_JOB - s.jobsDone)
+  return `Eso es para mis viajes. Cuando terminemos ${galpon} me voy de aventura: ${left === 1 ? 'falta una obra' : `faltan ${left} obras`}.`
+}
+
+/** A locked tab tapped: Paucho says what it waits for, up close. */
+export function LockedTab({ tab, onClose }: { tab: TabId; onClose: () => void }) {
+  const s = useGame((g) => g)
+  return (
+    <PauchoTalk compact pose="b8_curioso" text={`¡Todavía no! ${lockLine(s, tab)}`}>
+      <Button variant="gold" onClick={onClose}>
+        ¡Dale!
+      </Button>
+    </PauchoTalk>
   )
 }

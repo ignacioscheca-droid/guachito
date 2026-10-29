@@ -7458,3 +7458,7 @@ img.apiece[style*='bottom'] {
   font-weight: 800;
   color: var(--red);
 }
+/* while Paucho talks up close the tab bar waits (Home's talks sit inside the tab's layer, under it) */
+.app:has(.ptalk) .nav {
+  pointer-events: none;
+}

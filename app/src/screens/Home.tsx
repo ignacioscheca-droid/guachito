@@ -323,7 +323,7 @@ export function Home(p: Props) {
   }
   // Back with an obra finished: it waits in the field, you tap it, it rises where it is and
   // Paucho tells you about it; then what comes next glows (Home's own little sequence).
-  const [phase, setPhase] = useState<'reveal' | 'tell' | 'next' | null>(null)
+  const [phase, setPhase] = useState<'reveal' | 'tell' | 'held' | 'next' | null>(null)
   const [nextSay, setNextSay] = useState<string | null>(null)
   const area = AREAS[view.area]
   const doneObra = status === 'done' && job?.kind === 'build' && view.area === job.area ? area.obras[view.built] : null
@@ -352,9 +352,18 @@ export function Home(p: Props) {
     actions.completeJob()
     const next = area.obras[job.obra + 1]
     setNextSay(restingToday(getState()) ? `Mañana arrancamos ${next.the}, ¿me ayudás?` : `¡Ahora vamos con ${next.the}! ¿Me ayudás con tus hábitos?`)
+    // what the obra opened (a tab, the dog) is shown first; the next obra's invite comes after
+    if (welcomesWaiting(getState())) setPhase('held')
+    else inviteNext()
+  }
+  const inviteNext = () => {
     setPhase('next')
     window.setTimeout(() => setPhase((ph) => (ph === 'next' ? null : ph)), 6500)
   }
+  const held = welcomesWaiting(s)
+  useEffect(() => {
+    if (phase === 'held' && !held) inviteNext()
+  }, [phase, held])
   if (phase === 'reveal' || phase === 'tell') look = { mode: 'reveal' }
   const greet = doneObra ? `¡Volviste${s.playerName ? `, ${s.playerName}` : ''}! Terminé ${doneObra.the}. ¿La vemos? 🧉` : ''
   const fieldSay = p.say ?? (phase === 'next' ? nextSay : homeSay)
@@ -488,6 +497,9 @@ export function Home(p: Props) {
     </div>
   )
 }
+
+/** A tab's welcome or the dog's name still to come. */
+const welcomesWaiting = (s: GameState) => s.unlockQueue.length > 0 || (s.dog.arrived && !s.dog.name)
 
 const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)]
 const WEEK_LETTERS = ['D', 'L', 'M', 'M', 'J', 'V', 'S']

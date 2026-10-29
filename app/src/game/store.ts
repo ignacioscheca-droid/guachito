@@ -110,6 +110,8 @@ export type DayStart = {
   day: string
   termo: string[]
   rescue: { missed: string[]; days: number; offered: boolean } | null
+  /** Back after more days away than a rescue covers: Paucho welcomes you first (0 once he did). */
+  away?: number
 }
 
 // Its own key, so this build never touches the save of the app on main ("guachito.v1").
@@ -341,6 +343,17 @@ const addDays = (day: string, n: number) => {
   return dayKey(d)
 }
 
+/** Whole days since the last kept one, before today (0 if none, or yesterday was kept). */
+function daysAway(s: GameState, today: string) {
+  const kept = keptDays(s)
+  const last = Object.keys(kept)
+    .filter((d) => d < today && kept[d].length)
+    .sort()
+    .pop()
+  if (!last) return 0
+  return Math.round((new Date(`${today}T12:00:00`).getTime() - new Date(`${last}T12:00:00`).getTime()) / 86_400_000) - 1
+}
+
 /** Missed days between the last kept one and today (oldest first); none if no streak was going. */
 function missedDays(s: GameState, today: string): string[] {
   const kept = keptDays(s)
@@ -373,7 +386,7 @@ function unlock(s: GameState, ...tabs: TabId[]): GameState {
 }
 
 /** The Paucho tab opens on the third day you come back: you are "compañeros" by then. */
-const PAUCHO_TAB_DAYS = 3
+export const PAUCHO_TAB_DAYS = 3
 
 // ---- actions ----------------------------------------------------------
 
@@ -398,8 +411,16 @@ export const actions = {
     } else if (missed.length && missed.length <= RESCUE_MAX_GAP) {
       const days = streak(keptDays(state), addDays(missed[0], -1))
       next = { ...next, dayStart: { day, termo: [], rescue: { missed, days, offered: false } } }
+    } else {
+      const away = daysAway(state, day)
+      if (away > RESCUE_MAX_GAP) next = { ...next, dayStart: { day, termo: [], rescue: null, away } }
     }
     set(next)
+  },
+
+  /** Paucho welcomed you back. */
+  welcomedBack() {
+    if (state.dayStart?.away) set({ ...state, dayStart: { ...state.dayStart, away: 0 } })
   },
 
   /** Paucho offered to recalentar the mate: yes (do the habits today) or start over. */

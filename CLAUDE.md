@@ -46,6 +46,16 @@ and only "¡Sí, avisame!" opens the phone's dialog. Its design is the owner's, 
     One comes with each goal; sold in the Casita for `TERMO_PRICE` (60) once that shop has it.
   - **Recalentar:** more days missed than termos, but at most 3: `Rescue` (Racha.tsx) offers to recalentar
     it with `RESCUE_HABITS` (3) habits today (Home's chip shows "🔥 N / 3"). Otherwise it starts over.
+  - **Back after longer:** `WelcomeBack` (Racha.tsx): Paucho is glad to see you, no streak talk, asks for one habit.
+- **Each habit has a plan** (`habitPlans`, `HabitPlan` in store.ts; the ✏️ sheet `PlanSheet` in
+  components/HabitSheets.tsx): times a day (up to `MAX_TIMES`, 10: each time is a whole habit, 10 energy or
+  +5 herraduras, the owner's call; the card shows drops and a gold "+1"), every day / some days / N times a
+  week, and its moment (Al arrancar / Cuando sea / A la noche), which groups Home's cards like Finch's.
+  Sliding a card left shows «Hoy no puedo» (`skips`): no energy, no harm to the streak, back from the "💤 N" chip.
+  Lists and editing are bottom sheets (`Sheet` in ui.tsx); Paucho cheers each habit in the field (no toasts).
+- **Ceremonies in order:** obra → Paucho's comment → what it unlocked (no «Más tarde») → the next obra's
+  invite (Home holds it while `unlockQueue` or the dog's name waits). A locked tab makes Paucho say what it
+  waits for and how far you are (`LockedTab` in Welcomes.tsx).
 - **Home, laid out like Royal Match's:**
   - The area fills the screen. Above it sit the herraduras, the gear and a progress bar: the day's energy, then the 8-hour countdown, with the obra at its end; it becomes a button when ready or done.
   - Habits are Finch-sized cards (3½ in view, the last cut by the tab bar). "✓ N" and ✏️ chips sit above them. No text floats over the scene.

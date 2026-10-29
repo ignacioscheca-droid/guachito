@@ -110,3 +110,31 @@ export function Rescue({ days, onDone }: { days: number; onDone: () => void }) {
     </div>
   )
 }
+
+/**
+ * Back after a long while (more days than a rescue covers): no streak talk and no guilt,
+ * Paucho is just glad to see you and asks for little today.
+ */
+export function WelcomeBack({ days, onDone }: { days: number; onDone: () => void }) {
+  const s = useGame((g) => g)
+  const you = s.playerName.trim()
+  const [line] = useState(() => {
+    const hi = days >= 14 ? `¡${you || 'Hola'}! ¡Qué alegría verte! Te extrañé un montón.` : `¡${you ? `${you}, volviste` : 'Volviste'}! Te estaba esperando con el agua calentita.`
+    return `${hi} Arrancamos de a poco: con un hábito hoy ya estamos.`
+  })
+  return (
+    <div className="screen racha racha--gold">
+      <PauchoTalk pose="b1_saluda" text={line}>
+        <Button
+          variant="gold"
+          onClick={() => {
+            actions.welcomedBack()
+            onDone()
+          }}
+        >
+          ¡Volví, {s.name}! 🧉
+        </Button>
+      </PauchoTalk>
+    </div>
+  )
+}

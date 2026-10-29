@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { PauchoFace, preloadPaucho } from './components/Paucho'
-import { BottomNav, Button } from './components/ui'
+import { BottomNav } from './components/ui'
 import { actions, canBuySomething, getState, keptDays, mateDue, nextJob, todayKey, useGame, workRemainingMs, type TabId } from './game/store'
 import { streak } from './game/friendship'
 import { areaView } from './game/journey'
@@ -16,11 +16,11 @@ import { PauchoTab } from './screens/PauchoTab'
 import { AreaDone, Reveal } from './screens/Reveal'
 import { Settings } from './screens/Settings'
 import { StreakDay } from './screens/DayOne'
-import { GoalDone, Rescue } from './screens/Racha'
+import { GoalDone, Rescue, WelcomeBack } from './screens/Racha'
 import { TestMenu } from './screens/TestMenu'
 import { TripRun } from './screens/TripRun'
 import { TripStory } from './screens/TripStory'
-import { DogName, NotifAsk, UnlockWelcome } from './screens/Welcomes'
+import { DogName, LockedTab, NotifAsk, UnlockWelcome } from './screens/Welcomes'
 import { shouldAskPush } from './game/push'
 
 type View = 'tabs' | 'reveal' | 'story' | 'trip'
@@ -67,7 +67,7 @@ export default function App() {
   const [replayStreak, setReplayStreak] = useState(false)
   const [replayArea, setReplayArea] = useState(false)
   const [arriving, setArriving] = useState(false)
-  const [lockedTap, setLockedTap] = useState(false)
+  const [lockedTap, setLockedTap] = useState<TabId | null>(null)
   const [askPush, setAskPush] = useState(false)
   const [fullPending, setFullPending] = useState(false)
   const remaining = useWorkClock()
@@ -180,7 +180,9 @@ export default function App() {
     // is offered a rescue first
     const ds = s.dayStart?.day === todayKey(s) ? s.dayStart : null
     const days = streak({ ...keptDays(s), [todayKey(s)]: ['mate'] }, todayKey(s))
-    content = !ds ? null : ds.rescue && !ds.rescue.offered ? (
+    content = !ds ? null : ds.away ? (
+      <WelcomeBack days={ds.away} onDone={() => setTab('inicio')} />
+    ) : ds.rescue && !ds.rescue.offered ? (
       <Rescue days={ds.rescue.days} onDone={() => setTab('inicio')} />
     ) : (
       <StreakDay
@@ -250,9 +252,9 @@ export default function App() {
             casita: tab !== 'casita' && (s.unlocked.includes('casita') && !s.room.includes(FIRST_BED) || canBuySomething(s)),
           }}
           onTab={setTab}
-          onLocked={() => {
+          onLocked={(t) => {
             feel('locked', 'warning')
-            setLockedTap(true)
+            setLockedTap(t)
           }}
         />
       </>
@@ -268,17 +270,7 @@ export default function App() {
       {welcome && s.dog.arrived && !s.dog.name && <DogName />}
       {welcome && !(s.dog.arrived && !s.dog.name) && s.unlockQueue.length > 0 && <UnlockWelcome tab={s.unlockQueue[0]} onGo={setTab} />}
       {welcome && askPush && !(s.dog.arrived && !s.dog.name) && s.unlockQueue.length === 0 && <NotifAsk onClose={() => setAskPush(false)} />}
-      {lockedTap && (
-        <div className="overlay" onClick={() => setLockedTap(false)}>
-          <div className="modal unlock__box unlock__box--small" onClick={(e) => e.stopPropagation()}>
-            <h2>Todavía no 🔒</h2>
-            <p>Se abre más adelante, a medida que {s.name} y vos avancen juntos.</p>
-            <Button variant="light" onClick={() => setLockedTap(false)}>
-              ¡Dale!
-            </Button>
-          </div>
-        </div>
-      )}
+      {lockedTap && <LockedTab tab={lockedTap} onClose={() => setLockedTap(null)} />}
       {settings && (
         <Settings
           onClose={() => setSettings(false)}
