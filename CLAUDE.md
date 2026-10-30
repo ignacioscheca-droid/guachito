@@ -171,7 +171,8 @@ https://claude.ai/artifact/AjubNPcvbjovmSoMKry4t3 (a Design System artifact; its
 
 ## Decisions already made
 
-- Day loop copies Finch's day 0 (owner's call, from his Finch recording): each habit gives
+- (Main's build, Gauchito 1; this branch's numbers are in "Day loop" above and in the tests.)
+  Day loop copies Finch's day 0 (owner's call, from his Finch recording): each habit gives
   5 energy and 15 (three habits) fills the bar; later habits give 3 coins. A full bar runs
   `EnergyFull.tsx`: the bar counts to "¡Al máximo!", "¡Yujuuu!" + 30 coins flying to the
   counter, then "El rancho de Paucho está creciendo" (Finch's bird grows up; Paucho can't,
@@ -244,6 +245,12 @@ https://claude.ai/artifact/AjubNPcvbjovmSoMKry4t3 (a Design System artifact; its
 
 ## Checks
 
+- Before calling work done: `cd app && npm run verify` (tsc -b, lint, tests, build; fails on any failure).
 - `cd app && npx tsc -b && npm run build`
 - Hidden test menu: tap the Home greeting 5 times, or open with `?test`. "Ver el onboarding"
   replays the mate scene without saving anything.
+- Tests (`npm test`, Vitest, TZ pinned to Europe/Madrid): `src/game/rules.test.ts` (the rules), `simulation.test.ts`
+  (seeded players over 60 days + the pacing report, tunable ranges at its top), `errorLog.test.ts`. The game reads
+  time only through `src/game/clock.ts` (`now()`; tests move it with `setClock`).
+- Error log for iPhone testing: `src/game/errorLog.ts` keeps the last 30 failures in `gauchito.v2.errors`; see it in
+  Ajustes → Errores (copy / borrar); the test menu's «Algo se ve mal» adds a note. `postErrorLogToWorker` is not wired.

@@ -73,7 +73,7 @@ export function shouldAskPush(s: GameState) {
  * The worker that sends "the obra is done" when Paucho's job ends (push-worker/ on main,
  * deployed to Cloudflare). Empty until it is deployed: then nothing is scheduled.
  */
-const PUSH_WORKER_URL = ''
+export const PUSH_WORKER_URL = ''
 
 /** Asks for the "done" notification at `at` (ms), if notifications are on in this phone. */
 export function scheduleDonePush(subscription: string | null, at: number) {

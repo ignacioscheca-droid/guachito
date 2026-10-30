@@ -21,6 +21,7 @@ import { TestMenu } from './screens/TestMenu'
 import { TripRun } from './screens/TripRun'
 import { TripStory } from './screens/TripStory'
 import { DogArrival, LockedTab, NotifAsk, UnlockWelcome } from './screens/Welcomes'
+import { setErrorScreen } from './game/errorLog'
 import { shouldAskPush } from './game/push'
 
 type View = 'tabs' | 'reveal' | 'story' | 'trip'
@@ -81,6 +82,10 @@ export default function App() {
   }, [morning])
 
   useEffect(preloadPaucho, [])
+
+  // what is on screen, for the error log (Ajustes → Errores)
+  const where = !s.onboarded || replayOnboarding ? 'onboarding' : morning ? 'racha' : view !== 'tabs' ? view : tab
+  useEffect(() => setErrorScreen(settings ? `${where}+ajustes` : testMenu ? `${where}+prueba` : where), [where, settings, testMenu])
 
   // Out of the onboarding into Home: the blue of the last screen fades away, the panel
   // comes up like Finch's, and Paucho celebrates as he lands.

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { Button } from '../components/ui'
+import { clearErrors, errorLogAsText, formatTime, kindLabel, stateLine, useErrorLog } from '../game/errorLog'
 import { enableReminders, isIOS, isStandalone, NOTIFICATIONS, pushSupported, testNotification } from '../game/push'
 import { setSoundSettings, sfx, useSoundSettings } from '../game/sound'
 import { actions, useGame } from '../game/store'
@@ -54,6 +55,63 @@ function SoundBlock() {
         <span>📳 Vibración</span>
         <Toggle label="Vibración" on={so.haptics} onChange={(haptics) => setSoundSettings({ haptics })} />
       </div>
+    </section>
+  )
+}
+
+/** Failures kept on this phone (src/game/errorLog.ts), to copy and pass on. */
+function ErrorsBlock() {
+  const list = useErrorLog()
+  const [msg, setMsg] = useState<string | null>(null)
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(errorLogAsText(list))
+      setMsg('¡Copiado! Pegalo en el chat.')
+    } catch {
+      setMsg('No pude copiar. Abrí la lista y mantené apretado el texto para copiarlo.')
+    }
+  }
+
+  return (
+    <section className="settings__block">
+      <h3>Errores ({list.length})</h3>
+      {!list.length && <p>No hay errores guardados. Si algo se rompe, queda anotado acá.</p>}
+      {list.length > 0 && (
+        <>
+          <p>Si algo falló, copiá la lista y mandásela a Claude.</p>
+          <details className="settings__details">
+            <summary>Ver la lista</summary>
+            <ul className="errlog">
+              {[...list].reverse().map((e) => (
+                <li key={e.t + e.message} className={`errlog__item errlog__item--${e.kind}`}>
+                  <b>
+                    {formatTime(e.t)} · {kindLabel(e.kind)} · {e.screen}
+                  </b>
+                  <span>{e.message}</span>
+                  <small>{stateLine(e.state)}</small>
+                  {e.stack && <pre>{e.stack}</pre>}
+                </li>
+              ))}
+            </ul>
+          </details>
+          <div className="settings__row">
+            <Button variant="light" onClick={copy}>
+              Copiar
+            </Button>
+            <Button
+              variant="light"
+              onClick={() => {
+                clearErrors()
+                setMsg(null)
+              }}
+            >
+              Borrar
+            </Button>
+          </div>
+        </>
+      )}
+      {msg && <p className="settings__msg">{msg}</p>}
     </section>
   )
 }
@@ -193,6 +251,8 @@ export function Settings({ onClose, onTestMenu }: { onClose: () => void; onTestM
           </div>
           <input ref={file} type="file" accept="application/json,.json" hidden onChange={(e) => importBackup(e.target.files?.[0])} />
         </section>
+
+        <ErrorsBlock />
 
         {msg && <p className="settings__msg">{msg}</p>}
 

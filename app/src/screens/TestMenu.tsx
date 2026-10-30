@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { logNote } from '../game/errorLog'
 import { nextJob, actions, todayKey, useGame } from '../game/store'
 import { jobInfo } from '../game/journey'
 
@@ -17,6 +19,8 @@ export function TestMenu({
 }) {
   const s = useGame((g) => g)
   const job = nextJob(s)
+  const [note, setNote] = useState('')
+  const [noted, setNoted] = useState(false)
   const run = (fn: () => void) => () => {
     fn()
     onClose()
@@ -42,6 +46,29 @@ export function TestMenu({
         <button onClick={run(onStreak)}>Ver la racha del día 1</button>
         <button onClick={run(onArea)}>Ver «¡Área completada!» (no suma nada)</button>
         <button onClick={run(onAskPush)}>Ver el «¿Te aviso?» de Paucho</button>
+        <div className="testmenu__note">
+          <input
+            value={note}
+            maxLength={200}
+            placeholder="Algo se ve mal: ¿qué viste?"
+            aria-label="Algo se ve mal"
+            onChange={(e) => {
+              setNote(e.target.value)
+              setNoted(false)
+            }}
+          />
+          <button
+            disabled={!note.trim()}
+            onClick={() => {
+              logNote(note)
+              setNote('')
+              setNoted(true)
+            }}
+          >
+            Anotar
+          </button>
+        </div>
+        {noted && <p>Anotado en Ajustes → Errores, con cómo estaba el juego.</p>}
         <button
           className="testmenu__danger"
           onClick={run(() => {

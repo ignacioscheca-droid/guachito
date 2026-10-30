@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import type { AboutYou } from './aboutYou'
+import { now } from './clock'
 import { FIRST_HABIT_GIFT, HABITS, STARTER_GOALS, type HabitDef } from './content'
 import { dayKey, daysTogether, streak } from './friendship'
 import {
@@ -269,7 +270,7 @@ export function roomLock(s: GameState, o: RoomOption): 'premium' | 'south' | 'fr
 // ---- time -------------------------------------------------------------
 
 export function todayKey(s: GameState = state) {
-  const d = new Date(Date.now() + s.dayOffset * 86_400_000)
+  const d = new Date(now() + s.dayOffset * 86_400_000)
   const mm = String(d.getMonth() + 1).padStart(2, '0')
   const dd = String(d.getDate()).padStart(2, '0')
   return `${d.getFullYear()}-${mm}-${dd}`
@@ -373,7 +374,7 @@ export const mateDue = (s: GameState) => s.onboarded && !s.mates.includes(todayK
 
 export function workRemainingMs(s: GameState = state) {
   if (s.work.status !== 'working' || s.work.startedAt == null) return 0
-  return Math.max(0, s.work.startedAt + WORK_MS - (Date.now() + s.workSkipMs))
+  return Math.max(0, s.work.startedAt + WORK_MS - (now() + s.workSkipMs))
 }
 
 // ---- unlocks ----------------------------------------------------------
@@ -457,14 +458,14 @@ export const actions = {
 
   /** Creates a habit of the player's own and returns its id. */
   addCustomHabit(name: string, emoji: string): string {
-    const id = `c${Date.now().toString(36)}`
+    const id = `c${now().toString(36)}`
     set({ ...state, customHabits: [...state.customHabits, { id, name: name.trim(), emoji }] })
     return id
   },
 
   /** A new habit of your own: for today only, or (`everyDay`) added to the daily ones. */
   addHabit(name: string, emoji: string, everyDay: boolean) {
-    const id = `c${Date.now().toString(36)}`
+    const id = `c${now().toString(36)}`
     const day = todayKey()
     const customHabits = [...state.customHabits, { id, name: name.trim(), emoji }]
     if (everyDay) set({ ...state, customHabits, habits: [...state.habits, id] })
@@ -567,7 +568,7 @@ export const actions = {
   /** Full bar → Paucho starts the next job (an obra or the trip). */
   startWork() {
     if (state.work.status !== 'ready') return
-    set({ ...state, energy: 0, workSkipMs: 0, work: { status: 'working', startedAt: Date.now() } })
+    set({ ...state, energy: 0, workSkipMs: 0, work: { status: 'working', startedAt: now() } })
   },
 
   /** The eight hours are up: the job waits to be seen. */
