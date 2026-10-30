@@ -78,7 +78,13 @@ and only "¡Sí, avisame!" opens the phone's dialog. Its design is the owner's, 
   - Built the same way as Área 1: stages, a clean plate, and a sprite sheet. Doc: "Gauchito — Área 2: todo el arte".
   - **What moves:** the clothes swing on the line; the veleta wobbles and turns with the wind (side and front frames); the lantern glows; the two hens peck (standing and pecking frames).
   - **Paucho idles** throwing maize to the hens (`paucho_maiz`), with grains falling. The dog sits by his cucha.
-  - **The dog's arrival** is still a box (`DogName` in Welcomes.tsx; the dice throws criollo names). The scene that replaces it (the cucha shakes, he peeks out, runs to Paucho, close-ups, Paucho holds him and asks his name) waits for its art: Claude Doc "Gauchito — Llega el perro", https://claude.ai/artifact/V7xEYzFAQEViq42e35sJSA, kit in `kit_perro/`, results go to `escena_perro/` (both local only).
+  - **The dog's arrival** (`DogArrival` in Welcomes.tsx, over Home once the cucha is seen): the cucha up close
+    shakes, the puppy peeks out and looks at you, runs off; up close he blinks, tilts his head and barks «¡Guau!";
+    Paucho holds him (`PauchoTalk` pose `b9_perro`) and asks his name, with a dice of criollo names; the puppy
+    loves it (hearts) and «¡Bienvenido, {name}!» saves it. A tap before the naming skips to it. Art from ChatGPT
+    in `escena_perro/` (local only), imported by `design/tools/import_perro.py` (cucha_*, perro_b*,
+    mate_b9_perro_*; `cucha_asoma_mira.png` came truncated and the importer rebuilds it on `cucha_vacia`).
+    Brief: Claude Doc "Gauchito — Llega el perro", https://claude.ai/artifact/V7xEYzFAQEViq42e35sJSA.
 - **Paucho's room (Casita):** 16 places with 3 options each (`ROOM_SLOTS` in `src/game/room.ts`):
   - **Option k** is cut from ChatGPT's `cuarto_k`, in `arte_build/cuarto/`. Doc: "Gauchito — El cuarto de Paucho: todo el arte".
   - **The importer:** `design/tools/import_room.py` compares each room with `cuarto_vacio` inside each place's region (`REGIONS`). It writes the cut-outs, the shop thumbnails and the loose sprites, plus their boxes in `src/game/roomArt.ts`. `design/tools/room_map.py` drew the map that was sent with the brief.

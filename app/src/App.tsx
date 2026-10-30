@@ -20,7 +20,7 @@ import { GoalDone, Rescue, WelcomeBack } from './screens/Racha'
 import { TestMenu } from './screens/TestMenu'
 import { TripRun } from './screens/TripRun'
 import { TripStory } from './screens/TripStory'
-import { DogName, LockedTab, NotifAsk, UnlockWelcome } from './screens/Welcomes'
+import { DogArrival, LockedTab, NotifAsk, UnlockWelcome } from './screens/Welcomes'
 import { shouldAskPush } from './game/push'
 
 type View = 'tabs' | 'reveal' | 'story' | 'trip'
@@ -267,7 +267,7 @@ export default function App() {
       {content}
       {arriving && <div className="arrive-veil" aria-hidden />}
       {talk && <FullTalk start={talk} onCoinsLanded={() => setFullPending(false)} onDone={talkDone} />}
-      {welcome && s.dog.arrived && !s.dog.name && <DogName />}
+      {welcome && s.dog.arrived && !s.dog.name && <DogArrival />}
       {welcome && !(s.dog.arrived && !s.dog.name) && s.unlockQueue.length > 0 && <UnlockWelcome tab={s.unlockQueue[0]} onGo={setTab} />}
       {welcome && askPush && !(s.dog.arrived && !s.dog.name) && s.unlockQueue.length === 0 && <NotifAsk onClose={() => setAskPush(false)} />}
       {lockedTap && <LockedTab tab={lockedTap} onClose={() => setLockedTap(null)} />}

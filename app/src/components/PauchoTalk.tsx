@@ -3,7 +3,7 @@ import { art } from '../game/content'
 import { useTalk } from '../screens/Onboarding'
 
 /** The close-ups of the onboarding's mate scene ("plano medio"), each with mouth open and shut. */
-export type TalkPose = 'b1_saluda' | 'b2_habla' | 'b4_contento' | 'b5_ofrece' | 'b8_curioso'
+export type TalkPose = 'b1_saluda' | 'b2_habla' | 'b4_contento' | 'b5_ofrece' | 'b8_curioso' | 'b9_perro'
 
 /**
  * Paucho talking to you up close, like when he offers you a mate in the onboarding: he

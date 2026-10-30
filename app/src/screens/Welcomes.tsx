@@ -8,6 +8,7 @@ import { enableReminders } from '../game/push'
 import { haptic, sfx } from '../game/sound'
 import { actions, PAUCHO_TAB_DAYS, useGame, type GameState, type TabId } from '../game/store'
 import { PauchoTalk } from '../components/PauchoTalk'
+import { Confetti } from '../components/Confetti'
 
 /** Royal Match-style welcome when a tab opens: what it is, and a button to go there. */
 export function UnlockWelcome({ tab, onGo }: { tab: TabId; onGo: (t: TabId) => void }) {
@@ -68,40 +69,147 @@ export function UnlockWelcome({ tab, onGo }: { tab: TabId; onGo: (t: TabId) => v
 /** Criollo names for the dice. */
 const DOG_NAMES = ['Pampa', 'Facón', 'Tero', 'Ñandú', 'Chimichurri', 'Chamamé', 'Malambo', 'Baqueano', 'Locro', 'Alfajor', 'Mate', 'Chispa', 'Canela', 'Tango', 'Bandido', 'Ombú']
 
-/** The dog came with La cucha: you name him. */
-export function DogName() {
+type DogStep = 'ruido' | 'asoma' | 'mira' | 'corre' | 'cerca' | 'nombre' | 'feliz'
+/** How long each beat holds before the next (the close-up and the naming wait for you). */
+const DOG_BEATS: Partial<Record<DogStep, [number, DogStep]>> = {
+  ruido: [1400, 'asoma'],
+  asoma: [1300, 'mira'],
+  mira: [1500, 'corre'],
+  corre: [1300, 'cerca'],
+}
+
+/**
+ * The dog came with La cucha, and he gets an entrance: the new cucha shakes, a nose peeks
+ * out, then his whole head, and he runs off. Up close he looks at you, tilts his head and
+ * barks; then Paucho holds him (PauchoTalk) and asks what to call him, with a dice of
+ * criollo names, and the puppy loves it. A tap before the naming skips to it. Art: Claude Doc
+ * "Gauchito — Llega el perro" (design/tools/import_perro.py).
+ */
+export function DogArrival() {
+  const s = useGame((g) => g)
+  const you = s.playerName ? `, ${s.playerName}` : ''
+  const [step, setStep] = useState<DogStep>('ruido')
   const [name, setName] = useState(DOG_NAMES[0])
+  const [face, setFace] = useState('perro_b1_mira')
+  const [run, setRun] = useState(1)
+
   useEffect(() => {
-    sfx('unlock')
-    haptic('celebrate')
-  }, [])
+    const beat = DOG_BEATS[step]
+    if (step === 'ruido') sfx('rumble')
+    if (step === 'mira') {
+      sfx('unlock')
+      haptic('success')
+    }
+    if (!beat) return
+    const t = window.setTimeout(() => setStep(beat[1]), beat[0])
+    return () => clearTimeout(t)
+  }, [step])
+
+  // running: the four frames of his gallop
+  useEffect(() => {
+    if (step !== 'corre') return
+    const id = window.setInterval(() => setRun((r) => (r % 4) + 1), 90)
+    return () => clearInterval(id)
+  }, [step])
+
+  // up close: he looks at you, blinks, tilts his head, and barks
+  useEffect(() => {
+    if (step !== 'cerca') return
+    const seq: [number, string][] = [
+      [700, 'perro_b1_parpadeo'],
+      [850, 'perro_b1_mira'],
+      [1500, 'perro_b2_ladea'],
+      [2500, 'perro_b3_ladra'],
+      [3300, 'perro_b1_mira'],
+    ]
+    const ts = seq.map(([ms, f]) =>
+      window.setTimeout(() => {
+        setFace(f)
+        if (f === 'perro_b3_ladra') {
+          sfx('cheer')
+          haptic('celebrate')
+        }
+      }, ms),
+    )
+    ts.push(window.setTimeout(() => setStep('nombre'), 4300))
+    return () => ts.forEach(clearTimeout)
+  }, [step])
+
+  const skip = () => {
+    if (step !== 'nombre' && step !== 'feliz') setStep('nombre')
+  }
+
+  if (step === 'nombre')
+    return (
+      <PauchoTalk pose="b9_perro" text={`¡Se quiere quedar con nosotros${you}! ¿Cómo le ponemos?`}>
+        <form
+          className="mi-form perro__form"
+          onSubmit={(e) => {
+            e.preventDefault()
+            sfx('check')
+            haptic('celebrate')
+            setStep('feliz')
+          }}
+        >
+          <label className="field">
+            <input value={name} maxLength={14} onChange={(e) => setName(e.target.value)} aria-label="Nombre del perro" />
+            <button type="button" className="mi-dice" aria-label="Otro nombre" onClick={() => setName((n) => otherName(n))}>
+              🎲
+            </button>
+          </label>
+          <Button variant="gold" type="submit" disabled={!name.trim()}>
+            ¡Ese!
+          </Button>
+        </form>
+      </PauchoTalk>
+    )
+
   return (
-    <div className="overlay unlock">
-      <form
-        className="modal unlock__box"
-        onSubmit={(e) => {
-          e.preventDefault()
-          actions.nameDog(name)
-        }}
-      >
-        <span className="unlock__icon">
-          <img src={art('dog_happy')} alt="" />
-        </span>
-        <small>¡Llegó un perro!</small>
-        <h2>¿Cómo le ponemos?</h2>
-        <p>Se quedó en la cucha nueva y no se quiere ir más.</p>
-        <label className="field">
-          <input value={name} maxLength={14} onChange={(e) => setName(e.target.value)} aria-label="Nombre del perro" />
-          <button type="button" className="mi-dice" aria-label="Otro nombre" onClick={() => setName(DOG_NAMES[Math.floor(Math.random() * DOG_NAMES.length)])}>
-            🎲
-          </button>
-        </label>
-        <Button variant="gold" type="submit" disabled={!name.trim()}>
-          ¡Listo!
-        </Button>
-      </form>
+    <div className={`perro perro--${step}`} onClick={skip}>
+      {(step === 'ruido' || step === 'asoma' || step === 'mira' || step === 'corre') && (
+        <div className="perro__cucha">
+          <img src={art(step === 'asoma' ? 'cucha_asoma' : step === 'mira' ? 'cucha_asoma_mira' : 'cucha_vacia')} alt="" />
+          {step === 'ruido' && <span className="perro__ruido">¿?</span>}
+          {step === 'corre' && <img className="perro__run" src={art(`dog_run_${run}`)} alt="" />}
+        </div>
+      )}
+      {(step === 'cerca' || step === 'feliz') && (
+        <div className="perro__cerca">
+          {step === 'feliz' && <Confetti burstKey={1} count={30} />}
+          <img src={art(step === 'feliz' ? 'perro_b4_feliz' : face)} alt="" />
+          {face === 'perro_b3_ladra' && step === 'cerca' && <span className="perro__guau mi-bubble">¡Guau!</span>}
+          {step === 'feliz' && (
+            <span className="perro__hearts" aria-hidden>
+              <i>❤️</i>
+              <i>❤️</i>
+              <i>❤️</i>
+            </span>
+          )}
+        </div>
+      )}
+      {step === 'feliz' && (
+        <div className="perro__end">
+          <p className="mi-bubble">¡A {name.trim()} le encantó!</p>
+          <Button
+            variant="gold"
+            onClick={(e) => {
+              e.stopPropagation()
+              actions.nameDog(name)
+            }}
+          >
+            ¡Bienvenido, {name.trim()}!
+          </Button>
+        </div>
+      )}
+      {step !== 'feliz' && <span className="ptalk__hint ptalk__hint--on">Tocá para seguir</span>}
     </div>
   )
+}
+
+/** Another name off the dice, never the same one twice in a row. */
+function otherName(now: string) {
+  const rest = DOG_NAMES.filter((n) => n !== now)
+  return rest[Math.floor(Math.random() * rest.length)]
 }
 
 /**

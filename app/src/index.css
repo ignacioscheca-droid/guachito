@@ -6490,7 +6490,8 @@ img.apiece[style*='bottom'] {
   filter: saturate(0.6);
   transition: opacity 0.3s;
 }
-.ptalk {
+.ptalk,
+.perro {
   position: fixed;
   inset: 0;
   z-index: 70;
@@ -7266,7 +7267,8 @@ img.apiece[style*='bottom'] {
   color: var(--red);
 }
 /* while Paucho talks up close the tab bar waits (Home's talks sit inside the tab's layer, under it) */
-.app:has(.ptalk) .nav {
+.app:has(.ptalk) .nav,
+.app:has(.perro) .nav {
   pointer-events: none;
 }
 
@@ -7324,4 +7326,118 @@ img.apiece[style*='bottom'] {
   color: var(--cream);
   font-size: 11px;
   font-weight: 900;
+}
+
+/* the dog's arrival (DogArrival in Welcomes.tsx): the cucha up close, then the puppy */
+.perro {
+  justify-content: center;
+}
+.perro__cucha {
+  position: relative;
+  width: min(80%, 340px);
+  aspect-ratio: 560 / 454;
+  animation: mi-pop 0.35s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+.perro__cucha > img:first-child {
+  width: 100%;
+}
+.perro--ruido .perro__cucha > img:first-child {
+  animation: wiggle 0.28s 0.3s 4;
+  transform-origin: 50% 100%;
+}
+.perro__ruido {
+  position: absolute;
+  top: -12%;
+  right: 4%;
+  font-size: 34px;
+  font-weight: 900;
+  color: var(--cream);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  animation: pop 0.4s 0.3s both;
+}
+.perro__run {
+  position: absolute;
+  left: 30%;
+  bottom: 18%;
+  width: 46%;
+  animation: perro-run 1.3s ease-in forwards;
+}
+@keyframes perro-run {
+  from {
+    transform: translateX(0) scale(0.6);
+  }
+  to {
+    transform: translateX(170%) scale(1.15);
+  }
+}
+.perro__cerca {
+  position: relative;
+  width: min(84%, 360px);
+  aspect-ratio: 760 / 777;
+  animation: mi-pop 0.35s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+.perro__cerca > img {
+  width: 100%;
+}
+.perro__guau {
+  position: absolute;
+  top: 2%;
+  right: -4%;
+  margin: 0;
+  min-height: 0;
+  padding: 8px 14px;
+  font-size: 22px;
+  animation: pop 0.3s both;
+}
+.perro__guau::before {
+  display: none;
+}
+.perro__hearts i {
+  position: absolute;
+  top: 30%;
+  font-style: normal;
+  font-size: 30px;
+  animation: perro-heart 1.8s ease-out infinite;
+}
+.perro__hearts i:nth-child(1) {
+  left: 4%;
+}
+.perro__hearts i:nth-child(2) {
+  left: 46%;
+  top: 0;
+  animation-delay: 0.5s;
+}
+.perro__hearts i:nth-child(3) {
+  right: 4%;
+  animation-delay: 1s;
+}
+@keyframes perro-heart {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.6);
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-50px) scale(1.1);
+  }
+}
+.perro__end {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  width: min(calc(100% - 32px), 420px);
+}
+.perro__end .mi-bubble {
+  margin: -30px 0 0;
+  align-self: stretch;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 900;
+}
+.perro__form {
+  width: 100%;
 }
