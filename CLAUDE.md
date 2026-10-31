@@ -140,6 +140,24 @@ https://claude.ai/artifact/AjubNPcvbjovmSoMKry4t3 (a Design System artifact; its
 - Miro (https://miro.com/app/board/uXjVEVFHpys=/) holds the as-is screens by flow; new or
   improved screens are designed in Claude Design on top of this system.
 
+## Quality standards (in use since 2026-10-31, still a draft)
+
+The owner's rule: every change is measured against the Claude Doc **"Gauchito — Estándares de calidad
+(borrador)"**, https://claude.ai/artifact/52h8Pp6DsJfe6VruGepYQq. Rules have IDs (V voz, A arte,
+C ceremonias, U interfaz, P ritmo, T técnica), each marked "Automático", "Juez" or "Vos". Read the doc
+(docs tools) at the start of any task that touches what the player sees or the numbers.
+- **Builder:** before "listo", run `npm run verify` (T-1) and check the rules the change touches yourself.
+  Most "Automático" checks are not built yet: until they are, check them by hand (voseo, banned words,
+  tokens, 390×844 layout, 44 pt targets, one primary button).
+- **Juez:** for any visual change (screen, ceremony, art, copy), spawn a separate agent that did not build
+  it. Give it the 390×844 screenshots (and a short recording for motion), the doc's link and
+  `referencias/` (fichas + frames; local only, WIP: compare against it where a ficha exists). It acts as an
+  experienced art director, returns one note per screen citing the rule IDs that fail, and, when quality needs
+  art, writes the art request with a ready-to-paste prompt and its references. What fails goes back to building.
+- **Report:** the closing message to the owner lists the rule IDs checked and any that still fail.
+- **Scope:** rules about Paucho up close apply only where the screen has him; the P ranges are a first
+  proposal, to be tuned with the simulation's numbers. A rule the owner adds after a rejection goes in the doc.
+
 ## Working with the owner
 
 - Write to him in Rioplatense Spanish (voseo). App copy is also voseo.
