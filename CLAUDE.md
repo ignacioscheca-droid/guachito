@@ -46,6 +46,8 @@ and only "¡Sí, avisame!" opens the phone's dialog. Its design is the owner's, 
     One comes with each goal; sold in the Casita's Paucho tab for `TERMO_PRICE` (60), first card (🧉 stand-in until its art arrives).
   - **Recalentar:** more days missed than termos, but at most 3: `Rescue` (Racha.tsx) offers to recalentar
     it with `RESCUE_HABITS` (3) habits today (Home's chip shows "🔥 N / 3"). Otherwise it starts over.
+    Its cold mate sits in `PauchoTalk`'s `above` slot, the free space over his head, so his hat never covers it;
+    the test menu replays it («Ver "Se nos enfrió el mate"», no cambia nada).
   - **Back after longer:** `WelcomeBack` (Racha.tsx): Paucho is glad to see you, no streak talk, asks for one habit.
 - **Each habit has a plan** (`habitPlans`, `HabitPlan` in store.ts; the ✏️ sheet `PlanSheet` in
   components/HabitSheets.tsx): times a day (up to `MAX_TIMES`, 10: each time is a whole habit, 10 energy or
@@ -60,6 +62,7 @@ and only "¡Sí, avisame!" opens the phone's dialog. Its design is the owner's, 
   - The area fills the screen. Above it sit the herraduras, the gear and a progress bar: the day's energy, then the 8-hour countdown, with the obra at its end; it becomes a button when ready or done.
   - Habits are Finch-sized cards (3½ in view, the last cut by the tab bar). "✓ N" and ✏️ chips sit above them. No text floats over the scene.
   - The tab bar is Royal Match's: icons only, and the chosen tab is wider, lit, with its icon raised over its name.
+  - Characters stand on the art: a soft ground shadow (`.ashadow`, token `--ground-shadow`) sits under Paucho, the dog and the hens (`GroundShadow` in AreaScene.tsx) and under Paucho and the dog in the Casita (`FloorShadow` in RoomScene.tsx); the owner said they looked like stickers without it (2026-10-31).
 - **Paucho talks to you (the owner's rule, for everything):** up close, like the onboarding's mate (`PauchoTalk`, with the `mate_b*` close-ups, mouth moving while the line types out), or in a bubble over his head in the field (`AreaScene` `say`). When he is up close, the Paucho in the field steps out.
   - **The bar fills** (`FullTalk`): Home counts to the top while he says "¡Yujuuu!" in the field. Then he comes up close to thank you, and the day's herraduras fly from his hand to the counter. Next he tells you what he'll build and until when; "¡Dale, Paucho!" sets him off and he says "¡Toc, toc! Te aviso cuando esté". Each line has three variants.
   - **Back with an obra finished,** all in Home: Paucho greets you up close ("¿La vemos?", the obra still under its pile behind him). "¡A ver!" builds it in place; a dot fills on the area's progress (●●○), and he shows it to you up close. Then the next obra's materials glow and he invites you to it. Its icon is at the end of the bar. The last obra of an area goes on to `Reveal`'s area celebration.

@@ -45,6 +45,8 @@
   --frost: #a9d8f0;
   --frost-deep: #5ea7cf;
   --shadow: 0 6px 18px rgba(91, 58, 36, 0.12);
+  /* the ground shadow under characters in a scene: the warm brown of the art's own shadows */
+  --ground-shadow: rgba(70, 38, 14, 0.58);
   --radius: 22px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -3840,6 +3842,20 @@ img {
 .ascene__paucho {
   cursor: pointer;
 }
+/* a soft shadow on the ground under each character, so they stand on the art (GroundShadow) */
+.ashadow {
+  position: absolute;
+  aspect-ratio: 3.2;
+  translate: -50% -55%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    var(--ground-shadow) 30%,
+    color-mix(in srgb, var(--ground-shadow) 35%, transparent) 62%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
 .apiece {
   position: absolute;
   height: auto;
@@ -6591,6 +6607,20 @@ img.apiece[style*='bottom'] {
 .ptalk__guy {
   width: min(86%, 380px);
 }
+/* what Paucho talks about, in the space over his head: it shrinks to fit, never behind him */
+.ptalk__above {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--safe-top) + 16px) 0 8px;
+}
+/* on a short screen Paucho gives up some size so it keeps room */
+.ptalk__above + .ptalk__guy {
+  width: min(86%, 380px, 100dvh - 440px);
+}
 .ptalk__bubble {
   width: min(calc(100% - 32px), 420px);
   margin-top: -40px;
@@ -7030,7 +7060,8 @@ img.apiece[style*='bottom'] {
 }
 .racha__mate {
   width: 190px;
-  margin-top: calc(var(--safe-top) + 90px);
+  max-height: 100%;
+  object-fit: contain;
   filter: grayscale(0.4);
 }
 .racha__prizes {

@@ -67,6 +67,7 @@ export default function App() {
   const [replayOnboarding, setReplayOnboarding] = useState(false)
   const [replayStreak, setReplayStreak] = useState(false)
   const [replayArea, setReplayArea] = useState(false)
+  const [replayRescue, setReplayRescue] = useState(false)
   const [arriving, setArriving] = useState(false)
   const [lockedTap, setLockedTap] = useState<TabId | null>(null)
   const [askPush, setAskPush] = useState(false)
@@ -176,6 +177,8 @@ export default function App() {
     )
   } else if (replayStreak) {
     content = <StreakDay onNext={() => setReplayStreak(false)} />
+  } else if (replayRescue) {
+    content = <Rescue days={2} preview onDone={() => setReplayRescue(false)} />
   } else if (replayArea) {
     content = <AreaDone area={areaView(s.jobsDone).area} onDone={() => setReplayArea(false)} />
   } else if (goalDone != null) {
@@ -266,7 +269,7 @@ export default function App() {
     )
   }
 
-  const welcome = view === 'tabs' && s.onboarded && !replayOnboarding && !replayStreak && !replayArea && !morning
+  const welcome = view === 'tabs' && s.onboarded && !replayOnboarding && !replayStreak && !replayArea && !replayRescue && !morning
   return (
     <div className="app">
       {content}
@@ -285,8 +288,8 @@ export default function App() {
           }}
         />
       )}
-      {testMenu && <TestMenu onClose={() => setTestMenu(false)} onOnboarding={() => setReplayOnboarding(true)} onAskPush={() => setAskPush(true)} onStreak={() => setReplayStreak(true)} onArea={() => setReplayArea(true)} />}
-      {testMode && s.onboarded && !testMenu && !replayOnboarding && !replayStreak && !replayArea && view === 'tabs' && (
+      {testMenu && <TestMenu onClose={() => setTestMenu(false)} onOnboarding={() => setReplayOnboarding(true)} onAskPush={() => setAskPush(true)} onStreak={() => setReplayStreak(true)} onArea={() => setReplayArea(true)} onRescue={() => setReplayRescue(true)} />}
+      {testMode && s.onboarded && !testMenu && !replayOnboarding && !replayStreak && !replayArea && !replayRescue && view === 'tabs' && (
         <button className="testfab" onClick={() => setTestMenu(true)} aria-label="Menú de prueba">
           🛠
         </button>

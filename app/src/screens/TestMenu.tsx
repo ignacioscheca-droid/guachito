@@ -10,12 +10,14 @@ export function TestMenu({
   onAskPush,
   onStreak,
   onArea,
+  onRescue,
 }: {
   onClose: () => void
   onOnboarding: () => void
   onAskPush: () => void
   onStreak: () => void
   onArea: () => void
+  onRescue: () => void
 }) {
   const s = useGame((g) => g)
   const job = nextJob(s)
@@ -45,6 +47,7 @@ export function TestMenu({
         <button onClick={run(onOnboarding)}>Ver el onboarding (no borra nada)</button>
         <button onClick={run(onStreak)}>Ver la racha del día 1</button>
         <button onClick={run(onArea)}>Ver «¡Área completada!» (no suma nada)</button>
+        <button onClick={run(onRescue)}>Ver «Se nos enfrió el mate» (no cambia nada)</button>
         <button onClick={run(onAskPush)}>Ver el «¿Te aviso?» de Paucho</button>
         <div className="testmenu__note">
           <input

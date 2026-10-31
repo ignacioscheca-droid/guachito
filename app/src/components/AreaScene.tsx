@@ -50,6 +50,15 @@ const boxStyle = (b: Box): CSSProperties => ({ left: `${b.left}%`, top: `${b.top
 const DOG_BOX = 720 / 630
 const DOG_FILL = 0.875
 
+/**
+ * A soft shadow on the ground under someone's feet, so the characters stand on the art
+ * instead of floating over it like stickers. `x`, `y`: the feet, in % of the stage;
+ * `w`: the shadow's width, in % of the stage's width. It sits just under them (z).
+ */
+function GroundShadow({ x, y, w, z }: { x: number; y: number; w: number; z?: number }) {
+  return <i className="ashadow" style={{ left: `${x}%`, top: `${y}%`, width: `${w}%`, zIndex: z ?? Math.round(y) - 1 }} aria-hidden />
+}
+
 /** A fixed pseudo-random sequence, so the dust and sparkles land in the same places each time. */
 function seeded(n: number) {
   let s = 7
@@ -244,6 +253,12 @@ function PauchoTrabaja({ hero, aspect, onTap }: { hero: Spot; aspect: number; on
     zIndex: Math.round(hero.y),
   }
   return (
+    <>
+      <GroundShadow
+        x={hero.x + ((WORK_BOX.w / 2 - WORK_BOX.feetX) / WORK_BOX.tall) * hero.h * aspect}
+        y={hero.y}
+        w={((WORK_BOX.w * 0.8) / WORK_BOX.tall) * hero.h * aspect}
+      />
     <div
       className="pwork"
       style={style}
@@ -257,6 +272,7 @@ function PauchoTrabaja({ hero, aspect, onTap }: { hero: Spot; aspect: number; on
       ))}
       {hits > 0 && <i key={hits} className="pwork__dust" aria-hidden />}
     </div>
+    </>
   )
 }
 
@@ -326,10 +342,13 @@ function CasaLife({ built }: { built: number }) {
 function Hen({ color, box, flip, delay }: { color: 'blanca' | 'colorada'; box: [number, number, number, number]; flip?: boolean; delay: number }) {
   const [left, top, w, h] = box
   return (
-    <div className={`ahen${flip ? ' ahen--flip' : ''}`} style={{ left: `${left}%`, top: `${top}%`, width: `${w}%`, height: `${h}%` }}>
+    <>
+      <GroundShadow x={left + w / 2} y={top + h * 0.97} w={w * 1.05} z={1} />
+      <div className={`ahen${flip ? ' ahen--flip' : ''}`} style={{ left: `${left}%`, top: `${top}%`, width: `${w}%`, height: `${h}%` }}>
       <img className="ahen__stand" src={art(`area2_gallina_${color}_parada`)} style={{ animationDelay: `${delay}s` }} alt="" />
       <img className="ahen__peck" src={art(`area2_gallina_${color}_pica`)} style={{ animationDelay: `${delay}s` }} alt="" />
-    </div>
+      </div>
+    </>
   )
 }
 
@@ -472,11 +491,16 @@ export function AreaScene({ area, built, current, pose = 'idle', outfit, celebra
         {a.life === 'galpon' && <GalponLife built={built} />}
         {!a.layers && a.obras.slice(0, built).map((o) => <PieceArt key={o.id} obra={o} />)}
         {cur && <PieceArt obra={a.obras[built]} look={cur} />}
+        {dog && <GroundShadow x={a.dog.x} y={a.dog.y} w={a.dog.h * a.aspect * 1.15} />}
         {dog && (
           <div className="scene__dog" style={{ ...place({ ...a.dog, h: a.dog.h / DOG_FILL }), aspectRatio: DOG_BOX }}>
             <img src={art(a.life === 'casa' ? 'dog_sleep' : 'dog_sit')} alt="" />
           </div>
         )}
+        {pose && acting && a.act && (
+          <GroundShadow x={a.act.spot.x} y={a.act.spot.y} w={a.act.spot.h * a.aspect * (a.act.kind === 'mate' ? 0.62 : 0.6)} />
+        )}
+        {pose && !acting && !(pose === 'build' && !cheering) && <GroundShadow x={hero.x} y={hero.y} w={hero.h * a.aspect * 0.72} />}
         {pose && acting && a.act?.kind === 'mate' && <PauchoMate spot={a.act.spot} onTap={onTapPaucho} />}
         {pose && acting && a.act?.kind === 'maiz' && <PauchoMaiz spot={a.act.spot} onTap={onTapPaucho} />}
         {mark && a.obras[built] && (

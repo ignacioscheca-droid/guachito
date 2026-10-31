@@ -16,6 +16,7 @@ export function PauchoTalk({
   text,
   onNext,
   compact,
+  above,
   children,
 }: {
   pose: TalkPose
@@ -23,6 +24,8 @@ export function PauchoTalk({
   onNext?: () => void
   /** Smaller, low on the screen, so the scene above stays in view (an obra just built). */
   compact?: boolean
+  /** Shown in the free space over his head (it shrinks to fit, never behind him). */
+  above?: ReactNode
   children?: ReactNode
 }) {
   const { shown, talking, done } = useTalk(text, 300)
@@ -36,6 +39,7 @@ export function PauchoTalk({
 
   return (
     <div className={`ptalk${compact ? ' ptalk--compact' : ''}`} onClick={done && onNext ? onNext : undefined}>
+      {above && <div className="ptalk__above">{above}</div>}
       <div className="ptalk__guy mi-medio" key={pose}>
         <img src={art(`mate_${pose}_cerrada`)} alt="" />
         <img src={art(`mate_${pose}_abierta`)} alt="" style={{ opacity: open ? 1 : 0 }} />

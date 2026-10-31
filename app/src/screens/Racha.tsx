@@ -86,18 +86,18 @@ export function GoalDone({ goal, onDone }: { goal: number; onDone: () => void })
  * offers to recalentar it with RESCUE_HABITS habits today. Otherwise it starts over, and
  * the record stays.
  */
-export function Rescue({ days, onDone }: { days: number; onDone: () => void }) {
+export function Rescue({ days, preview, onDone }: { days: number; preview?: boolean; onDone: () => void }) {
   const s = useGame((g) => g)
   const you = s.playerName.trim()
   const answer = (yes: boolean) => {
-    actions.answerRescue(yes)
+    if (!preview) actions.answerRescue(yes)
     onDone()
   }
   return (
     <div className="screen racha racha--cold">
-      <img className="racha__mate" src={art('mate_empty')} alt="" />
       <PauchoTalk
         pose="b8_curioso"
+        above={<img className="racha__mate" src={art('mate_empty')} alt="" />}
         text={`Se nos enfrió el mate${you ? `, ${you}` : ''}… ¡pero lo recalentamos! Hacé ${RESCUE_HABITS} hábitos hoy y recuperamos ${days === 1 ? 'el día' : `los ${days} días`}.`}
       >
         <Button variant="gold" onClick={() => answer(true)}>

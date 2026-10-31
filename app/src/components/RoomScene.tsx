@@ -48,6 +48,18 @@ const at = (x: number, y: number): CSSProperties => ({ left: `${x}%`, top: `${(y
 /** z for floor things: the nearer (lower) the bottom, the later it is drawn. */
 const zOf = (bottom: number) => Math.round(bottom * 10)
 
+/** A soft shadow on the floor under someone's feet (`w`: its width, in sprite heights). */
+function FloorShadow({ f, w }: { f: Foot; w: number }) {
+  const hCqw = (f.h / 100) * (AH / AW) * 100
+  return (
+    <i
+      className="ashadow"
+      style={{ left: `${f.x}%`, top: `${(f.bottom / 100) * (AH / AW) * 100}cqw`, width: `${hCqw * w}cqw`, zIndex: zOf(f.bottom) - 1 }}
+      aria-hidden
+    />
+  )
+}
+
 const aspectOf = (name: string) => {
   const [w, h] = SPRITE_PX[name]
   return w / h
@@ -190,6 +202,7 @@ export function RoomScene({ placed, fresh, pose, dog, onTap, say, sayAction, onS
             />
           ))}
 
+        {dog && <FloorShadow f={DOG} w={1.3} />}
         {dog &&
           (dogAsleep ? (
             <img className="rdog rdog--asleep" src={art('perro_room_duerme')} alt="" style={footStyle({ ...DOG, h: DOG.h * 0.8 }, aspectOf('perro_room_duerme'), zOf(DOG.bottom))} />
@@ -200,6 +213,7 @@ export function RoomScene({ placed, fresh, pose, dog, onTap, say, sayAction, onS
             </span>
           ))}
 
+        <FloorShadow f={PAUCHO} w={0.62} />
         <Blinker key={pose} name={paucho} className={`rpaucho rpaucho--${pose}`} style={footStyle(PAUCHO, aspectOf(paucho), zOf(PAUCHO.bottom))} />
 
         {say && (
