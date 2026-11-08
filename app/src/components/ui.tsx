@@ -31,11 +31,13 @@ export function Check({ on }: { on: boolean }) {
 
 /**
  * Royal Match's bar: icons only; the chosen tab is wider and lit, its icon raised over its
- * name. Inicio sits in the middle; the rest open as the game goes on.
+ * name. Inicio sits in the middle; the rest open as the game goes on. Mapa holds Áreas and
+ * Aventuras (mockups M1–M2), which made room for Encargos next to Inicio.
  */
 const TABS: { id: TabId; label: string; icon: string }[] = [
-  { id: 'areas', label: 'Áreas', icon: 'nav_rancho' },
-  { id: 'aventuras', label: 'Aventuras', icon: 'nav_aventura' },
+  { id: 'mapa', label: 'Mapa', icon: 'nav_aventura' },
+  // stand-in until the tab's own icon arrives: the libreta from Paucho's room
+  { id: 'encargos', label: 'Encargos', icon: 'room_top_libreta' },
   { id: 'inicio', label: 'Inicio', icon: 'habit_mate' },
   { id: 'paucho', label: 'Paucho', icon: 'g_avatar' },
   { id: 'casita', label: 'Casita', icon: 'nav_inicio' },
@@ -55,7 +57,8 @@ export function BottomNav({
   /** Paucho's tab is labelled with his name, and shows his (dressed) face. */
   name: string
   face: ReactNode
-  badges?: Partial<Record<TabId, boolean>>
+  /** A red dot, or a number (Encargos: how many to cobrar). */
+  badges?: Partial<Record<TabId, boolean | number>>
   onTab: (t: TabId) => void
   onLocked: (t: TabId) => void
 }) {
@@ -72,7 +75,14 @@ export function BottomNav({
           >
             <span className="nav__icon">
               {t.id === 'paucho' && unlocked ? face : <img src={art(t.icon)} alt="" />}
-              {badges?.[t.id] && <i className="nav__badge" />}
+              {typeof badges?.[t.id] === 'number' && badges[t.id] ? (
+                // keyed by the number: it pops each time one more is cumplido
+                <i key={String(badges[t.id])} className="nav__badge nav__badge--count">
+                  {badges[t.id]}
+                </i>
+              ) : (
+                badges?.[t.id] === true && <i className="nav__badge" />
+              )}
             </span>
             {tab === t.id && <b className="nav5__label">{t.id === 'paucho' ? name : t.label}</b>}
           </button>

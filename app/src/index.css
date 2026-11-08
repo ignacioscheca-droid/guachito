@@ -7555,3 +7555,299 @@ img.apiece[style*='bottom'] {
 .perro__form {
   width: 100%;
 }
+
+/* ---------- Encargos (Claude Doc "Gauchito — Encargos") ---------- */
+
+.encargos {
+  min-height: calc(100dvh - var(--safe-bottom) - 84px);
+  padding: calc(var(--safe-top) + 12px) 16px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: var(--paper);
+}
+.encargos__head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 40px;
+}
+.encargos__paucho {
+  flex: none;
+  width: 112px;
+}
+.encargos__say.mi-bubble {
+  flex: 1;
+  margin: 0;
+  min-height: 0;
+  padding: 12px 14px;
+  font-size: 16px;
+  animation: pop 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+/* the tail points at Paucho, on the left */
+.encargos__say.mi-bubble::before {
+  top: 50%;
+  left: -6px;
+  transform: translateY(-50%) rotate(45deg);
+}
+.encargos__coins {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+.encargos__sec {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.encargos__sec h2 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--earth);
+}
+.encargos__sec h2 small {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--brown);
+}
+.encargos__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* today's four on a line, like Finch's daily quests */
+.etl {
+  position: relative;
+  margin: 0;
+  padding: 0 0 0 30px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.etl::before {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: 30px;
+  bottom: 30px;
+  width: 4px;
+  border-radius: 999px;
+  background: var(--line);
+}
+.etl li {
+  position: relative;
+}
+.etl li::before {
+  content: '';
+  position: absolute;
+  left: -30px;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  margin-top: -11px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 3px var(--line);
+}
+.etl li.etl--done::before {
+  background: var(--gold-light);
+  box-shadow: inset 0 0 0 3px var(--gold-deep);
+}
+.etl li.etl--paid::before {
+  background: var(--tick);
+  box-shadow: inset 0 0 0 3px var(--tick-deep);
+}
+
+.ecard {
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 78px;
+  padding: 12px;
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  transition: opacity 0.3s;
+}
+.ecard--done {
+  box-shadow:
+    0 0 0 2px var(--line),
+    0 0 16px color-mix(in srgb, var(--gold) 45%, transparent),
+    var(--shadow);
+}
+.ecard--paid {
+  opacity: 0.6;
+}
+.ecard__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: var(--icon-well);
+  font-size: 28px;
+}
+.ecard__icon img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+.ecard__body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.ecard__body strong {
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.2;
+  color: var(--ink);
+}
+.ecard__bar {
+  position: relative;
+  display: block;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--tick-off);
+  box-shadow: inset 0 2px 0 var(--tick-off-ledge);
+  overflow: hidden;
+}
+.ecard__bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  min-width: 18px;
+  border-radius: 999px;
+  background: linear-gradient(var(--gold-top), var(--gold-bottom));
+  transition: width 0.6s cubic-bezier(0.22, 1.25, 0.36, 1);
+}
+.ecard__bar b {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--bar-label);
+}
+.ecard__steps {
+  display: flex;
+  gap: 4px;
+  margin-top: -1px;
+}
+.ecard__steps i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--dot-off);
+}
+.ecard__steps i.on {
+  background: var(--gold);
+}
+.ecard__end {
+  display: grid;
+  place-items: center;
+}
+.ecard__coins {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--brown);
+}
+.ecard__coins img {
+  width: 24px;
+  height: 24px;
+}
+.btn.ecard__cobrar {
+  width: auto;
+  min-height: 44px;
+  padding: 0 14px;
+  font-size: 15px;
+  font-weight: 900;
+  animation: pop 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.ecard .check--on {
+  background: var(--tick);
+  border-color: var(--tick);
+}
+
+.nav__badge.nav__badge--count {
+  animation: pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+  top: -2px;
+  right: -4px;
+  width: auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+  color: var(--surface);
+}
+
+/* ---------- Mapa: Áreas (La estancia) + Aventuras (Los viajes) ---------- */
+
+.mapa__top {
+  position: fixed;
+  z-index: 20;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(100%, 430px);
+  padding: calc(var(--safe-top) + 10px) 16px 22px;
+  background: linear-gradient(var(--paper) calc(100% - 12px), transparent);
+}
+.mapa__top .seg {
+  background: var(--icon-well);
+  box-shadow: var(--shadow);
+}
+.mapa--viajes .advtab {
+  padding-top: calc(var(--safe-top) + 64px);
+}
+.btn.ecard__cobrar {
+  flex-direction: column;
+  gap: 0;
+  min-width: 74px;
+  min-height: 52px;
+  padding: 4px 10px;
+  line-height: 1.1;
+  color: var(--earth);
+  box-shadow:
+    0 3px 0 var(--gold-deep),
+    inset 0 0 0 2px var(--gold);
+}
+.ecard__cobrar span {
+  font-size: 14px;
+}
+.ecard__cobrar b {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 15px;
+  font-weight: 900;
+}
+.ecard__cobrar img {
+  width: 20px;
+  height: 20px;
+}
+.btn.encargos__all {
+  gap: 4px;
+  animation: pop 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.encargos__all img {
+  width: 24px;
+  height: 24px;
+  margin-left: 6px;
+}

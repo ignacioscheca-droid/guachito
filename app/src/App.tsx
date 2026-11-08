@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { PauchoFace, preloadPaucho } from './components/Paucho'
 import { BottomNav } from './components/ui'
-import { actions, canBuySomething, getState, keptDays, mateDue, nextJob, todayKey, useGame, workRemainingMs, type TabId } from './game/store'
+import { actions, canBuySomething, encargosToCobrar, finished, getState, habitsToday, keptDays, skippedToday, mateDue, navOpen, nextJob, todayKey, useGame, workRemainingMs, type TabId, type Unlock } from './game/store'
 import { streak } from './game/friendship'
 import { areaView } from './game/journey'
 import { FIRST_BED } from './game/room'
 import { feel, sfx } from './game/sound'
-import { AreasTab } from './screens/AreasTab'
-import { AventurasTab } from './screens/AventurasTab'
 import { Casita } from './screens/Casita'
+import { Encargos } from './screens/Encargos'
 import { FullTalk } from './screens/FullTalk'
 import { Home } from './screens/Home'
+import { MapaTab, type MapaView } from './screens/MapaTab'
 import { Onboarding } from './screens/Onboarding'
 import { PauchoTab } from './screens/PauchoTab'
 import { AreaDone, Reveal } from './screens/Reveal'
@@ -28,6 +28,8 @@ type View = 'tabs' | 'reveal' | 'story' | 'trip'
 
 /** What Paucho says in the field after a habit. */
 const PRAISE = ['¡Sos un genio!', '¡Bien ahí!', '¡Qué crack!', '¡Increíble!', '¡Bravo!', '¡Así se hace!']
+/** …and when that habit also cumplió an encargo. */
+const ENCARGO_SAY = ['¡Encargo cumplido! Pasá a cobrar', '¡Uno menos en la libreta!', '¡Eso estaba anotado! Pasá a cobrar']
 
 /** Ticks while Paucho works and marks the job finished when the eight hours are up. */
 function useWorkClock() {
@@ -53,7 +55,19 @@ function useWorkClock() {
 
 export default function App() {
   const s = useGame((g) => g)
-  const [tab, setTab] = useState<TabId>('inicio')
+  const [tab, setTabState] = useState<TabId>('inicio')
+  const [mapaView, setMapaView] = useState<MapaView>('estancia')
+  const setTab = (t: TabId) => {
+    setTabState(t)
+    actions.visited(t)
+  }
+  /** A welcome's button: Áreas and Aventuras are the Mapa tab's two views. */
+  const goTo = (u: Unlock) => {
+    if (u === 'areas' || u === 'aventuras') {
+      setMapaView(u === 'areas' ? 'estancia' : 'viajes')
+      setTab('mapa')
+    } else setTab(u)
+  }
   const [view, setView] = useState<View>('tabs')
   // Paucho up close when the bar is full: thanks (and the herraduras), then what he'll build
   const [talk, setTalk] = useState<'thanks' | 'work' | null>(null)
@@ -70,6 +84,7 @@ export default function App() {
   const [replayRescue, setReplayRescue] = useState(false)
   const [arriving, setArriving] = useState(false)
   const [lockedTap, setLockedTap] = useState<TabId | null>(null)
+  const today = todayKey(s)
   const [askPush, setAskPush] = useState(false)
   const [fullPending, setFullPending] = useState(false)
   const remaining = useWorkClock()
@@ -83,6 +98,11 @@ export default function App() {
   }, [morning])
 
   useEffect(preloadPaucho, [])
+
+  // from day 1, each day brings its encargos (and Mondays, the week's)
+  useEffect(() => {
+    if (s.onboarded) actions.openEncargos()
+  }, [s.onboarded, today, tab])
 
   // what is on screen, for the error log (Ajustes → Errores)
   const where = !s.onboarded || replayOnboarding ? 'onboarding' : morning ? 'racha' : view !== 'tabs' ? view : tab
@@ -140,11 +160,16 @@ export default function App() {
 
   // Like Finch: a cheer for each habit, and when the bar fills, the full-energy sequence.
   const completeHabit = (id: string) => {
+    const before = encargosToCobrar(getState())
     const r = actions.completeHabit(id)
+    // (not when this habit closed the day: Paucho is already saying so up close, the badge is enough)
+    const g = getState()
+    const dayDone = habitsToday(g).every((h) => finished(g, h) || skippedToday(g).includes(h))
+    const encargo = encargosToCobrar(g) > before && !dayDone ? ENCARGO_SAY[Math.floor(Math.random() * ENCARGO_SAY.length)] : null
     setCelebrateKey((k) => k + 1)
     const warm = r.recalentado ? `¡Recalentamos el mate! Volvimos a ${r.recalentado} días de racha 🔥` : null
     if (r.full) {
-      laterSay.current = warm
+      laterSay.current = warm ?? encargo
       // Home counts the bar up to the top (the herraduras held back), Paucho cheers in the
       // field, then he comes up close to thank you and hand them over
       setFullPending(true)
@@ -153,6 +178,7 @@ export default function App() {
       return
     }
     if (warm) return say(warm, 6000)
+    if (encargo) return say(encargo, 3000)
     // Paucho cheers in the field (the energy or herraduras already flew to where they add up)
     const praise = PRAISE[Math.floor(Math.random() * PRAISE.length)]
     say(r.firstTime ? `${praise} ¡Primera vez que lo hacés!` : praise, 2200)
@@ -245,19 +271,28 @@ export default function App() {
           )}
           {tab === 'casita' && <Casita />}
           {tab === 'paucho' && <PauchoTab onShop={() => setTab('casita')} />}
-          {tab === 'areas' && <AreasTab onGoHome={() => setTab('inicio')} />}
-          {tab === 'aventuras' && (
-            <AventurasTab remainingMs={remaining} onStart={startJob} onWatch={() => setView('trip')} onStory={() => setView('story')} />
+          {tab === 'encargos' && <Encargos />}
+          {tab === 'mapa' && (
+            <MapaTab
+              view={mapaView}
+              onView={setMapaView}
+              remainingMs={remaining}
+              onGoHome={() => setTab('inicio')}
+              onStart={startJob}
+              onWatch={() => setView('trip')}
+              onStory={() => setView('story')}
+            />
           )}
         </main>
         <BottomNav
           tab={tab}
-          open={s.unlocked}
+          open={navOpen(s)}
           name={s.name}
           face={<PauchoFace outfit={s.outfit} className="nav5__face" />}
           badges={{
             inicio: tab !== 'inicio' && (status === 'ready' || status === 'done'),
             casita: tab !== 'casita' && (s.unlocked.includes('casita') && !s.room.includes(FIRST_BED) || canBuySomething(s)),
+            encargos: encargosToCobrar(s),
           }}
           onTab={setTab}
           onLocked={(t) => {
@@ -276,7 +311,7 @@ export default function App() {
       {arriving && <div className="arrive-veil" aria-hidden />}
       {talk && <FullTalk start={talk} onCoinsLanded={() => setFullPending(false)} onDone={talkDone} />}
       {welcome && s.dog.arrived && !s.dog.name && <DogArrival />}
-      {welcome && !(s.dog.arrived && !s.dog.name) && s.unlockQueue.length > 0 && <UnlockWelcome tab={s.unlockQueue[0]} onGo={setTab} />}
+      {welcome && !(s.dog.arrived && !s.dog.name) && s.unlockQueue.length > 0 && <UnlockWelcome tab={s.unlockQueue[0]} onGo={goTo} />}
       {welcome && askPush && !(s.dog.arrived && !s.dog.name) && s.unlockQueue.length === 0 && <NotifAsk onClose={() => setAskPush(false)} />}
       {lockedTap && <LockedTab tab={lockedTap} onClose={() => setLockedTap(null)} />}
       {settings && (

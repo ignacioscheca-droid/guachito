@@ -27,12 +27,30 @@ and only "¡Sí, avisame!" opens the phone's dialog. Its design is the owner's, 
   (`TRIP`, which brings lenga posts for the corrales), then Área 3 "Los corrales" (corral, molino,
   bebedero; still stand-ins until its art arrives: doc "Gauchito — Área 3: todo el arte"). Area
   order agreed with the owner: casa, galpón, corrales, cocina, laguna, estación.
-- **Tab bar:** Áreas · Aventuras · Inicio · Paucho · Casita. On day 0 only Inicio is open:
+- **Tab bar (since 2026-11-08):** Mapa · Encargos · Inicio · Paucho · Casita (`TabId`; what opens is
+  `Unlock` in store.ts, `navOpen`). On day 0 only Inicio is open:
+  - day 1 opens Encargos;
   - the casita opens Casita, where the room and its shop share one screen and the first
     purchase, the bed, is forced;
   - the third day with habits opens Paucho (friendship by days together, streak, clothes);
-  - the first finished area opens Áreas;
-  - the end of La chacra opens Aventuras.
+  - the first finished area opens Áreas and the end of El galpón opens Aventuras: they are the two
+    views of the Mapa tab, «La estancia» and «Los viajes» (`MapaTab.tsx`, mockups M1–M2 in
+    `design/mockups/ronda2/`), which opens with the first of them.
+- **Encargos** (`game/encargos.ts`, `screens/Encargos.tsx`, `EncargoCard`; doc "Gauchito — Encargos",
+  https://claude.ai/artifact/HfYbAujJBdP27ibwCHhqi9): Paucho's notes in his libreta, so every habit moves
+  something, also after the bar is full.
+  - **Diarios:** 4 a day from day 1, in fixed places: arranque (the mate, the first habit), la barra (fill
+    it, or see the obra finished today), con Paucho trabajando (habits after the full bar, never more than
+    are left in today's plan), variado. Days 1–7 are written by hand (`FIRST_WEEK`).
+  - **Semanales:** 6 lines in steps (`LINES`: hábitos 5 → 12 → 20 → 30…), week 1 = days 1–7, then weeks end
+    on Sunday; from week 2 the top step is 110 % of last week's. No line asks 7 of 7 days (that's the streak).
+  - **Herraduras only,** by level (`LEVEL_COINS`: toque 5, chico 10, medio 15, grande 20, especial 25; weekly
+    steps 10–25), times `ENCARGO_SCALE` (1 for the owner's test). No bonus for the 4 dailies (owner's call).
+  - **Cobrar by hand,** like Finch: each card's light «Cobrar», one gold «¡Cobrar todo!»; the tab's badge
+    counts them; Paucho says «¡Encargo cumplido!» in the field. Cumplidos not cobrados are paid when the
+    tanda renews (`kept`, «Te guardé…»).
+  - **Progress is never stored:** it comes from completions, mates, `coinGains` (30 = the bar filled, 5 = a
+    habit after it) and `log` (per day: obra seen, buy, place, wear, plan, habit added, paucho tab visited).
 - **Racha:** each new day opens with the morning mate (`StreakDay` in DayOne.tsx, `mateDue`
   in store.ts): you swipe to cebar it, the number rolls from yesterday's streak, kept days
   show their check, and "¡Dale!" saves the day in `mates`. A day counts if its mate was

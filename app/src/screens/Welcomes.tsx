@@ -3,18 +3,24 @@ import { PauchoFace } from '../components/Paucho'
 import { Button } from '../components/ui'
 import { art } from '../game/content'
 import { daysTogether } from '../game/friendship'
-import { AREAS, areaName, areaView, JOURNEY, jobInfo, TRIP, TRIP_JOB } from '../game/journey'
+import { AREAS, areaName, areaView, JOURNEY, jobInfo, TRIP } from '../game/journey'
 import { enableReminders } from '../game/push'
 import { haptic, sfx } from '../game/sound'
-import { actions, PAUCHO_TAB_DAYS, useGame, type GameState, type TabId } from '../game/store'
+import { actions, PAUCHO_TAB_DAYS, useGame, type GameState, type TabId, type Unlock } from '../game/store'
 import { PauchoTalk } from '../components/PauchoTalk'
 import { Confetti } from '../components/Confetti'
 
 /** Royal Match-style welcome when a tab opens: what it is, and a button to go there. */
-export function UnlockWelcome({ tab, onGo }: { tab: TabId; onGo: (t: TabId) => void }) {
+export function UnlockWelcome({ tab, onGo }: { tab: Unlock; onGo: (t: Unlock) => void }) {
   const s = useGame((g) => g)
   const you = s.playerName ? `, ${s.playerName}` : ''
-  const copy: Partial<Record<TabId, { icon: ReactNode; title: string; text: string; go: string }>> = {
+  const copy: Partial<Record<Unlock, { icon: ReactNode; title: string; text: string; go: string }>> = {
+    encargos: {
+      icon: <img src={art('room_top_libreta')} alt="" />,
+      title: 'Encargos',
+      text: `¡Te anoté unos encargos${you}! Cuatro por día y unos más para la semana. Cada uno que cumplas, lo cobrás en herraduras.`,
+      go: 'Ver los encargos',
+    },
     casita: {
       icon: <img src={art('nav_inicio')} alt="" />,
       title: `La casita de ${s.name}`,
@@ -29,14 +35,14 @@ export function UnlockWelcome({ tab, onGo }: { tab: TabId; onGo: (t: TabId) => v
     },
     areas: {
       icon: <img src={art('nav_rancho')} alt="" />,
-      title: 'Áreas',
-      text: '¡Terminamos el rancho! En Áreas vas a ver lo que hicimos juntos y lo que viene.',
+      title: 'El mapa',
+      text: '¡Terminamos el rancho! En el mapa vas a ver lo que hicimos juntos y lo que viene.',
       go: 'Ver las áreas',
     },
     aventuras: {
       icon: <img src={art('nav_aventura')} alt="" />,
-      title: 'Aventuras',
-      text: `${TRIP.reason} Cuando llenes la energía, salgo de viaje.`,
+      title: 'Los viajes',
+      text: `${TRIP.reason} Cuando llenes la energía, salgo de viaje. Lo vas a ver en el mapa.`,
       go: 'Ver el viaje',
     },
   }
@@ -293,14 +299,13 @@ function lockLine(s: GameState, tab: TabId) {
     const left = Math.max(1, PAUCHO_TAB_DAYS - daysTogether(s.completions))
     return `Eso es para cuando seamos compañeros. Nos ${left === 1 ? 'falta un día' : `faltan ${left} días`} con hábitos.`
   }
-  if (tab === 'areas') {
+  if (tab === 'encargos') return 'Mañana te anoto unos encargos en la libreta. ¡Vas a ver!'
+  if (tab === 'mapa') {
     const { area, built } = areaView(s.jobsDone)
     const left = AREAS[area].obras.length - built
-    return `Ahí van las áreas que terminemos. A ${areaName(area, s.name, true)} le ${left === 1 ? 'falta una obra' : `faltan ${plural(left, 'obra', 'obras')}`}.`
+    return `Ese es el mapa de todo lo que vamos a hacer. A ${areaName(area, s.name, true)} le ${left === 1 ? 'falta una obra' : `faltan ${plural(left, 'obra', 'obras')}`}.`
   }
-  const galpon = areaName(1, s.name, true)
-  const left = Math.max(1, TRIP_JOB - s.jobsDone)
-  return `Eso es para mis viajes. Cuando terminemos ${galpon} me voy de aventura: ${left === 1 ? 'falta una obra' : `faltan ${left} obras`}.`
+  return ''
 }
 
 /** A locked tab tapped: Paucho says what it waits for, up close. */

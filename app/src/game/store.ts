@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react'
 import type { AboutYou } from './aboutYou'
 import { now } from './clock'
 import { FIRST_HABIT_GIFT, HABITS, STARTER_GOALS, type HabitDef } from './content'
+import { renew, toCobrar, dailyView, lineView, type Encargos } from './encargos'
 import { dayKey, daysTogether, streak } from './friendship'
 import {
   AREA_COINS,
@@ -23,8 +24,13 @@ import { CLOTHES, clothesById, type Slot } from './shop'
  */
 export type WorkStatus = 'charging' | 'ready' | 'working' | 'done'
 
-/** Bottom bar: Áreas · Aventuras · Inicio · Paucho · Casita. Only Inicio is open on day 0. */
-export type TabId = 'areas' | 'aventuras' | 'inicio' | 'paucho' | 'casita'
+/** Bottom bar: Mapa · Encargos · Inicio · Paucho · Casita. Only Inicio is open on day 0. */
+export type TabId = 'mapa' | 'encargos' | 'inicio' | 'paucho' | 'casita'
+/**
+ * What opens as the game goes on, each with its welcome. Áreas and Aventuras are the two
+ * views of the Mapa tab, which opens with the first of them.
+ */
+export type Unlock = 'areas' | 'aventuras' | 'encargos' | 'inicio' | 'paucho' | 'casita'
 
 /** What ticking a habit gave: energy while the bar fills, herraduras once it is full. */
 export type Completion = { energy: number; coins: number; full: boolean; firstTime: boolean; recalentado: number | null }
@@ -70,9 +76,13 @@ export type GameState = {
   work: { status: WorkStatus; startedAt: number | null }
   /** Jobs of JOURNEY finished and seen (the next one is JOURNEY[jobsDone]). */
   jobsDone: number
-  unlocked: TabId[]
-  /** Tabs just unlocked whose welcome hasn't been shown yet. */
-  unlockQueue: TabId[]
+  unlocked: Unlock[]
+  /** Just unlocked, its welcome not shown yet. */
+  unlockQueue: Unlock[]
+  /** What encargos count that the rest of the save doesn't keep, per day: 'obra' seen, 'buy', 'place', 'wear', 'plan', 'habit' added, 'paucho' tab visited. */
+  log: Record<string, string[]>
+  /** Today's encargos and this week's (null on day 0). */
+  encargos: Encargos | null
   /** Room options owned (ids from ROOM_SLOTS, like "cama_1"), and the one in each place. */
   room: string[]
   placed: Record<string, string>
@@ -144,6 +154,8 @@ const initial = (): GameState => ({
   jobsDone: 0,
   unlocked: ['inicio'],
   unlockQueue: [],
+  log: {},
+  encargos: null,
   room: [],
   placed: {},
   premium: false,
@@ -258,6 +270,23 @@ export function canBuySomething(s: GameState) {
   return room || clothes
 }
 
+/** The bar's tabs that are open; Mapa opens with Áreas or Aventuras, whichever comes first. */
+export function navOpen(s: GameState): TabId[] {
+  const open: TabId[] = []
+  if (s.unlocked.includes('areas') || s.unlocked.includes('aventuras')) open.push('mapa')
+  for (const t of ['encargos', 'inicio', 'paucho', 'casita'] as const) if (s.unlocked.includes(t)) open.push(t)
+  return open
+}
+
+/** Encargos cumplidos waiting to be cobrados (the Encargos tab's badge). */
+export const encargosToCobrar = (s: GameState) => toCobrar(s, todayKey(s))
+
+/** Keeps something encargos count (see `log`). */
+function addLog(s: GameState, kind: string): GameState {
+  const day = todayKey(s)
+  return { ...s, log: { ...s.log, [day]: [...(s.log[day] ?? []), kind] } }
+}
+
 /** Why a room option can't be had yet, or null when it can (bought or, if given, received). */
 export function roomLock(s: GameState, o: RoomOption): 'premium' | 'south' | 'friend' | 'dog' | null {
   if (o.slot === 'plato' && !s.dog.arrived) return 'dog'
@@ -295,7 +324,7 @@ function weekBefore(day: string) {
 }
 
 /** Its day: every day, one of its days, or (so many times a week) until the week's are done. */
-function dueOn(s: GameState, id: string, day: string) {
+export function dueOn(s: GameState, id: string, day: string) {
   const { when } = planOf(s, id)
   if (when.kind === 'days') return when.days.includes(weekday(day))
   if (when.kind === 'week') return weekBefore(day).filter((d) => finished(s, id, d)).length < when.times
@@ -380,7 +409,7 @@ export function workRemainingMs(s: GameState = state) {
 // ---- unlocks ----------------------------------------------------------
 
 /** Opens tabs and queues their welcome (once each). */
-function unlock(s: GameState, ...tabs: TabId[]): GameState {
+function unlock(s: GameState, ...tabs: Unlock[]): GameState {
   const fresh = tabs.filter((t) => !s.unlocked.includes(t))
   if (!fresh.length) return s
   return { ...s, unlocked: [...s.unlocked, ...fresh], unlockQueue: [...s.unlockQueue, ...fresh] }
@@ -419,6 +448,58 @@ export const actions = {
       if (away > RESCUE_MAX_GAP) next = { ...next, dayStart: { day, termo: [], rescue: null, away } }
     }
     set(next)
+  },
+
+  /**
+   * The day's encargos (and, on a new week, the week's): from day 1, when the Encargos tab
+   * opens. What the old tanda left cumplido and not cobrado is cobrado for you.
+   */
+  openEncargos() {
+    const day = todayKey()
+    if (!state.onboarded || state.encargos?.day === day) return
+    const { encargos, coins } = renew(state, day)
+    if (!encargos) return
+    set(unlock({ ...state, encargos, coins: state.coins + coins }, 'encargos'))
+  },
+
+  /** Cobrar one of today's encargos; returns the herraduras (0 if it isn't cumplido). */
+  cobrarDaily(i: number): number {
+    const d = dailyView(state).find((v) => v.i === i)
+    if (!state.encargos || !d || !d.done || d.paid) return 0
+    const paid = state.encargos.paid.map((p, k) => p || k === i)
+    set({ ...state, coins: state.coins + d.coins, encargos: { ...state.encargos, paid } })
+    return d.coins
+  },
+
+  /** Cobrar a weekly line's step: it moves on to the next one. */
+  cobrarLine(id: string): number {
+    const l = lineView(state, todayKey()).find((v) => v.line.id === id)
+    if (!state.encargos || !l || !l.done) return 0
+    const lines = state.encargos.week.lines.map((x) => (x.id === id ? { ...x, step: x.step + 1 } : x))
+    set({ ...state, coins: state.coins + l.coins, encargos: { ...state.encargos, week: { ...state.encargos.week, lines } } })
+    return l.coins
+  },
+
+  /** Cobrar everything cumplido at once, weekly lines up every step they reached. */
+  cobrarTodo(): number {
+    let coins = 0
+    for (const d of dailyView(state)) if (d.done && !d.paid) coins += actions.cobrarDaily(d.i)
+    for (let paid = 1; paid; ) {
+      paid = 0
+      for (const l of lineView(state, todayKey())) if (l.done) paid += actions.cobrarLine(l.line.id)
+      coins += paid
+    }
+    return coins
+  },
+
+  /** Paucho told you what he cobró for you. */
+  keptSeen() {
+    if (state.encargos?.kept) set({ ...state, encargos: { ...state.encargos, kept: 0 } })
+  },
+
+  /** A tab was opened (encargos count a visit to Paucho's). */
+  visited(tab: TabId) {
+    if (tab === 'paucho') set(addLog(state, 'paucho'))
   },
 
   /** Paucho welcomed you back. */
@@ -468,8 +549,9 @@ export const actions = {
     const id = `c${now().toString(36)}`
     const day = todayKey()
     const customHabits = [...state.customHabits, { id, name: name.trim(), emoji }]
-    if (everyDay) set({ ...state, customHabits, habits: [...state.habits, id] })
-    else set({ ...state, customHabits, extras: { ...state.extras, [day]: [...(state.extras[day] ?? []), id] } })
+    const s = addLog(state, 'habit')
+    if (everyDay) set({ ...s, customHabits, habits: [...s.habits, id] })
+    else set({ ...s, customHabits, extras: { ...s.extras, [day]: [...(s.extras[day] ?? []), id] } })
     return id
   },
 
@@ -480,7 +562,7 @@ export const actions = {
   /** How a habit is done: times a day, its days, its moment. */
   setPlan(id: string, plan: HabitPlan) {
     const times = Math.max(1, Math.min(MAX_TIMES, plan.times))
-    set({ ...state, habitPlans: { ...state.habitPlans, [id]: { ...plan, times } } })
+    set({ ...addLog(state, 'plan'), habitPlans: { ...state.habitPlans, [id]: { ...plan, times } } })
   },
 
   /** Takes a habit off the list (and its plan); its past days stay. */
@@ -585,7 +667,7 @@ export const actions = {
   completeJob() {
     if (state.work.status !== 'done') return
     const job = JOURNEY[state.jobsDone]
-    let next: GameState = { ...state, jobsDone: state.jobsDone + 1, work: { status: 'charging', startedAt: null } }
+    let next: GameState = { ...addLog(state, 'obra'), jobsDone: state.jobsDone + 1, work: { status: 'charging', startedAt: null } }
     if (job?.kind === 'build') {
       const lastOfArea = JOURNEY[state.jobsDone + 1]?.kind !== 'build' || (JOURNEY[state.jobsDone + 1] as { area: number }).area !== job.area
       if (job.area === 0 && job.obra === 0) next = unlock(next, 'casita')
@@ -612,7 +694,7 @@ export const actions = {
   buyRoom(id: string): boolean {
     const o = roomOption(id)
     if (!o || state.room.includes(id) || roomLock(state, o) || state.coins < priceOf(o)) return false
-    set({ ...state, coins: state.coins - priceOf(o), room: [...state.room, id], placed: { ...state.placed, [o.slot]: id } })
+    set({ ...addLog(state, 'buy'), coins: state.coins - priceOf(o), room: [...state.room, id], placed: { ...state.placed, [o.slot]: id } })
     return true
   },
 
@@ -621,7 +703,7 @@ export const actions = {
     const placed = { ...state.placed }
     if (id && state.room.includes(id) && roomOption(id)?.slot === slot) placed[slot] = id
     else delete placed[slot]
-    set({ ...state, placed })
+    set({ ...(id ? addLog(state, 'place') : state), placed })
   },
 
   /** Buys clothes and puts them on straight away. */
@@ -629,7 +711,7 @@ export const actions = {
     const c = clothesById(id)
     if (!c || state.clothes.includes(id) || state.coins < c.price) return false
     if (c.south && !southOpen(state)) return false
-    set({ ...state, coins: state.coins - c.price, clothes: [...state.clothes, id], outfit: { ...state.outfit, [c.slot]: id } })
+    set({ ...addLog(state, 'buy'), coins: state.coins - c.price, clothes: [...state.clothes, id], outfit: { ...state.outfit, [c.slot]: id } })
     return true
   },
 
@@ -638,7 +720,7 @@ export const actions = {
     const outfit = { ...state.outfit }
     if (id && state.clothes.includes(id) && CLOTHES.some((c) => c.id === id && c.slot === slot)) outfit[slot] = id
     else delete outfit[slot]
-    set({ ...state, outfit })
+    set({ ...(id ? addLog(state, 'wear') : state), outfit })
   },
 
   setNames(companion: string, player: string) {
