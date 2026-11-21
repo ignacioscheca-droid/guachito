@@ -187,4 +187,88 @@ Los proyectos `android/` e `ios/` son código fuente propio, no artefactos: se e
 
 Lo que la persona anota (ánimo, reflexión) queda solo en el teléfono: entra en Preferences y en el respaldo del sistema, pero no en analítica ni en Supabase. Si el dueño quiere que tampoco viaje en el respaldo del sistema, va en una clave aparte excluida con `android:dataExtractionRules` y, en iOS, en un archivo marcado `isExcludedFromBackup`.
 
-<!-- CONTINÚA: secciones 5–12 -->
+## 5. Funciones nativas, en el orden del plan
+
+Cada función entra como una capa detrás de `isNative`, con la web como respaldo. Qué hace cada una ya está decidido en los docs de diseño; acá va solo cómo se enchufa.
+
+### 5.1 Avisos locales (doc 16)
+
+Plugin `@capacitor/local-notifications@8` (8.3.1 en npm, peer `@capacitor/core >=8`). Sin servidor: al publicar se retiran `reminder.yml`, `send-reminder.mjs` y el VAPID del binario.
+
+1. `src/game/notifications.ts` con `reschedule(state)` (doc 16): `cancel` de todo lo pendiente y `schedule` de nuevo, con ids fijos por tipo (100 = mañana, 200 = obra lista, 300 = racha, 400–404 = escalera) para no duplicar.
+2. Canales Android al arrancar (`createChannel`): `manana`, `obra`, `racha`, `vuelta`, con importancia `DEFAULT`. Cada uno se puede apagar desde el sistema; el nombre lo ve la persona, en voseo («Obra lista»).
+3. Permiso: `checkPermissions()` → si `prompt`, primero el pedido de Paucho (doc 16), después `requestPermissions()`. Si `denied`, no se vuelve a pedir: Ajustes ofrece «Abrir ajustes del teléfono».
+4. Ícono `ic_stat_mate`: silueta blanca sobre transparente, en `android/app/src/main/res/drawable-*`. Si falta, Android muestra un cuadrado gris.
+5. Tocar un aviso: `addListener('localNotificationActionPerformed')` lleva a la pantalla que indica `extra.kind`.
+
+| Trampa | Qué hacer |
+|---|---|
+| Android 13+ exige `POST_NOTIFICATIONS` en tiempo de ejecución | El plugin lo declara; igual pedirlo después del pre-permiso, nunca al arrancar. |
+| Alarmas exactas (`SCHEDULE_EXACT_ALARM`/`USE_EXACT_ALARM`): Play solo las acepta para alarmas y calendarios | No declararlas. Usar `allowWhileIdle: true`; un aviso de «obra lista» con 10 min de atraso no importa (doc 16). Si el plugin agrega el permiso por defecto, quitarlo con `tools:node="remove"` en el manifest (sin verificar si la 8.x lo agrega). |
+| Fabricantes con ahorro agresivo (Xiaomi, Samsung, Motorola) matan alarmas | Reprogramar en cada apertura; el widget cubre el hueco (doc 25). No pedir «ignorar optimización de batería»: Play lo restringe. |
+| Reinicio del teléfono | El plugin reprograma tras el arranque; verificarlo en QA (§9). |
+| iOS guarda como máximo 64 avisos pendientes | El diseño usa ≤ 10. Si algún día pasa de 64, iOS descarta en silencio los más lejanos. |
+| Cambio de huso horario o de hora | Programar con `at` calculado en hora local y reprogramar en `appStateChange`. |
+
+### 5.2 a 5.6: hápticos, compartir, enlaces, errores, analítica
+
+| # | Función | Plugin | Pasos | Trampas |
+|---|---|---|---|---|
+| 5.2 | Hápticos | `@capacitor/haptics` | `sound.ts`: si `isNative`, `Haptics.impact({ style: Light })` al tildar, `notification({ type: Success })` en la barra llena | Respetar el interruptor de vibración de Ajustes. Android sin motor bueno vibra feo: usar `impact`, no `vibrate(ms)`. |
+| 5.3 | Compartir (doc 10) | `@capacitor/share` + `@capacitor/filesystem` | Generar la tarjeta en canvas → `Filesystem.writeFile` en `Directory.Cache` → `Share.share({ files: [uri] })` | En Android hace falta el `FileProvider` que trae la plantilla; probar WhatsApp e Instagram reales. |
+| 5.4 | Deep links | `@capacitor/app` (`appUrlOpen`) | Rutas `https://gauchito.app/m/...` (mate de a dos, doc 9). Android: `intent-filter` con `android:autoVerify="true"` + `/.well-known/assetlinks.json` con el SHA-256 **de la clave de firma de Play** (no la de subida). iOS: capability Associated Domains `applinks:gauchito.app` + `/.well-known/apple-app-site-association` sin extensión, servido como JSON | Los dos archivos tienen que estar en el dominio propio, no en `github.io/guachito`. Tomar el SHA-256 de Play Console → Integridad de la app. Sin app instalada, la URL abre una página web con botones a las tiendas. |
+| 5.5 | Errores (doc 27) | `@sentry/capacitor` 4.6.0 + `@sentry/react` en la versión exacta que pide (10.76.2 hoy) | `Sentry.init` en `main.tsx` con `release = versión` y `dist = versionCode`; subir source maps en CI | La versión de `@sentry/react` debe coincidir con el peer o falla el build. Limpiar nombres del estado adjunto (doc 27). |
+| 5.6 | Analítica (doc 27) | `posthog-js` (web, sin plugin nativo) | `persistence: 'localStorage'`, sin autocaptura ni grabación; `distinct_id` del doc 26 | En iOS, si no hay rastreo entre apps, **no** hace falta ATT; declararlo igual en la etiqueta de privacidad (§7). Cola propia si no hay red. |
+
+### 5.7 Cuenta y nube: Supabase (doc 26)
+
+`@supabase/supabase-js` corre en la WebView sin plugin. Lo nativo es el inicio de sesión.
+
+1. Anónimo: `supabase.auth.signInAnonymously()` al primer arranque.
+2. Google: en Android, inicio nativo con Credential Manager (plugin comunitario, p. ej. `@capacitor-firebase/authentication` 8.6.0 o uno equivalente sin Firebase; elección sin verificar) que devuelve un `idToken`, y `supabase.auth.linkIdentity` / `signInWithIdToken`. Nunca OAuth dentro de la WebView: Google lo bloquea.
+3. Apple: obligatorio en iPhone si se ofrece Google (doc 26, guía 4.8). Capability «Sign in with Apple» + `idToken` nativo.
+4. `delete_account` del servidor (doc 26) + página web de borrado para Play (§6).
+5. Sesión guardada en Preferences, no en `localStorage` (mismo motivo que §4).
+
+### 5.8 Compras: RevenueCat (doc 17)
+
+`@revenuecat/purchases-capacitor` 14.1.0 (5-nov-2026), peer `@capacitor/core >=8`: compatible con Capacitor 8 (npm, verificado hoy).
+
+1. **Antes de codificar**: Play → perfil de pagos (cuenta de comerciante); App Store Connect → Acuerdo de apps pagas + banco + impuestos. Sin eso no hay productos.
+2. Crear productos con los ids del doc 17. Play: suscripción `gauchito_premium` con planes base `anual` y `mensual` y la oferta `prueba-14d`; **Play solo deja crear productos después de subir un AAB con el permiso `BILLING`** (el SDK lo agrega). iOS: grupo «Gauchito Premium», dos productos, oferta introductoria.
+3. RevenueCat: proyecto con dos apps; en Play, cuenta de servicio con acceso a la API de Play Developer y notificaciones en tiempo real (Pub/Sub); en iOS, clave In-App Purchase (.p8) y notificaciones del servidor v2. Entitlement `premium`, offering `default`.
+4. Código: `Purchases.configure({ apiKey, appUserID: user_id })` con el id de Supabase; `getOfferings()` → paywall; `purchasePackage()`; `restorePurchases()` visible en Ajustes y en el paywall (Apple lo exige).
+5. Sandbox. Android: cuentas en «Pruebas de licencias» de Play Console, instaladas desde la pista interna (no por USB con otra firma). iOS: probar primero con un archivo StoreKit en Xcode, después con un tester de sandbox en el iPhone. Las suscripciones de prueba se renuevan cada pocos minutos.
+
+### 5.9 Anuncios: AdMob + UMP + ATT (doc 23, con escala)
+
+`@capacitor-community/admob` 8.3.0, que apunta a Capacitor 8.5+ e incluye UMP y ATT ([README](https://github.com/capacitor-community/admob)). El plan lo marcaba «sin verificar»: hoy queda confirmado.
+
+1. App ID de AdMob en `AndroidManifest.xml` (`com.google.android.gms.ads.APPLICATION_ID`) y en `Info.plist` (`GADApplicationIdentifier`), más `SKAdNetworkItems`.
+2. Orden al arrancar: `requestConsentInfo()` → si hace falta, `showConsentForm()` (UMP, obligatorio en EEE y Reino Unido) → en iOS `requestTrackingAuthorization()` con `NSUserTrackingUsageDescription` en voseo → `initialize()`.
+3. Solo anuncios con recompensa, elegidos por la persona (doc 23). Ids de prueba de Google en debug: un clic propio en un anuncio real puede suspender la cuenta.
+4. Entra en «Seguridad de los datos» y en la etiqueta de Apple como recolección de terceros. Hasta que entre AdMob, la app no pide ATT.
+
+### 5.10 Widgets: el único código nativo propio (doc 25)
+
+El widget no puede leer la WebView. La app escribe tres datos en un almacén compartido y el widget los lee.
+
+**Puente.** Un plugin local de Capacitor, `WidgetBridge`, con un solo método:
+
+```ts
+WidgetBridge.update({ lastMateDay: '2026-11-15', streak: 12, workEndsAt: 1763222400000, paused: false })
+```
+
+Se llama desde `reschedule(state)` (§5.1), así avisos y widget nunca se contradicen.
+
+| | iOS | Android |
+|---|---|---|
+| Almacén compartido | App Group `group.app.gauchito.paucho` → `UserDefaults(suiteName:)` | `SharedPreferences` propias (`widget_state`) |
+| Plugin | `ios/App/App/WidgetBridgePlugin.swift` escribe y llama `WidgetCenter.shared.reloadAllTimelines()` | `android/app/src/main/java/.../WidgetBridgePlugin.kt` escribe y pide `GlanceAppWidgetManager` / `updateAll` |
+| Widget | Target «Widget Extension» en Xcode (SwiftUI, WidgetKit), con el mismo App Group en las dos targets | `GlanceAppWidget` (Jetpack Glance, Kotlin) + `AppWidgetProviderInfo` XML; o `AppWidgetProvider` clásico con `RemoteViews` |
+| Refresco | Línea de tiempo de 48 h (doc 25) | `WorkManager` + `updatePeriodMillis` 30 min (doc 25) |
+| Arte | PNG ≤ 360 px en el catálogo de la extensión | `res/drawable-nodpi` |
+
+Trampas: el plugin local se registra a mano (`bridge.registerPluginInstance` en iOS; `registerPlugin` en `MainActivity` en Android). La extensión iOS tiene su propio bundle id (`app.gauchito.paucho.widget`) y su propio perfil: la firma automática lo resuelve si el App Group está tildado en las dos. Escribir Kotlin y Swift se puede en la nube; probarlos, no.
+
+<!-- CONTINÚA: secciones 6–12 -->
