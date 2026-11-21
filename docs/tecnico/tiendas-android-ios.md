@@ -271,4 +271,138 @@ Se llama desde `reschedule(state)` (§5.1), así avisos y widget nunca se contra
 
 Trampas: el plugin local se registra a mano (`bridge.registerPluginInstance` en iOS; `registerPlugin` en `MainActivity` en Android). La extensión iOS tiene su propio bundle id (`app.gauchito.paucho.widget`) y su propio perfil: la firma automática lo resuelve si el App Group está tildado en las dos. Escribir Kotlin y Swift se puede en la nube; probarlos, no.
 
-<!-- CONTINÚA: secciones 6–12 -->
+## 6. Android hasta Google Play
+
+El cuello de botella es el calendario de la prueba cerrada, no el código.
+
+| Paso | Qué hacer | Trampa |
+|---|---|---|
+| Ícono adaptativo | `npx @capacitor/assets generate --android` desde `resources/icon-foreground.png` (Paucho dentro del círculo seguro de 66 %) + `icon-background.png` (`#fbf3e4`); ícono monocromo para Android 13+ | Probar con máscara redonda y de gota. |
+| Ícono de ficha | 512×512, PNG de 32 bits, ≤ 1 MB ([Play](https://support.google.com/googleplay/android-developer/answer/9866151?hl=en)) | — |
+| Firma | **Play App Signing** (obligatorio para AAB): Google guarda la clave de la app; vos firmás con una **clave de subida**. `keytool -genkeypair -v -keystore upload.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000` | Guardar `upload.jks` y su contraseña en dos lugares (gestor de contraseñas + copia cifrada fuera de la Mac). Si se pierde, se pide un reseteo a Google: días, no catástrofe. Nunca a git. |
+| Versión | `versionName` = `1.0.0`; `versionCode` entero que siempre sube. Regla: `MAJOR*10000 + MINOR*100 + PATCH`, o el número de corrida de CI | Play rechaza un `versionCode` repetido, aunque el AAB anterior se haya descartado. |
+| Target API | `targetSdk 36` (Android 16): obligatorio para apps nuevas y actualizaciones desde el 31-ago-2026 ([Play](https://support.google.com/googleplay/android-developer/answer/11926878?hl=en)). Es el valor por defecto de Capacitor 8 | Cada agosto sube uno: agendar la actualización. |
+| AAB | `cd android && ./gradlew bundleRelease` → `app/build/outputs/bundle/release/app-release.aab` | Play no acepta APK para apps nuevas. |
+| Prueba cerrada | ≥ 12 testers con opt-in **continuo** durante los 14 días previos al pedido de producción; la revisión suele tardar ≤ 7 días ([Play](https://support.google.com/googleplay/android-developer/answer/14151465?hl=en)) | Empezarla el día 1 con 15–20 personas (margen por bajas). Quien sale y vuelve reinicia sus 14 días. Pedir que abran la app varios días: Google pregunta por la participación. |
+| Seguridad de los datos | Formulario en Contenido de la app: hoy «no se recopilan datos»; con PostHog, Sentry, Supabase y RevenueCat: identificadores, uso de la app, diagnósticos, compras; cifrado en tránsito; borrado posible | Debe coincidir con la política de privacidad y con lo que mandan los SDK. |
+| Clasificación (IARC) | Cuestionario: sin violencia, sin apuestas, compras dentro de la app | — |
+| Público objetivo | **Solo 18+** (regla del brief) | Un chibi puede leerse como «atractivo para chicos»: responder que no, y que la ficha muestre adultos, mate, trabajo y hábitos, no juguetes. Si Google la marca, entra en la política de Familias (sin AdMob personalizado, más revisión). |
+| Declaración de apps de salud | Obligatoria para toda app, también en pistas de prueba ([Play](https://support.google.com/googleplay/android-developer/answer/14738291?hl=en)). Marcar solo «bienestar / hábitos»; nada médico | Sin «ansiedad», «tratar» ni «curar» en ficha ni app. |
+| Privacidad y borrado | URL de política + URL web de borrado de cuenta (doc 26) | Obligatoria apenas haya cuentas. |
+| Ficha | Título ≤ 30 (sin verificar), descripción corta ≤ 80 ([Play](https://support.google.com/googleplay/android-developer/answer/9866151?hl=en)), larga ≤ 4.000 (sin verificar); 2 a 8 capturas por tipo, 9:16 de 1080×1920 o más; gráfico destacado 1024×500 | Capturas sin alfa. |
+| Pistas | interna (hasta 100, minutos) → cerrada (el reloj) → abierta (opcional) → producción | — |
+| Lanzamiento | Gradual: 5 % → 20 % → 50 % → 100 %, mirando vitals 48 h por escalón | Se puede frenar, no deshacer. |
+| Pre-launch report | Corre solo en cada AAB de prueba: mirar cierres, accesibilidad y capturas | La escena del mate con toques lentos puede dar falsos «sin respuesta». |
+| Android vitals | Umbrales «mal comportamiento»: cierres > 1,09 % y ANR > 0,47 % de usuarios por día (sin verificar hoy) | Pasarlos baja la visibilidad en la tienda. |
+
+## 7. iOS hasta App Store
+
+Todo pasa en la Mac con Xcode 26 (Apple exige SDK de iOS 26 desde el 28-abr-2026, [Apple](https://developer.apple.com/news/upcoming-requirements/)).
+
+1. **Firma automática**: Xcode → target App → Signing & Capabilities → equipo del dueño, «Automatically manage signing». Crea certificados y perfiles solo.
+2. **Capabilities**: Push Notifications no hace falta (avisos locales). Sí: App Groups (widget), Associated Domains (§5.4), Sign in with Apple (§5.7), In-App Purchase.
+3. **`Info.plist`**: `CFBundleDisplayName` = «Gauchito»; `ITSAppUsesNonExemptEncryption` = `NO` (solo HTTPS); `NSUserTrackingUsageDescription` solo cuando entre AdMob; `UISupportedInterfaceOrientations` solo vertical; `UIRequiresFullScreen` = `YES` si se excluye iPad.
+4. **`PrivacyInfo.xcprivacy`**: declarar las APIs de «razón requerida» que usa la app (`NSPrivacyAccessedAPICategoryUserDefaults`, motivo `CA92.1`, por Preferences) y los datos recolectados. Los SDK (Sentry, RevenueCat, AdMob) traen el suyo; Xcode los junta en el reporte de privacidad del archivo.
+5. **Íconos y launch screen**: `npx @capacitor/assets generate --ios` (1024×1024 sin alfa). Launch screen = storyboard con color `#fbf3e4` y logo, igual que el splash.
+6. **iPad**: solo iPhone en la v1 (sin capturas de iPad ni QA extra).
+7. **TestFlight**: Product → Archive → Distribute → App Store Connect. Interno (hasta 100 del equipo) sin revisión; externo (hasta 10.000) con una revisión corta del primer build.
+8. **App Store Connect**:
+   - Ficha: nombre ≤ 30 y subtítulo ≤ 30 (sin verificar hoy), palabras clave ≤ 100, URL de soporte y de privacidad.
+   - Capturas: obligatoria al menos una de iPhone con Dynamic Island mediano, 1179×2556 o 1206×2622; hasta 10 ([Apple](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/)). Recomiendo además 1320×2868 (grande).
+   - Etiquetas de privacidad: lo mismo que «Seguridad de los datos».
+   - Edad: el cuestionario nuevo (4+, 9+, 13+, 16+, 18+; [Apple](https://developer.apple.com/news/?id=ks775ehf)). Responder honesto; para quedar 18+ hay que elegir la restricción manual más alta (cómo, sin verificar).
+   - Suscripciones: grupo, precios por país, textos de la oferta, captura del paywall para revisión.
+   - Small Business Program: anotarse antes del primer cobro; baja la comisión a 15 % por debajo de USD 1 millón al año (plan).
+
+**Bajar el riesgo de rechazo, en esta app**
+
+| Regla | Riesgo | Qué sacar o agregar |
+|---|---|---|
+| 4.2 Funcionalidad mínima | «Es un sitio envuelto» | Agregar: avisos locales, hápticos, compartir nativo, widget, compras. Sacar: «Agregar a inicio», textos de Web Push, código de suscripción en Ajustes, `server.url`. Todo el arte adentro. |
+| 2.3 Metadatos | Capturas o textos de funciones que no existen | Capturas del build real; nada de «aventuras» si no están. |
+| Reseñas inventadas (5.6 / 2.3) | ★★★★★ falsas en `PlanScreens.tsx` | Sacarlas (§2, fila 17). |
+| 2.1 Completitud | Menú de pruebas, «Gauchito 2 (áreas)», botones muertos | `TEST_MENU=0`, nombre final, sacar `dayOffset` y `workSkipMs` (doc 26). |
+| 5.1.1(v) | Hay cuenta pero no se borra | Borrado dentro de la app (doc 26). |
+| 3.1.1 | Premium desbloqueado por otra vía | Solo compra de Apple; «Restaurar compras» visible. |
+| 3.1.2 | Suscripción mal explicada | Paywall con precio total, período, prueba, renovación automática y enlaces a términos (EULA de Apple) y privacidad (doc 17). |
+| 1.4.1 / salud | Que parezca terapia | Nada de «ansiedad», «tratar», «curar»; el minuto de calma es un juego de respiración, no una práctica clínica. |
+| 4.8 | Google sin Apple | Sign in with Apple junto a Google. |
+
+## 8. CI/CD y actualizaciones
+
+GitHub Actions compila Android en `ubuntu-latest` y iOS en `macos-latest`; Fastlane sube a las dos tiendas. Alternativa más simple para iOS: Xcode Cloud (25 h/mes incluidas con el programa, sin verificar) o subir a mano desde la Mac las primeras veces.
+
+| Flujo | Dispara | Hace |
+|---|---|---|
+| `verify.yml` | cada push | `npx tsc -b && npm run build` y los tests |
+| `android.yml` | tag `v*` | `npm ci` → `build:native` → `cap sync android` → decodifica el keystore → `bundleRelease` → `fastlane supply --track internal` |
+| `ios.yml` | tag `v*`, manual | `cap sync ios` → `fastlane match` (certificados en un repo privado) → `gym` → `pilot` (TestFlight) |
+
+Secretos: `ANDROID_KEYSTORE_B64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `PLAY_SERVICE_ACCOUNT_JSON`; `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` (clave de API de App Store Connect), `MATCH_PASSWORD`; `SENTRY_AUTH_TOKEN`. Las claves públicas (RevenueCat, PostHog) van en `.env.native`, no son secretas.
+
+Versionado: un solo `version` en `app/package.json`; un script escribe `versionName`/`CFBundleShortVersionString` y usa `github.run_number` como `versionCode`/`CFBundleVersion`.
+
+**OTA de la capa web.** Plugins como `@capawesome/capacitor-live-update` (8.8.1) o `@capgo/capacitor-updater` bajan un `dist/` nuevo sin pasar por la tienda. Apple lo permite para código interpretado que no cambie el propósito de la app ni agregue funciones sin revisión ([guías](https://developer.apple.com/app-store/review/guidelines/), 2.5.2; texto no releído hoy). Google permite JavaScript en una WebView, no código nativo descargado ([política](https://support.google.com/googleplay/android-developer/answer/9888379); sin verificar hoy). Recomiendo no usar OTA al principio: el contenido remoto (doc 28) cubre textos y eventos.
+
+## 9. Rendimiento y QA
+
+El riesgo real es la memoria, no el peso.
+
+- **Memoria**: una escena de 1024×1536 decodificada ocupa ~6 MB (plan). En un Android de 3–4 GB la WebView puede morir con 10–15 escenas vivas. Reglas: servir escenas a 768 px de ancho en nativo (estimación: ~3,4 MB), descargar `<img>` de pantallas ocultas, máximo 3 escenas decodificadas a la vez; medir con `chrome://inspect` → Memory.
+- **WebView mínima**: `minWebViewVersion: 111` (§3); por debajo, Capacitor muestra un error. `minSdk 24` (Android 7) por defecto; recomiendo subirlo a 26 (estimación: < 2 % de teléfonos argentinos afuera, sin verificar). iOS 16.4 como mínimo (§1).
+- **Binario**: ~16 MB de arte y audio (§2, fila 18) + ~8 MB de Capacitor y SDK (estimación). Meta: AAB < 40 MB.
+- **Offline**: todo funciona sin red salvo nube, compras y borrado de cuenta, que dicen por qué no.
+- **Matriz**: Motorola Moto G (gama baja, 3–4 GB, el más vendido en Argentina, sin verificar), Samsung Galaxy A (gama media), un Pixel con Android 16, el iPhone del dueño, un iPhone viejo con iOS 16.
+
+**Checklist de QA de release**
+
+- [ ] Instalar desde la pista, no por cable; primer arranque sin red.
+- [ ] Onboarding completo; cerrar a la fuerza a mitad y volver.
+- [ ] Datos intactos tras actualizar desde la versión anterior.
+- [ ] Avisos: permiso negado, aceptado, reinicio del teléfono, cambio de hora.
+- [ ] Botón y gesto atrás en cada hoja; teclado en los 4 inputs.
+- [ ] Audio con modo silencio y con Spotify sonando.
+- [ ] Compra, cancelación y restauración en sandbox.
+- [ ] Widget: cambio de día a medianoche (doc 25).
+- [ ] Sin menú de pruebas, sin textos de web, sin reseñas.
+- [ ] 30 minutos de uso en el Moto G sin cierre.
+
+## 10. Legal mínimo
+
+Sin esto no se publica.
+
+- **Privacidad y términos**: dos páginas en `gauchito.app`, en voseo, que nombren a cada proveedor (PostHog, Sentry, Supabase, RevenueCat, Google, Apple) y digan que lo que anotás queda en el teléfono. Argentina: Ley 25.326; el registro de bases de datos ante la AAIP, a confirmar con abogado.
+- **Borrar datos**: dentro de la app y por web (doc 26).
+- **Impuestos**: la tienda retiene IVA y percepciones al comprador; el dueño cobra en dólares del exterior y factura como exportación de servicios (monotributo o responsable inscripto). **Confirmar con contador**, junto con la liquidación de divisas (plan, «Sin verificar»).
+- **Música y sonidos**: guardar la licencia escrita de cada pista de `public/audio`, con permiso de uso comercial en apps. Sin licencia, se reemplaza antes de subir.
+
+## 11. Cronograma y checklists
+
+Semanas del plan de 24, una persona con IA.
+
+| Semana | Android | iOS |
+|---|---|---|
+| 1 | Cuenta Play, verificación, dominio, ids | — |
+| 2–3 | §2 + §3 + §4; AAB a la pista interna | — |
+| 3 | **Arranca la prueba cerrada** (15–20 testers) | — |
+| 3–5 | Avisos locales, hápticos, Sentry, PostHog como actualizaciones | — |
+| 5–6 | Pedido de producción; lanzamiento gradual | — |
+| 7–10 | Supabase, borrado, compartir | Corte de la etapa 2 → cuenta Apple |
+| 10–13 | RevenueCat + Premium (lanzamiento suave, plan) | `cap add ios`, TestFlight, compras en sandbox |
+| 13–15 | Widget Android | Widget iOS, revisión App Store |
+| 24+ | AdMob (con escala) | AdMob + ATT |
+
+**Checklist Android**: cuenta verificada · id `app.gauchito.paucho` · target 36 · AAB firmado y keystore respaldado · 12+ testers × 14 días · seguridad de los datos · IARC · público 18+ · declaración de salud · privacidad y borrado web · ficha y capturas · gradual con vitals.
+
+**Checklist iOS**: Xcode 26 · firma automática · App Groups y Associated Domains · `PrivacyInfo.xcprivacy` · íconos sin alfa · TestFlight · capturas 1206×2622 · etiquetas de privacidad · edad · suscripciones con Restaurar · Small Business Program · tabla de 4.2 cumplida.
+
+## 12. Qué queda sin verificar
+
+- Límites de caracteres de título y descripción larga en Play y de nombre y subtítulo en App Store.
+- Si `@capacitor/local-notifications` 8.x declara `SCHEDULE_EXACT_ALARM` por defecto.
+- Cómo emite Capacitor el gesto atrás predictivo de Android 16 y el nombre exacto de la variable de safe area de System Bars.
+- Plugin de inicio de sesión con Google sin Firebase para Capacitor 8.
+- Umbrales actuales de Android vitals; horas incluidas de Xcode Cloud.
+- Texto vigente de Apple 2.5.2 y de la política de Google sobre código descargado.
+- Cómo forzar 18+ en el cuestionario nuevo de Apple.
+- Disponibilidad de `gauchito.app`, modelos de teléfono más usados en Argentina, AAIP e impuestos.
