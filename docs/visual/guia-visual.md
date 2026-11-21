@@ -4,7 +4,7 @@
 
 Esta guía dice cómo tiene que verse, moverse y sonar Gauchito, qué está mal hoy y qué se revisa antes de lanzar algo nuevo. Cada regla tiene un ID (`PJ-03`) para citarla en una revisión. Las capturas son de la rama `areas` a 390×844; los recuadros rojos marcan lo que hay que corregir y los verdes, lo que hay que copiar.
 
-Cómo usarla: al diseñar, leé el capítulo que toca. Al lanzar, recorré la checklist del final con los ID. Si una regla choca con una decisión del dueño, gana la decisión y la regla se corrige acá.
+Si una regla choca con una decisión del dueño, gana la decisión y la regla se corrige acá.
 
 ---
 
@@ -58,7 +58,7 @@ Lo que sigue sale del capítulo «Arte y animación» del plan, verificado sobre
 | 20 | **Reseñas inventadas** de 5 estrellas que elogian «aventuras» e «historias» en «Armando tus metas» | PlanScreens.tsx:12-19 | A | Sacarlas antes de publicar (MT-05) | 11 |
 | 21 | **Reducir movimiento cubierto a medias:** 2 bloques `prefers-reduced-motion` en 7.853 líneas de CSS | `index.css:1540, 3189`; DayOne.tsx:143 | B | Variante quieta para cada animación de más de 400 ms (AC-04) | 14 |
 
-**Lo que está bien y hay que cuidar.** La escena de la racha (`img/si-racha-mate.jpg`) es la mejor pantalla de la app: Paucho de fieltro grande, una sola idea, cielo que amanece. El plano medio de «¡Volviste!» (`done1`) también: Paucho ocupa el 90 % del ancho y habla de cerca. La vida de ambiente (nubes, árboles, fogón, gallinas, veleta) está por encima del promedio indie (plan). Las reglas de esta guía salen en buena parte de generalizar esas pantallas.
+**Lo que está bien y hay que cuidar.** La escena de la racha (`img/si-racha-mate.jpg`) es la mejor pantalla de la app: Paucho de fieltro grande, una sola idea, cielo que amanece. El plano medio de «¡Volviste!» (`done1`) también: Paucho ocupa el 90 % del ancho y habla de cerca. La vida de ambiente (nubes, árboles, fogón, gallinas, veleta) está por encima del promedio indie (plan).
 
 ---
 
@@ -89,7 +89,7 @@ Paucho es un pibe de campo dormilón y tierno, de fieltro, chibi de 2,6 cabezas.
 
 **SÍ / NO**
 
-- **SÍ:** el primer plano de «¡Volviste, Nacho!» (`done1`): Paucho llena el 90 % del ancho, saluda con la mano, mate en la otra, mira a cámara. Se lee la emoción desde un metro.
+- **SÍ:** el primer plano de «¡Volviste, Nacho!» (`done1`): Paucho llena el 90 % del ancho, saluda con la mano, mate en la otra, mira a cámara.
 - **NO:** `g_jump` seguido de `mate_b4` en la misma revelación: dos sombreros, dos bigotes, dos sombreados en 1,7 s (`img/no-dos-pauchos.jpg`).
 - **SÍ:** «Tengo un sueño… anoche la radio no paraba» con la cara de sueño.
 - **NO:** cara triste con «Ayer no viniste».
@@ -239,7 +239,7 @@ Pocos colores, cada uno con un trabajo. La paleta sale de `app/src/index.css`.
 |---|---|---|
 | CO-01 | **Verde = acción principal.** Un solo botón verde por pantalla | `--tick` arriba, `--tick-deep` como base de 6 px; texto blanco 18 px peso 900 |
 | CO-02 | **Dorado = premio.** Herraduras, cofres, hitos de racha, el brillo de la revelación. Nunca botones de navegar ni barras de progreso de tareas | Hoy 40 usos de `--gold*` |
-| CO-03 | **Energía naranja, separada del dorado**: la barra usa `--energy`; el «+5 ⚡» de la tarjeta, `--earth` con el rayo de color | Que «+energía» no se confunda con «+herraduras» |
+| CO-03 | **Energía naranja, separada del dorado**: la barra usa `--energy`; el «+10 ⚡» de la tarjeta, `--earth` con el rayo de color | Que «+energía» no se confunda con «+herraduras» |
 | CO-04 | **Secundario** = contorno `--wood` 2 px o texto `--earth` sin fondo | — |
 | CO-05 | **Rojo nunca para estados del jugador** (racha en riesgo, hábito no hecho) | P7 |
 | CO-06 | **Contraste**: texto ≥ 4,5:1, texto ≥ 24 px o 19 px negrita ≥ 3:1 | Ver AC-01 |
@@ -284,3 +284,260 @@ Una familia (Nunito), siete tamaños, y los títulos importantes en cartel de ma
 **Quién lo hace mejor.** Duolingo: una sola familia redondeada con pocos tamaños muy marcados. Homescapes y Royal Match: títulos de evento en carteles con material del mundo.
 
 **Hoy en Gauchito.** Corregir: 26 tamaños; tres tamaños con medio píxel; títulos sin cartel; truncados en la tienda.
+
+### 3.8 Componentes de UI (UI)
+
+Pocos componentes, siempre iguales. Cada uno vive en `ui.tsx` y en el sistema de diseño.
+
+| ID | Componente | Spec |
+|---|---|---|
+| UI-01 | **Botón principal** | 56 px de alto, radio 28, `--tick` con base `--tick-deep` de 6 px; al tocar baja 4 px en 80 ms; ancho completo menos 24 px por lado |
+| UI-02 | **Botón secundario** | 48 px, contorno `--wood` 2 px, texto `--earth`; nunca dos principales juntos |
+| UI-03 | **Pastilla de premio** | 32 px, `--gold` con base `--gold-deep`, herradura de 20 px + número 16 px peso 900 |
+| UI-04 | **Tarjeta de hábito** | 72 px de alto, radio `--radius` 22, ícono 44 px en pozo `--icon-well`, check de 48×48 a la derecha |
+| UI-05 | **Globo de Paucho** | `--bubble`, radio 18, cola de 12 px hacia la boca, sombra `--shadow` |
+| UI-06 | **Barra de progreso** | 12 px, fondo `--tick-off`; relleno `--tick` para tareas, `--energy` solo para energía, `--gold` solo para un cofre |
+| UI-07 | **Hoja inferior** | radio 28 arriba, asa de 36×5 px, velo ES-09 |
+| UI-08 | **Interruptor** | 52×32, encendido `--tick` (hoy `--green` apagado de tono: se unifica) |
+| UI-09 | **Estados**: normal, apretado, deshabilitado (45 % de opacidad, sin sombra), cargando (puntos que laten), hecho (check verde) | Los cinco dibujados antes de construir |
+| UI-10 | **Estado vacío** con Paucho y una frase, nunca una caja vacía | Ej.: «Todavía no hay recuerdos. Mañana salgo a buscar uno.» |
+
+**SÍ / NO**
+
+- **SÍ:** el check de hábito: blanco con check verde; al tocarlo se llena de verde y suelta confeti.
+- **NO:** «Cobrar» como contorno dorado al lado de una barra dorada y de «¡Cobrar todo!» dorado: tres dorados que piden tres cosas distintas (`img/hoy-dorado-en-todo.jpg`).
+- **NO:** «Guardar nombres» deshabilitado casi invisible sobre crema (Ajustes): debe verse que existe.
+
+**Quién lo hace mejor.** Duolingo: el botón grueso con base de color que se hunde al tocar es su firma. Finch: tarjetas con el mismo alto y ritmo en todas las listas.
+
+**Hoy en Gauchito.** Corregir: botones dorados, barras doradas, tres variantes de «cobrar»; interruptores en `--green` y check en `--tick` (dos verdes distintos).
+
+### 3.9 Layout y áreas seguras (LA)
+
+| ID | Regla | Spec |
+|---|---|---|
+| LA-01 | **Blanco táctil** ≥ 44×44 pt en iOS y ≥ 48×48 dp en Android; se diseña a 48 | Hoy hay botones de 30 y 32 px (`index.css:661, 800, 865`) |
+| LA-02 | **Separación entre blancos** ≥ 8 px | — |
+| LA-03 | **Márgenes**: 16 px a los lados en listas, 24 px en botones de ancho completo | — |
+| LA-04 | **Áreas seguras**: barra superior debajo de `--safe-top`, pestañas encima de `--safe-bottom`; nada interactivo en los 20 px del gesto de inicio | Probar con muesca y con isla |
+| LA-05 | **Grilla de 8 px** para espacios (4 px solo dentro de componentes) | — |
+| LA-06 | **3½ tarjetas** visibles en Inicio (decisión tomada; doc 13 deja abierta 2½ en pantallas < 700 px) | — |
+| LA-07 | **Pantallas de prueba**: 390×844 (iPhone), 360×800 y 360×640 (Android chico) | Las tres capturadas en cada revisión |
+| LA-08 | **Una idea por pantalla** en ceremonias: personaje, número, botón | La racha lo cumple |
+| LA-09 | **Pulgar**: la acción principal en el tercio inferior | — |
+
+**SÍ / NO**
+
+- **SÍ:** la racha: Paucho arriba, número al medio, «¡Dale!» abajo al alcance del pulgar.
+- **NO:** la primera pantalla de racha con 340 px vacíos debajo del texto (`streak1`): el gesto de deslizar podría ocupar ese espacio con el mate más grande.
+
+**Quién lo hace mejor.** Finch y Duolingo ponen la acción principal abajo, de ancho completo, siempre en el mismo lugar.
+
+### 3.10 Animación y movimiento (AN)
+
+Todo movimiento tiene anticipación, acción y asentamiento, y su curva depende de qué hace.
+
+| ID | Regla | Spec |
+|---|---|---|
+| AN-01 | **Cinco curvas con nombre** en tokens | `--ease-out` `cubic-bezier(0.2, 0.8, 0.3, 1)` entradas · `--ease-in` `cubic-bezier(0.5, 0, 0.75, 0)` salidas · `--ease-cam` `cubic-bezier(0.45, 0, 0.2, 1)` cámara (doc 13) · `--ease-pop` `cubic-bezier(0.3, 1.4, 0.5, 1)` aparecer con rebote chico · `--ease-party` `cubic-bezier(0.3, 1.8, 0.5, 1)` solo festejos |
+| AN-02 | **Duraciones por tipo** | toque 80–120 ms · cambio de estado 200–300 ms · entrada de hoja 300–400 ms · salida = 70 % de la entrada · cámara 500–900 ms · festejo diario ≤ 3.000 ms · ceremonia ≤ 12 s |
+| AN-03 | **Rebote solo para lo que se gana o aparece** (premios, checks, obra). Textos, hojas y listas entran sin rebote | Hoy rebota todo |
+| AN-04 | **Anticipación** de 80–150 ms antes de toda acción grande: Paucho se agacha antes de saltar, la obra tiembla antes de caer | — |
+| AN-05 | **Personaje a 12 fps** (83 ms por cuadro) en sprites; la interfaz a 60 fps | Doc 14 |
+| AN-06 | **Idle vivo**: respiración por sprite o por capas, nunca escalando el bitmap entero; un gesto chico cada 8–14 s (sorbo, mirar al perro) | Hoy `paucho-breathe` escala 1,012 × 1,028 |
+| AN-07 | **Parpadeo**: cada 2,5–6 s al azar, 120–150 ms cerrado, 1 de cada 6 veces doble | Capas `_parpadeo` y `_ojos` |
+| AN-08 | **Caminar**: ciclo de 8 cuadros (667 ms), avanza 0,9 × su alto por ciclo, pies sin patinar (≤ 2 px), la cámara lo sigue con 120 ms de atraso | Doc 14 |
+| AN-09 | **Hablar**: la boca abre en sílabas del texto (una vocal = abierta), no cada 130 ms fijo; para al terminar la frase | Hoy alterna 2 imágenes |
+| AN-10 | **Escalonado** en listas: 40 ms entre elementos, máximo 6 | — |
+| AN-11 | **Solo `transform` y `opacity`** se animan | Rendimiento |
+| AN-12 | **Nunca teletransportar** al personaje entre dos lugares de la escena | Caminata o corte con fundido de 150 ms |
+
+**SÍ / NO**
+
+- **SÍ:** la obra se agacha (anticipación 120 ms), cae con `--ease-party` en 450 ms y levanta polvo en el impacto.
+- **NO:** la hoja de Ajustes entrando con el mismo rebote que un premio.
+- **SÍ:** Paucho camina del banquito al caballete cuando se llena la barra.
+- **NO:** Paucho sentado en un cuadro y martillando en el siguiente.
+
+**Quién lo hace mejor.** Duolingo: personajes en Rive con bocas sincronizadas en más de 40 idiomas (plan). Royal Match: el rey anticipa cada reacción con todo el cuerpo. Finch: el pajarito camina a su aventura.
+
+**Hoy en Gauchito.** Corregir: `cubic-bezier(0.3, 1.6, 0.5, 1)` en 22 reglas y 45 rebotes en total; respiración por escala; boca a 130 ms; martillo a 2 cuadros por segundo; sin caminar.
+
+### 3.11 Ceremonias y festejo (CE)
+
+Tres niveles. Cuanto más raro el logro, más larga y más rica la ceremonia.
+
+| Nivel | Qué | Duración | Toques | Elementos |
+|---|---|---|---|---|
+| **1 · Diario** | hábito hecho, mate cebado, encargo cobrado | ≤ 3 s | 0 | check, confeti chico (≤ 24 piezas), salto de Paucho, sonido corto, háptico «success» |
+| **2 · Semanal** | barra llena, obra terminada, meta de racha de 7 | 4–8 s | 1 | cámara a la obra, caída con polvo, brillo que la recorre, pastilla de premio que vuela al contador |
+| **3 · Hito** | primer día, área terminada, racha 30/50/100, animalito nuevo | 8–12 s | 1–2 | primer plano de Paucho, cartel de madera, música de 4–6 s, tarjeta para compartir (doc 10) |
+
+| ID | Regla | Spec |
+|---|---|---|
+| CE-01 | **Lo diario ≤ 3 s y sin toques** | Se puede seguir usando la app mientras termina |
+| CE-02 | **Barra llena**: ceremonia completa solo el primer día (decisión tomada); desde el segundo, ≤ 3 s y sin texto obligatorio | Hoy cinco tiempos y dos toques todos los días |
+| CE-03 | **Siempre se puede saltear** tocando fuera, salvo el nivel 3 la primera vez | — |
+| CE-04 | **El premio viaja** al contador (herraduras) en 600–900 ms con `--ease-in` y el contador late al llegar | — |
+| CE-05 | **Confeti con la paleta**, no arcoíris: `--tick`, `--gold`, `--sky`, `--red`, `--cream` | — |
+| CE-06 | **Un solo nivel 3 por sesión**; si se juntan dos, el segundo espera al próximo ingreso | — |
+| CE-07 | **Reducir movimiento**: sin confeti ni cámara; fundido de 150 ms y el sonido igual | AC-04 |
+
+**SÍ / NO**
+
+- **SÍ:** hábito hecho: la tarjeta se va con confeti, Paucho salta, «¡Primera vez que lo completás!» como aviso de 2 s.
+- **NO:** «¡Al máximo!» → «¡Yujuuu!» → 30 herraduras volando → «El rancho está creciendo» → «¡Salir de aventura!» todos los días.
+
+**Quién lo hace mejor.** Royal Match: fin de nivel de 2 s y cofres con puesta en escena aparte. Homescapes: la renovación se revela con cámara y brillo. Duolingo: la extensión de racha es corta; los hitos tienen pantalla propia.
+
+### 3.12 Sonido y hápticos (SO)
+
+El sonido es la señal de calidad más barata (plan). Hoy todo es oscilador.
+
+| ID | Regla | Spec |
+|---|---|---|
+| SO-01 | **Sonidos grabados o de biblioteca con licencia**, no sintetizados: moneda/herradura, mate (sorbo y bombilla), ladrido, rasgueo de guitarra, martillo, pasos en tierra | ≤ 40 KB cada uno, ogg/m4a |
+| SO-02 | **Voz de Paucho en sílabas** inventadas, 3 tonos (contento, curioso, con sueño), como Animal Crossing | Sincronizada con AN-09 |
+| SO-03 | **Mezcla**: efectos −12 dB, voz −14 dB, música −20 dB y baja 6 dB cuando habla Paucho | — |
+| SO-04 | **Música**: loop de guitarra criolla suave; licencia comercial confirmada antes de publicar (hoy «At Peace With the Plains» sin confirmar, plan) | — |
+| SO-05 | **Hápticos**: `tap` en botones, `success` en hábito hecho, `celebrate` en nivel 3, nunca `warning` por algo que el jugador no hizo | `sound.ts` ya tiene los seis tipos |
+| SO-06 | **Todo funciona en silencio**: ningún dato vive solo en el sonido | — |
+| SO-07 | **Interruptores separados** de música, efectos y vibración (ya existen) | Mantener |
+
+**SÍ / NO:** **SÍ** el sorbo grabado del mate en el cuadro exacto en que Paucho chupa. **NO** un «bip» de oscilador para la herradura. **NO** vibración de alerta cuando la racha está por enfriarse.
+
+### 3.13 Texto en pantalla (TX)
+
+| ID | Regla | Spec |
+|---|---|---|
+| TX-01 | **Voseo** en todo texto de app | «Cebá», «Mirá», «¿La vemos?» |
+| TX-02 | **Paucho habla en primera persona** y de cerca; el sistema casi no habla | «Terminé el galpón» y no «Obra completada» |
+| TX-03 | **Botones con verbo** de 1–3 palabras | «¡A ver!», «Cobrar», «Seguir» |
+| TX-04 | **Sin culpa ni salud clínica**: nunca «ansiedad», «tratar», «curar», síntomas ni diagnósticos; nada de «no viniste» | P7 |
+| TX-05 | **Números con unidad dibujada**: «15» + herradura, no «15 herraduras» en botones | — |
+| TX-06 | **Moneda, racha y tienda** con sus nombres: herraduras, el mate de la mañana, prendas y cosas del cuarto | — |
+| TX-07 | **Nada falso**: ni reseñas inventadas ni cifras de usuarios que no existen | PlanScreens.tsx:12-19 |
+
+**SÍ:** «¡5 mates seguidos! Faltan 2 para tu meta.» **NO:** «¡Día completo!» a la noche sin hábitos hechos (plan). **NO:** «Racha perdida».
+
+### 3.14 Accesibilidad (AC)
+
+| ID | Regla | Spec |
+|---|---|---|
+| AC-01 | **Contraste** WCAG AA: 4,5:1 texto, 3:1 texto grande e íconos que informan | `--muted` sobre `--paper` ≈ 4,1:1 (estimación): solo ≥ 14 px negrita; naranja `--energy` nunca para texto |
+| AC-02 | **Texto dinámico**: la app aguanta 130 % de tamaño sin cortar botones | Prueba con zoom del sistema |
+| AC-03 | **Etiqueta accesible** en cada ícono, botón y en Paucho («Paucho, cebando mate») | — |
+| AC-04 | **Reducir movimiento**: cada animación > 400 ms tiene variante quieta; se respeta el ajuste del sistema y hay un interruptor propio | Hoy 2 bloques en 7.853 líneas |
+| AC-05 | **Color nunca solo**: «hecho» tiene check además de verde; bloqueado tiene candado además de opacidad | — |
+| AC-06 | **Sin destellos** de más de 3 por segundo | Confeti y brillos incluidos |
+
+**SÍ:** «días de racha» en `--earth`. **NO:** «días de racha» y «J V S D» en `#f59a2c` sobre `#fbf3e4`.
+
+### 3.15 Rendimiento visual (RE)
+
+La memoria decodificada manda, no el peso del archivo. Una escena de 1024×1536 pesa ~150 KB en webp y ocupa 6,3 MB en memoria (ancho × alto × 4).
+
+| ID | Regla | Spec |
+|---|---|---|
+| RE-01 | **Presupuesto de imágenes cargadas** ≤ 60 MB decodificados por pantalla (estimación para un Android de 3–4 GB) | Etapa 6,3 + hojas de sprites ≤ 20 + UI |
+| RE-02 | **Solo el área activa** en memoria (plan) | Las demás se liberan al salir |
+| RE-03 | **Tamaño de origen ≤ 2× el tamaño mostrado** a densidad 3 | Íconos de 256 para 64 px |
+| RE-04 | **Hojas de sprites** ≤ 2.048 px de lado, ≤ 8 MB decodificados, ≤ 250 KB | Doc 14 |
+| RE-05 | **Animaciones simultáneas** ≤ 12 en pantalla; nada de `filter: blur` animado | Hoy 124 `@keyframes` |
+| RE-06 | **60 fps** en un Android barato (3–4 GB, densidad 2) medido con el perfil del navegador antes de cada lanzamiento | — |
+| RE-07 | **Peso total** de `a/` ≤ 12,5 MB (doc 12); cada pieza nueva compensa borrando una sin uso | — |
+| RE-08 | **Precarga** de la próxima pantalla de ceremonia durante la anterior, sin bloquear | — |
+
+### 3.16 Materiales de tienda (MT)
+
+| ID | Regla | Spec |
+|---|---|---|
+| MT-01 | **Ícono de app**: Paucho de fieltro de cara (recorte de `mate_b2`), sombrero cortando el borde superior, fondo `--sky` liso | 1024×1024 sin transparencia; legible a 48 px |
+| MT-02 | **Capturas**: 5–8, en orden: Paucho grande + frase; el mate de la racha; la obra que se revela; la Casita; la racha de a dos | 1290×2796 (iOS 6,9") y 1080×1920 (Android) |
+| MT-03 | **Una frase por captura** en cartel de madera, voseo, ≤ 6 palabras | «Cuidate un poquito cada día» |
+| MT-04 | **Arte real de la app**, sin pantallas inventadas | — |
+| MT-05 | **Nada falso**: ni reseñas, ni «millones de usuarios», ni premios que no existen | — |
+| MT-06 | **Video de 15–30 s** que empieza con Paucho cebando y termina con la obra revelada | — |
+| MT-07 | **Público 18+** declarado; las capturas no apuntan a chicos | — |
+| MT-08 | **Sin lenguaje clínico** en título, subtítulo ni capturas | TX-04 |
+
+**SÍ:** captura 1 con Paucho de primer plano y «Tu compañero para cuidarte». **NO:** una captura de Ajustes o del cuestionario.
+
+---
+
+## 4. Checklist de lanzamiento de una funcionalidad nueva
+
+Se copia en el pedido de cambio y se marca cada línea. Una línea sin marcar frena el lanzamiento salvo que el dueño la firme.
+
+| Capítulo | Revisar |
+|---|---|
+| Personaje | PJ-01 modelo único · PJ-05 tamaño · PJ-06 cara ≥ 50 px · PJ-08 estados bajos sin culpa · PJ-12 pies en el piso |
+| Mascotas | MA-01 material · MA-02 escala · MA-06 ≤ 2 en primer plano |
+| Vestimenta | VE-02 capa por pose o ropa base · VE-04 vista previa puesta · VE-06 alineación |
+| Escenas | ES-01 encuadre · ES-02 sin cicatrices al 200 % · ES-04 nada liso > 60 px |
+| Íconos | IC-01 de la hoja · IC-04 sin escenario · IC-06 sin emoji · IC-07 un significado · IC-09 bloqueado |
+| Color | CO-01 un verde · CO-02 dorado solo premio · CO-07 tokens |
+| Tipografía | TI-01 escala · TI-07 ≥ 12 px · TI-09 sin truncar |
+| Componentes | UI-09 los cinco estados · UI-10 estado vacío |
+| Layout | LA-01 ≥ 44 pt / 48 dp · LA-04 áreas seguras · LA-07 tres tamaños |
+| Animación | AN-01 curva con nombre · AN-02 duración por tipo · AN-03 rebote solo premios · AN-12 sin teletransporte |
+| Ceremonias | CE-01 diario ≤ 3 s · CE-03 se saltea · CE-06 un nivel 3 por sesión |
+| Sonido | SO-01 grabado · SO-05 háptico correcto · SO-06 funciona en silencio |
+| Texto | TX-01 voseo · TX-04 sin culpa ni clínica · TX-07 nada falso |
+| Accesibilidad | AC-01 contraste · AC-03 etiquetas · AC-04 reducir movimiento |
+| Rendimiento | RE-01 memoria · RE-05 ≤ 12 animaciones · RE-06 60 fps en Android barato |
+| Tienda | MT-04 arte real · MT-05 nada falso (si la función entra a capturas) |
+
+**Procedimiento de revisión**
+
+1. **Capturas** de cada pantalla y estado nuevo a 390×844, 360×800 y 360×640, con la menor y la mayor cantidad de contenido (0 hábitos y 7; nombre corto y largo).
+2. **Video de 10 s** de cada animación a 390×844, y la misma con «reducir movimiento» activado.
+3. **Android chico real** (3–4 GB): abrir, recorrer y medir fps y memoria con el perfil del navegador.
+4. **Comparación lado a lado** con la pantalla vecina más parecida que ya pasó: mismo Paucho, mismos íconos, mismos botones.
+5. **Juez visual separado**: alguien (persona o agente) que no hizo la pieza recibe las capturas, esta checklist y `img/si-paucho-fieltro.jpg`, y devuelve aprobado o una lista con ID.
+6. **El dueño la mira en su iPhone** instalado desde la pantalla de inicio antes de publicar.
+
+---
+
+## 5. Pipeline de producción de arte
+
+**Hoy.** El arte nuevo se genera con ChatGPT desde kits de referencia (`kit_escena_mate/`, `kit_rancho_etapas/`), se baja a la Mac del dueño y se procesa con los importadores de `design/tools/` (`import_assets.py`, `import_mate_scene.py`, `import_area1.py`, `import_room.py`, `import_trabajando.py`, `make_mate_parts.py`), que quitan fondo y halos, alinean y exportan webp a `app/public/a/`. Rive se armó en la app de escritorio y quedó sin uso. El problema: cada tanda arranca de referencias distintas, y así nacieron cuatro dialectos de íconos y dos Pauchos.
+
+**Cómo debe ser.**
+
+1. **Hoja de modelo** (2048×1536, doc 12): frente, tres cuartos, perfil, espalda; 11 expresiones (PJ-07); manos; paleta de 8 muestras; medidas. Vive en `design/model/` y se adjunta a *toda* generación.
+2. **Prompts base** versionados en `design/prompts/` (pose, plano limpio, íconos, animalito, prenda), con lienzo, fondo magenta `#FF00FF`, luz y lista negra (PJ-11). Se cambian por pedido de cambio, no a mano en cada chat.
+3. **Una tanda = una hoja**: íconos de a 32, poses de a 4, prendas de a una por todas sus poses. Nunca piezas sueltas de un mismo sistema en días distintos.
+4. **Importador por familia** en `design/tools/`, que imprime las cajas y anclas para el código (como `WORK_BOX`) y falla si la caja o la línea de pies cambian.
+5. **Control de calidad** antes del juez: hoja de contactos (`contact.py`) a 100 % y 200 %; prueba de silueta (PJ-03); comparación de cara contra `mate_b2_habla_cerrada`; halos sobre tierra clara y madera oscura; peso y memoria (RE).
+6. **Tope de 6 intentos** por pieza (doc 12) y 20 generaciones por ciclo de sprite (doc 14); al tope se guarda la mejor y se anota.
+7. **Registro**: cada pieza en `a/` tiene en un CSV su prompt, referencia, fecha e intento ganador, para poder rehacerla igual.
+
+---
+
+## 6. Backlog visual priorizado
+
+Tamaño: **S** ≤ 1 día · **M** 2–4 días · **L** ≥ 1 semana (estimación).
+
+| Prioridad | Tarea | Tamaño | IDs | Doc |
+|---|---|---|---|---|
+| 1 | Sacar las reseñas inventadas | S | TX-07, MT-05 | 11 |
+| 2 | Botón principal verde, dorado solo premios, barras de tarea en verde | S | CO-01, CO-02, UI-06 | 15 |
+| 3 | Cinco curvas con nombre y reemplazo de los 45 rebotes | S | AN-01, AN-03 | 14 |
+| 4 | Cámara 1,40× en Inicio | M | ES-01, PJ-05 | 13 |
+| 5 | Hoja de modelo + 6 poses `g_*` en fieltro + avatar | M | PJ-01, PJ-12 | 12 |
+| 6 | Plano limpio del Área 1 sin cicatrices | S | ES-02 | 12 |
+| 7 | Hoja de 32 íconos; fuera emojis, granero, candado de metal y la segunda herradura | M | IC-01…IC-11 | 12 |
+| 8 | Barra llena corta desde el día 2 | S | CE-02 | 15 |
+| 9 | Contraste de la racha y escala tipográfica | S | AC-01, TI-01 | — |
+| 10 | Sonidos grabados y voz en sílabas | M | SO-01, SO-02 | 15 |
+| 11 | Prueba de sprites con el martillo (2 días) | M | AN-05 | 14 |
+| 12 | 6 expresiones nuevas | M | PJ-07 | 06 |
+| 13 | Ropa visible en pestaña Paucho y tienda | M | VE-02, VE-04 | 14 |
+| 14 | Reducir movimiento completo | M | AC-04, CE-07 | 14 |
+| 15 | Medición en Android de 3–4 GB | S | RE-01, RE-06 | — |
+| 16 | Títulos en cartel de madera | S | TI-04 | 15 |
+| 17 | Cuatro ciclos de sprites y caminar | L | AN-06…AN-08 | 14 |
+| 18 | Materiales de tienda | M | MT-01…MT-08 | — |
+
+**Pregunta abierta para el dueño.** El doc 13 fija ≥ 28 % del ancho para Paucho en Inicio (1,40× con el arte actual); esta guía pide ~35 % como meta. Llegar ahí exige una pose de reposo más ancha o 2½ tarjetas en pantallas chicas. Recomiendo cerrar V1 en 28 % y decidir el 35 % con la captura real en el iPhone.
