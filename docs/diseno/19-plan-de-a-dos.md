@@ -89,7 +89,7 @@ Nada de esto toca hábitos, racha, obras, salidas ni calma: son cosas de mimar.
 
 | Regla | Valor inicial | Por qué |
 |---|---|---|
-| Precio | 1,5 × el individual, redondeado al escalón de tienda. Con individual a USD 2,99 / 19,99: USD 4,49 al mes y 29,99 al año. Con 2,49 / 14,99: USD 3,99 y 22,99 | Lo fija el plan; 25 % de ahorro por persona se entiende sin cuenta |
+| Precio | 1,5 × el individual, redondeado al escalón de tienda. Con individual a USD 2,99 / 17,99 (doc 17): USD 4,49 al mes y 26,99 al año. Con 2,49 / 14,99: USD 3,99 y 22,99 | Lo fija el plan; 25 % de ahorro por persona se entiende sin cuenta |
 | Lugares | 2 (titular + 1) | «De a dos» es el producto; un plan familiar sería otro documento |
 | Prueba gratis | La misma que el individual (doc 17), una vez por titular | No abrir un atajo para repetir pruebas |
 | Vigencia del enlace | 7 días, un solo uso | Evita que circule en grupos |
